@@ -10,21 +10,20 @@ def generate_random_coupling(
     seed: Optional[int] = None,
     antisymmetric: bool = True
 ) -> np.ndarray:
-    if seed is not None:
-        np.random.seed(seed)
-    
+    rng = np.random.default_rng(seed)
+
     sigma = np.sqrt(variance * 6.0 / (n_majorana ** 3))
     J = np.zeros((n_majorana, n_majorana, n_majorana, n_majorana))
-    
+
     if antisymmetric:
         for indices in combinations(range(n_majorana), 4):
-            value = np.random.normal(0, sigma)
+            value = rng.normal(0, sigma)
             for perm in _signed_permutations(indices):
                 idx, sign = perm
                 J[idx] = sign * value
     else:
-        J = np.random.normal(0, sigma, (n_majorana, n_majorana, n_majorana, n_majorana))
-    
+        J = rng.normal(0, sigma, (n_majorana, n_majorana, n_majorana, n_majorana))
+
     return J
 
 
@@ -110,13 +109,11 @@ def level_spacing_ratio(eigenvalues: np.ndarray) -> float:
     sorted_eigs = np.sort(eigenvalues)
     spacings = np.diff(sorted_eigs)
     spacings = spacings[spacings > 1e-12]
-    
+
     if len(spacings) < 2:
         return 0.0
-    
-    ratios = []
-    for i in range(len(spacings) - 1):
-        r = min(spacings[i], spacings[i+1]) / max(spacings[i], spacings[i+1])
-        ratios.append(r)
-    
+
+    s_n = spacings[:-1]
+    s_n1 = spacings[1:]
+    ratios = np.minimum(s_n, s_n1) / np.maximum(s_n, s_n1)
     return float(np.mean(ratios))
