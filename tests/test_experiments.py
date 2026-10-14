@@ -47,6 +47,13 @@ TINY = {
         "page_n_majorana": 8,
         "eth_sizes": [8, 10],
     },
+    "floquet": {
+        "sizes": [4],
+        "omegas": [6.0, 12.0],
+        "n_periods": 50,
+        "n_steps": 8,
+        "expansion_omegas": [20.0, 40.0],
+    },
 }
 
 

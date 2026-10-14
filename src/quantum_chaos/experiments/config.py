@@ -62,6 +62,19 @@ class DynamicsConfig:
 
 
 @dataclass(frozen=True)
+class FloquetConfig:
+    sizes: tuple[int, ...] = (6, 8)
+    omegas: tuple[float, ...] = (4.0, 8.0, 10.0, 12.0, 14.0, 16.0, 20.0)
+    J0: float = 1.0
+    J1: float = 1.0
+    tp: float = 0.5
+    U: float = 4.0
+    n_periods: int = 20000
+    n_steps: int = 48
+    expansion_omegas: tuple[float, ...] = (20.0, 40.0, 80.0)
+
+
+@dataclass(frozen=True)
 class FigureConfig:
     name: str
     kind: str
@@ -71,6 +84,7 @@ class FigureConfig:
     otoc: OTOCConfig | None = None
     sff: SFFConfig | None = None
     dynamics: DynamicsConfig | None = None
+    floquet: FloquetConfig | None = None
     bins: int = 25
     extra: dict[str, Any] = field(default_factory=dict)
 
@@ -81,6 +95,7 @@ _SECTIONS = {
     "otoc": OTOCConfig,
     "sff": SFFConfig,
     "dynamics": DynamicsConfig,
+    "floquet": FloquetConfig,
 }
 
 
@@ -105,6 +120,10 @@ def figure_config_from_dict(data: dict[str, Any], where: str = "config") -> Figu
                 section["tp_values"] = tuple(float(x) for x in section["tp_values"])
             if key == "dynamics" and "betas" in section:
                 section["betas"] = tuple(float(x) for x in section["betas"])
+            if key == "floquet":
+                for name, cast in (("sizes", int), ("omegas", float), ("expansion_omegas", float)):
+                    if name in section:
+                        section[name] = tuple(cast(x) for x in section[name])
             if key == "dynamics" and "eth_sizes" in section:
                 section["eth_sizes"] = tuple(int(x) for x in section["eth_sizes"])
             data[key] = _build(cls, section, f"{where}.{key}")

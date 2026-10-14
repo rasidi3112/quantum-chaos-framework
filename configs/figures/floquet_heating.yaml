@@ -1,0 +1,13 @@
+name: floquet_heating
+kind: floquet_heating
+output: figures/floquet_heating.png
+floquet:
+  sizes: [6, 8]
+  omegas: [4.0, 8.0, 10.0, 12.0, 14.0, 16.0, 20.0, 24.0]
+  J0: 1.0
+  J1: 1.0
+  tp: 0.5
+  U: 4.0
+  n_periods: 20000
+  n_steps: 48
+  expansion_omegas: [20.0, 40.0, 80.0]
