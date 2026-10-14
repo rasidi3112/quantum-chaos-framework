@@ -2,10 +2,18 @@ import numpy as np
 from typing import Optional, Tuple, Dict, List, Callable
 
 from ..utils.jordan_wigner import JordanWignerMapper
-from ..utils.helpers import spectral_density, level_spacing_ratio
+from ..utils.helpers import spectral_density
 
 
 class DrivenHubbardHamiltonian:
+    """Periodically driven Hubbard chain in the full Fock space (Jordan-Wigner).
+
+    H(t) = J0 cos(omega t) H_hop + U sum_j n_{j,up} n_{j,down}. For level
+    statistics use :class:`quantum_chaos.hamiltonians.hubbard_ed.HubbardRingED`,
+    which resolves the symmetry sectors; pooling the whole Fock space is not
+    meaningful.
+    """
+
     def __init__(
         self,
         n_sites: int,
@@ -171,9 +179,6 @@ class DrivenHubbardHamiltonian:
     def get_spectral_density(self, bins: int = 50) -> Tuple[np.ndarray, np.ndarray]:
         return spectral_density(self.static_eigenvalues, bins=bins)
     
-    def get_level_spacing_ratio(self) -> float:
-        return level_spacing_ratio(self.static_eigenvalues)
-    
     def get_number_operator(self, site: int, spin: str) -> np.ndarray:
         q = self._site_spin_to_qubit(site, spin)
         return self._jw_mapper.number_operator(q)
@@ -218,8 +223,7 @@ class DrivenHubbardHamiltonian:
             'onsite_interaction': self.onsite_interaction,
             'periodic_boundary': self.periodic_boundary,
             'driving_period': 2 * np.pi / self.driving_frequency,
-            'ground_state_energy': float(self.static_eigenvalues[0]),
-            'level_spacing_ratio': self.get_level_spacing_ratio()
+            'ground_state_energy': float(self.static_eigenvalues[0])
         }
     
     def __repr__(self) -> str:

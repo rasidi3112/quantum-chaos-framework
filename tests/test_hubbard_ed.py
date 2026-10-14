@@ -112,8 +112,6 @@ def test_integrable_versus_nonintegrable_level_statistics():
                                                                integrable["stderr"])
 
 
-@pytest.mark.xfail(reason="P1-4: full-Fock-space <r> mixes all symmetry sectors (0.78 at L=2)",
-                   strict=True)
 def test_unresolved_fock_space_level_statistics_removed():
     from quantum_chaos.hamiltonians.hubbard_hamiltonian import DrivenHubbardHamiltonian
 
