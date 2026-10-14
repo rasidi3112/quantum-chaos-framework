@@ -25,10 +25,8 @@ env/
 # Output files
 *.pdf
 *.jpg
-# Allow output.png for README
-!output.png
 
-# Jupyter
+# Jupyter (tutorials are kept as jupytext .py files)
 .ipynb_checkpoints/
 *.ipynb
 
@@ -43,3 +41,8 @@ htmlcov/
 
 # Local virtual environments
 .venv/
+
+# Docs build
+site/
+.mypy_cache/
+.ruff_cache/

@@ -1,0 +1,72 @@
+{
+  "config": {
+    "name": "ratio_distributions",
+    "kind": "ratio_distributions",
+    "output": "figures/ratio_distributions.png",
+    "syk": {
+      "realisations": {
+        "16": 60,
+        "18": 20,
+        "20": 10
+      },
+      "rmt_samples": 600,
+      "trim": 0.0,
+      "bootstrap_seed": 0,
+      "rmt_seed": 1
+    },
+    "hubbard": {
+      "n_sites": 8,
+      "n_up": 4,
+      "n_down": 4,
+      "t": 1.0,
+      "U": 4.0,
+      "tp_values": [
+        0.0,
+        0.5
+      ]
+    },
+    "otoc": null,
+    "bins": 25,
+    "extra": {}
+  },
+  "provenance": {
+    "git_commit": "126f49f",
+    "src_tree": "8ebae35",
+    "dirty": true,
+    "package_version": "0.2.0.dev0",
+    "python": "3.13.5",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "pennylane": "0.45.1",
+    "platform": "macOS-27.0-arm64-arm-64bit-Mach-O"
+  },
+  "data": {
+    "syk": {
+      "16": {
+        "class": "GOE",
+        "n_ratios": 15120,
+        "mean": 0.5308710226178238
+      },
+      "18": {
+        "class": "GUE",
+        "n_ratios": 5080,
+        "mean": 0.6004325963276297
+      },
+      "20": {
+        "class": "GSE",
+        "n_ratios": 5080,
+        "mean": 0.6748670396563747
+      }
+    },
+    "hubbard": {
+      "0.0": {
+        "n_ratios": 2840,
+        "mean": 0.38633036189588804
+      },
+      "0.5": {
+        "n_ratios": 2986,
+        "mean": 0.5172959212614648
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+# Distributions of r~ = min/max of consecutive spacings against the Atas et al. surmises.
+name: ratio_distributions
+kind: ratio_distributions
+output: figures/ratio_distributions.png
+bins: 25
+syk:
+  realisations: {16: 60, 18: 20, 20: 10}   # GOE, GUE, GSE
+hubbard:
+  n_sites: 8
+  n_up: 4
+  n_down: 4
+  U: 4.0
+  tp_values: [0.0, 0.5]

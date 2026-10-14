@@ -1,0 +1,24 @@
+# Overview figure (README): SYK <r> per N, Hubbard t'=0 vs t'=0.5, T=inf OTOCs.
+name: overview
+kind: overview
+output: figures/overview.png
+syk:
+  realisations: {10: 300, 12: 200, 14: 150, 16: 100}   # N: disorder realisations (seeds 0..n-1)
+  rmt_samples: 600
+  trim: 0.0
+  bootstrap_seed: 0
+  rmt_seed: 1
+hubbard:
+  n_sites: 8
+  n_up: 4
+  n_down: 4
+  t: 1.0
+  U: 4.0
+  tp_values: [0.0, 0.5]
+otoc:
+  syk_n: 12
+  syk_seed: 7
+  hubbard_sites: 4
+  hubbard_U: 4.0
+  t_max: 6.0
+  n_times: 61

@@ -68,10 +68,12 @@ t'=0.5: <r> = 0.5173 ± 0.0048
 ```
 
 `python main.py` prints a longer demonstration and regenerates the figure
-below (~25 s); `python scripts/validate_level_statistics.py` regenerates the
-validation tables (~40 min; `--quick` for a short run).
+below (~30 s). `make figures` regenerates every figure from the YAML files in
+`configs/figures/` (seeds included), each with a JSON sidecar holding the
+plotted numbers and provenance; `make validate` regenerates the validation
+tables (~40 min).
 
-![Symmetry-resolved diagnostics](output.png)
+![Symmetry-resolved diagnostics](figures/overview.png)
 
 *(a) SYK ⟨r⟩ per N (filled) and random matrices with the same number of levels
 (open), with the large-N values of Atas et al.; the class follows N mod 8.

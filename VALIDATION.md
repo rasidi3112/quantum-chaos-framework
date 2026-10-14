@@ -13,7 +13,7 @@ Reproduce:
 pytest                                        # fast suite
 pytest -m slow                                # statistical tests (~1-2 min)
 python scripts/validate_level_statistics.py   # section 2 tables (~40 min)
-python main.py                                # output.png
+make figures                                  # figures/*.png (+ JSON sidecars)
 ```
 
 ## 1. Exact and deterministic checks (unit tests)
