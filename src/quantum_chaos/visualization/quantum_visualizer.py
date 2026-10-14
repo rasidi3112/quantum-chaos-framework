@@ -23,7 +23,7 @@ class QuantumVisualizer:
         # Try to use specified style, fall back to default
         try:
             plt.style.use(style)
-        except:
+        except OSError:  # unknown style name
             plt.style.use('default')
         
         # Color palette for SYK vs Hubbard comparison
@@ -107,7 +107,7 @@ class QuantumVisualizer:
         
         # Compute level spacings
         syk_spacings = np.diff(np.sort(syk_eigenvalues))
-        syk_spacings = syk_spacings / np.mean(syk_spacings)  # Unfold
+        syk_spacings = syk_spacings / np.mean(syk_spacings)  # mean-spacing normalisation, not an unfolding
         
         hubbard_spacings = np.diff(np.sort(hubbard_eigenvalues))
         hubbard_spacings = hubbard_spacings / np.mean(hubbard_spacings)
@@ -160,7 +160,7 @@ class QuantumVisualizer:
                 linewidth=2, label='Hubbard')
         
         ax.set_xlabel('Time', fontsize=12)
-        ax.set_ylabel('Fidelity F(t) = |⟨ψ(0)|ψ(t)⟩|²', fontsize=12)
+        ax.set_ylabel(r'Fidelity $F(t) = |\langle\psi(0)|\psi(t)\rangle|^2$', fontsize=12)
         ax.set_title(title, fontsize=14, fontweight='bold')
         ax.legend(fontsize=11)
         ax.set_ylim(0, 1.05)
@@ -258,7 +258,7 @@ class QuantumVisualizer:
         axes[0].plot(times, comparison_results['noisy_expectation'],
                      '--', color=self.colors['noisy'], linewidth=2, label='NISQ')
         axes[0].set_xlabel('Time', fontsize=12)
-        axes[0].set_ylabel('⟨O⟩', fontsize=12)
+        axes[0].set_ylabel(r'$\langle O\rangle$', fontsize=12)
         axes[0].set_title('Observable Expectation', fontsize=14, fontweight='bold')
         axes[0].legend()
         axes[0].grid(True, alpha=0.3)
@@ -276,7 +276,7 @@ class QuantumVisualizer:
         axes[2].plot(times, comparison_results['expectation_error'],
                      '-', color=self.colors['error'], linewidth=2)
         axes[2].set_xlabel('Time', fontsize=12)
-        axes[2].set_ylabel('|⟨O⟩_ideal - ⟨O⟩_noisy|', fontsize=12)
+        axes[2].set_ylabel(r'$|\langle O\rangle_{\rm ideal} - \langle O\rangle_{\rm noisy}|$', fontsize=12)
         axes[2].set_title('Expectation Value Error', fontsize=14, fontweight='bold')
         axes[2].grid(True, alpha=0.3)
         
@@ -334,17 +334,22 @@ class QuantumVisualizer:
         
         steps = error_analysis['steps']
         
+        # State error is O(t^2/n) (order 1) and O(t^3/n^2) (order 2), so the
+        # infidelity 1 - F ~ |error|^2 scales as n^-2 and n^-4.
         ax.loglog(steps, error_analysis['error_order1'], 
                   'o-', color=self.colors['syk'], linewidth=2, 
-                  markersize=8, label='First Order (O(t²/n))')
+                  markersize=8, label='First order')
         ax.loglog(steps, error_analysis['error_order2'],
                   's-', color=self.colors['hubbard'], linewidth=2,
-                  markersize=8, label='Second Order (O(t³/n²))')
+                  markersize=8, label='Second order')
         
-        # Reference lines
-        steps_arr = np.array(steps)
-        ax.loglog(steps_arr, 0.1 / steps_arr, 'k--', alpha=0.5, label='1/n scaling')
-        ax.loglog(steps_arr, 0.1 / steps_arr**2, 'k:', alpha=0.5, label='1/n² scaling')
+        # Reference slopes anchored at the first data point
+        steps_arr = np.array(steps, dtype=float)
+        e1, e2 = error_analysis['error_order1'][0], error_analysis['error_order2'][0]
+        ax.loglog(steps_arr, e1 * (steps_arr / steps_arr[0]) ** -2, 'k--', alpha=0.5,
+                  label=r'$\propto n^{-2}$')
+        ax.loglog(steps_arr, e2 * (steps_arr / steps_arr[0]) ** -4, 'k:', alpha=0.5,
+                  label=r'$\propto n^{-4}$')
         
         ax.set_xlabel('Number of Trotter Steps', fontsize=12)
         ax.set_ylabel('Infidelity (1 - F)', fontsize=12)
@@ -397,7 +402,7 @@ class QuantumVisualizer:
         ax.axhline(0.530, color='black', linestyle='-', label='GOE (0.530)')
         ax.set_xticks(x)
         ax.set_xticklabels(['SYK', 'Hubbard'])
-        ax.set_ylabel('⟨r⟩')
+        ax.set_ylabel(r'$\langle r\rangle$')
         ax.set_title('Level Spacing Ratio', fontweight='bold')
         ax.legend(fontsize=9)
         

@@ -3,6 +3,8 @@ import pennylane as qml
 from typing import List, Tuple, Dict, Optional, Callable, Union, Sequence
 from scipy.linalg import expm
 
+from ..utils.helpers import RngLike, as_rng
+
 
 def _basis_state(n_qubits: int, index: int = 0) -> np.ndarray:
     psi = np.zeros(2 ** n_qubits, dtype=complex)
@@ -87,7 +89,8 @@ class QuantumKernel:
     
     def expressivity_metric(
         self,
-        n_samples: int = 100
+        n_samples: int = 100,
+        rng: RngLike = None
     ) -> Dict:
         """Descriptive statistics of the kernel on standard-normal random inputs.
 
@@ -97,7 +100,7 @@ class QuantumKernel:
         """
         # Generate random data
         data_dim = self.n_qubits  # Assume input dimension = n_qubits
-        X = np.random.randn(n_samples, data_dim)
+        X = as_rng(rng).standard_normal((n_samples, data_dim))
         
         # Compute kernel matrix
         K = self.kernel_matrix(X)
@@ -280,10 +283,12 @@ def neel_state(hubbard) -> np.ndarray:
 def compare_kernel_expressivity(
     syk_kernel: QuantumKernel,
     hubbard_kernel: QuantumKernel,
-    n_samples: int = 100
+    n_samples: int = 100,
+    rng: RngLike = None
 ) -> Dict:
-    """Kernel statistics of both models side by side (no ranking)."""
+    """Kernel statistics of both models on the same random inputs (no ranking)."""
+    seed = int(as_rng(rng).integers(2**63))
     return {
-        'syk': syk_kernel.expressivity_metric(n_samples),
-        'hubbard': hubbard_kernel.expressivity_metric(n_samples),
+        'syk': syk_kernel.expressivity_metric(n_samples, rng=seed),
+        'hubbard': hubbard_kernel.expressivity_metric(n_samples, rng=seed),
     }

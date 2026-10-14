@@ -1,5 +1,7 @@
 
 
+import warnings
+
 import numpy as np
 import pennylane as qml
 from pennylane import numpy as pnp
@@ -261,11 +263,13 @@ class TrotterEvolution:
         pauli_terms: List[Tuple[float, str]],
         hamiltonian_matrix: np.ndarray,
         total_time: float,
-        max_steps: int = 100
+        max_steps: int = 100,
+        rng: Union[None, int, np.random.Generator] = None
     ) -> Dict:
-        # Random initial state
+        """Infidelity of order-1/2 Trotter evolution vs exact, from a random state."""
+        rng = np.random.default_rng(rng)
         dim = 2 ** self.n_qubits
-        initial_state = np.random.randn(dim) + 1j * np.random.randn(dim)
+        initial_state = rng.standard_normal(dim) + 1j * rng.standard_normal(dim)
         initial_state /= np.linalg.norm(initial_state)
         
         # Exact evolution
@@ -314,7 +318,8 @@ def matrix_to_pauli_terms(
     result = []
     for coeff, pauli_str in pauli_decomp:
         if np.abs(np.imag(coeff)) > 1e-10:
-            print(f"Warning: Non-Hermitian term {pauli_str} with coeff {coeff}")
+            warnings.warn(f"non-Hermitian term {pauli_str} with coefficient {coeff}; "
+                          "keeping only the real part", UserWarning, stacklevel=2)
         result.append((np.real(coeff), pauli_str))
     
     return result

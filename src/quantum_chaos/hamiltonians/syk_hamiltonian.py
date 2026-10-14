@@ -118,7 +118,8 @@ class SYKHamiltonian:
             raise ValueError("Temperature must be positive")
         
         beta = 1.0 / temperature
-        boltzmann_factors = np.exp(-beta * self.eigenvalues)
+        # shift by E_0 so that the largest weight is exp(0) = 1 (no overflow)
+        boltzmann_factors = np.exp(-beta * (self.eigenvalues - self.eigenvalues[0]))
         Z = np.sum(boltzmann_factors)
         thermal_diag = np.diag(boltzmann_factors / Z)
         rho = self.eigenvectors @ thermal_diag @ self.eigenvectors.conj().T
@@ -241,7 +242,7 @@ def finite_size_scaling(N_values: List[int], n_realizations: int = 20) -> Dict:
                 'r_infinity_err': np.sqrt(pcov[0, 0]),
                 'goe_deviation': abs(popt[0] - 0.530) / 0.530 * 100
             }
-        except:
+        except (RuntimeError, ValueError):  # fit did not converge / degenerate input
             pass
     
     return results

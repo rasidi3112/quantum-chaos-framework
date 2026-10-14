@@ -1,29 +1,39 @@
 import numpy as np
-from typing import Tuple, Optional, List
+from typing import Tuple, Optional, List, Union
 from scipy.linalg import expm
 from itertools import combinations
+
+RngLike = Union[None, int, np.random.Generator]
+
+
+def as_rng(seed: RngLike = None) -> np.random.Generator:
+    """Return a ``numpy.random.Generator`` from None, an int seed or a Generator."""
+    return np.random.default_rng(seed)
 
 
 def generate_random_coupling(
     n_majorana: int,
     variance: float = 1.0,
-    seed: Optional[int] = None,
+    seed: RngLike = None,
     antisymmetric: bool = True
 ) -> np.ndarray:
-    if seed is not None:
-        np.random.seed(seed)
-    
+    """Gaussian SYK couplings with <J_ijkl^2> = 3! * variance / N^3.
+
+    ``seed`` may be None, an int or a ``numpy.random.Generator``; the global
+    NumPy RNG is never touched.
+    """
+    rng = as_rng(seed)
     sigma = np.sqrt(variance * 6.0 / (n_majorana ** 3))
     J = np.zeros((n_majorana, n_majorana, n_majorana, n_majorana))
     
     if antisymmetric:
         for indices in combinations(range(n_majorana), 4):
-            value = np.random.normal(0, sigma)
+            value = rng.normal(0, sigma)
             for perm in _signed_permutations(indices):
                 idx, sign = perm
                 J[idx] = sign * value
     else:
-        J = np.random.normal(0, sigma, (n_majorana, n_majorana, n_majorana, n_majorana))
+        J = rng.normal(0, sigma, (n_majorana, n_majorana, n_majorana, n_majorana))
     
     return J
 
@@ -147,7 +157,7 @@ def level_spacing_ratio(eigenvalues: np.ndarray) -> float:
     spacings = spacings[spacings > 1e-12]
     
     if len(spacings) < 2:
-        return 0.0
+        return float('nan')
     
     ratios = []
     for i in range(len(spacings) - 1):

@@ -33,6 +33,7 @@ addopts = ["-ra", "--strict-markers"]
 xfail_strict = true
 filterwarnings = [
     "error::pennylane.exceptions.PennyLaneDeprecationWarning",
+    "error:Glyph .* missing from font:UserWarning",
 ]
 markers = [
     "slow: long-running statistical tests (deselect with '-m \"not slow\"')",

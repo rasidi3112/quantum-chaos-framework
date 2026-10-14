@@ -55,7 +55,7 @@ class OTOCCalculator:
         elif temperature is not None:
             self._diagonalize()
             beta = 1.0 / temperature
-            boltzmann = np.exp(-beta * self._eigenvalues)
+            boltzmann = np.exp(-beta * (self._eigenvalues - np.min(self._eigenvalues)))
             Z = np.sum(boltzmann)
             rho = self._eigenvectors @ np.diag(boltzmann / Z) @ self._eigenvectors.conj().T
         else:
@@ -86,12 +86,12 @@ class OTOCCalculator:
         self._diagonalize()
         beta = 1.0 / temperature
         
-        # ρ^(1/4)
-        boltzmann_quarter = np.exp(-beta * self._eigenvalues / 4)
+        # y = rho^(1/4) with rho = exp(-beta H)/Z; energies shifted by E_0 (no overflow)
+        shifted = self._eigenvalues - np.min(self._eigenvalues)
+        boltzmann_quarter = np.exp(-beta * shifted / 4)
         rho_quarter = self._eigenvectors @ np.diag(boltzmann_quarter) @ self._eigenvectors.conj().T
         
-        # Normalization
-        Z = np.sum(np.exp(-beta * self._eigenvalues))
+        Z = np.sum(np.exp(-beta * shifted))
         rho_quarter /= (Z ** 0.25)
         
         otoc_values = []

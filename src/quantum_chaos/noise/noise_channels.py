@@ -1,7 +1,7 @@
 
 
 import numpy as np
-from typing import List, Tuple, Optional, Dict
+from typing import List, Tuple, Optional, Dict, Union
 from dataclasses import dataclass
 
 
@@ -196,9 +196,11 @@ class NoiseChannels:
     def apply_readout_error(
         self,
         measurement_results: np.ndarray,
-        error_rate: float
+        error_rate: float,
+        rng: Union[None, int, np.random.Generator] = None
     ) -> np.ndarray:
-        noise = np.random.random(measurement_results.shape) < error_rate
+        """Flip each classical bit independently with probability ``error_rate``."""
+        noise = np.random.default_rng(rng).random(np.shape(measurement_results)) < error_rate
         return np.logical_xor(measurement_results, noise).astype(int)
     
     def full_noise_model(

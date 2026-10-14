@@ -14,9 +14,12 @@ This framework provides tools for:
 - Simulating Floquet dynamics and quasi-energy spectra
 - Quantum kernel methods for machine learning
 
-## Output
+## Status
 
-![Quantum Chaos Analysis](output.png)
+The package is being corrected and validated (see `PLAN.md`). The former
+summary figure compared all system sizes with GOE statistics, which is wrong
+for N mod 8 = 2, 4, 6; it will be regenerated with the correct symmetry
+classes in phase 1.
 
 ## Features
 
@@ -42,7 +45,7 @@ This framework provides tools for:
 ## Installation
 
 ```bash
-git clone https://github.com/yourusername/quantum-chaos-framework.git
+git clone https://github.com/rasidi3112/quantum-chaos-framework.git
 cd quantum-chaos-framework
 pip install -e ".[test]"
 pytest

@@ -124,7 +124,7 @@ class QuantumKernelClassificationBenchmark:
         noise: float = 0.1,
         random_state: int = 42
     ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-        np.random.seed(random_state)
+        rng = np.random.default_rng(random_state)
         
         samples_per_class = n_samples // n_classes
         
@@ -133,10 +133,10 @@ class QuantumKernelClassificationBenchmark:
         
         for c in range(n_classes):
             # Class center
-            center = separation * np.random.randn(n_features)
+            center = separation * rng.standard_normal(n_features)
             
             # Generate samples around center
-            class_samples = center + noise * np.random.randn(samples_per_class, n_features)
+            class_samples = center + noise * rng.standard_normal((samples_per_class, n_features))
             
             X.append(class_samples)
             y.extend([c] * samples_per_class)
@@ -179,8 +179,8 @@ class QuantumKernelClassificationBenchmark:
         
         # Compute kernel expressivity metrics
         print("Computing expressivity metrics...")
-        syk_expressivity = self.syk_kernel.expressivity_metric(n_samples=min(50, len(X_train)))
-        hubbard_expressivity = self.hubbard_kernel.expressivity_metric(n_samples=min(50, len(X_train)))
+        syk_expressivity = self.syk_kernel.expressivity_metric(n_samples=min(50, len(X_train)), rng=0)
+        hubbard_expressivity = self.hubbard_kernel.expressivity_metric(n_samples=min(50, len(X_train)), rng=0)
         
         results['expressivity'] = {
             'syk': syk_expressivity,

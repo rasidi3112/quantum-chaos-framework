@@ -20,7 +20,6 @@ def global_state_untouched(fn):
 # --- explicit RNG -------------------------------------------------------------
 
 
-@pytest.mark.xfail(reason="P0-10: generate_random_coupling reseeds the global RNG", strict=True)
 def test_couplings_are_reproducible_without_global_rng():
     from quantum_chaos.utils.helpers import generate_random_coupling
 
@@ -32,7 +31,6 @@ def test_couplings_are_reproducible_without_global_rng():
                                   generate_random_coupling(6, seed=7))
 
 
-@pytest.mark.xfail(reason="P0-10: stochastic helpers use the global RNG", strict=True)
 def test_stochastic_helpers_accept_rng_and_leave_global_state_alone():
     from quantum_chaos.noise.noise_channels import NoiseChannels
     from quantum_chaos.qml.quantum_classifier import QuantumKernelClassificationBenchmark
@@ -56,7 +54,6 @@ def test_stochastic_helpers_accept_rng_and_leave_global_state_alone():
                                   nc.apply_readout_error(bits, 0.3, rng=5))
 
 
-@pytest.mark.xfail(reason="P0-10: trotter_error_analysis uses the global RNG", strict=True)
 def test_trotter_error_analysis_is_reproducible():
     from quantum_chaos.circuits.trotter_evolution import TrotterEvolution
 
@@ -74,7 +71,6 @@ def test_trotter_error_analysis_is_reproducible():
 # --- numerical robustness ---------------------------------------------------
 
 
-@pytest.mark.xfail(reason="P0-10: Boltzmann weights overflow at low temperature", strict=True)
 def test_thermal_states_at_low_temperature_are_finite():
     from quantum_chaos.circuits.otoc_calculator import OTOCCalculator
     from quantum_chaos.hamiltonians.syk_hamiltonian import SYKHamiltonian
@@ -94,14 +90,12 @@ def test_thermal_states_at_low_temperature_are_finite():
     assert np.all(np.isfinite(c)) and np.all(np.isfinite(c_reg))
 
 
-@pytest.mark.xfail(reason="P0-10: too few levels return 0.0 instead of nan", strict=True)
 def test_level_spacing_ratio_with_too_few_levels_is_nan():
     from quantum_chaos.utils.helpers import level_spacing_ratio
 
     assert np.isnan(level_spacing_ratio(np.array([0.0, 1.0])))
 
 
-@pytest.mark.xfail(reason="P0-10: non-Hermitian terms are reported with print()", strict=True)
 def test_matrix_to_pauli_terms_warns_for_non_hermitian_input():
     from quantum_chaos.circuits.trotter_evolution import matrix_to_pauli_terms
 
@@ -112,7 +106,6 @@ def test_matrix_to_pauli_terms_warns_for_non_hermitian_input():
 # --- hygiene ------------------------------------------------------------------
 
 
-@pytest.mark.xfail(reason="P0-10: bare except clauses", strict=True)
 def test_no_bare_except():
     offenders = [f"{p.relative_to(SRC)}:{i}" for p in SRC.rglob("*.py")
                  for i, line in enumerate(p.read_text().splitlines(), 1)
@@ -120,7 +113,6 @@ def test_no_bare_except():
     assert not offenders
 
 
-@pytest.mark.xfail(reason="P0-10: no global RNG calls in the package", strict=True)
 def test_no_global_numpy_rng_in_package():
     pattern = re.compile(r"np\.random\.(seed|rand|randn|random|normal|uniform|choice|randint)\(")
     offenders = [f"{p.relative_to(SRC)}:{i}" for p in SRC.rglob("*.py")
@@ -128,7 +120,6 @@ def test_no_global_numpy_rng_in_package():
     assert not offenders
 
 
-@pytest.mark.xfail(reason="P0-10: broken shebang and placeholder clone URL", strict=True)
 def test_entry_points_and_readme():
     assert (ROOT / "main.py").read_text().splitlines()[0] == "#!/usr/bin/env python3"
     assert "yourusername" not in (ROOT / "README.md").read_text()
