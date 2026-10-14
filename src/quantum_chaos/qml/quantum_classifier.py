@@ -65,7 +65,9 @@ class QuantumClassifier:
         return {
             "accuracy": accuracy_score(y_test, y_pred),
             "predictions": y_pred,
-            "classification_report": classification_report(y_test, y_pred, output_dict=True),
+            "classification_report": classification_report(
+                y_test, y_pred, output_dict=True, zero_division=0
+            ),
         }
 
 
