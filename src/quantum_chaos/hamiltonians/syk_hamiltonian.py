@@ -19,6 +19,7 @@ N mod 8 = 2, 6 (P exchanges the sectors, whose spectra are then identical).
 """
 
 from itertools import combinations
+from typing import Any
 
 import numpy as np
 from scipy.sparse import coo_matrix, csr_matrix
@@ -26,7 +27,13 @@ from scipy.sparse.linalg import eigsh
 
 from ..spectral.rmt import R_MEAN, ensemble_mean_r
 from ..spectral.statistics import bootstrap_mean, spacing_ratios
-from ..utils.helpers import RngLike, generate_random_coupling, hermitian_eigh, spectral_density
+from ..utils.helpers import (
+    RngLike,
+    generate_random_coupling,
+    hermitian_eigh,
+    hermitian_eigvalsh,
+    spectral_density,
+)
 from ..utils.jordan_wigner import JordanWignerMapper
 
 _CLASS_BY_N_MOD_8 = {0: "GOE", 2: "GUE", 4: "GSE", 6: "GUE"}
@@ -126,11 +133,11 @@ class SYKHamiltonian:
         self.symmetry_class = syk_symmetry_class(n_majorana)
 
         self._jw_mapper = JordanWignerMapper(self.n_qubits)
-        self._couplings = None
-        self._sparse_hamiltonian = None
-        self._hamiltonian_matrix = None
-        self._eigenvalues = None
-        self._eigenvectors = None
+        self._couplings: np.ndarray | None = None
+        self._sparse_hamiltonian: csr_matrix | None = None
+        self._hamiltonian_matrix: np.ndarray | None = None
+        self._eigenvalues: np.ndarray | None = None
+        self._eigenvectors: np.ndarray | None = None
         self._sector_levels: dict[str, np.ndarray] = {}
 
     @property
@@ -163,12 +170,14 @@ class SYKHamiltonian:
     def eigenvalues(self) -> np.ndarray:
         if self._eigenvalues is None:
             self._diagonalize()
+        assert self._eigenvalues is not None
         return self._eigenvalues
 
     @property
     def eigenvectors(self) -> np.ndarray:
         if self._eigenvectors is None:
             self._diagonalize()
+        assert self._eigenvectors is not None
         return self._eigenvectors
 
     def _build_hamiltonian(self) -> csr_matrix:
@@ -244,9 +253,7 @@ class SYKHamiltonian:
 
     def sector_eigenvalues(self, sector: str = "even") -> np.ndarray:
         if sector not in self._sector_levels:
-            self._sector_levels[sector] = hermitian_eigh(
-                self.parity_projection(sector), eigvals_only=True
-            )
+            self._sector_levels[sector] = hermitian_eigvalsh(self.parity_projection(sector))
         return self._sector_levels[sector]
 
     def particle_hole_unitary(self) -> np.ndarray:
@@ -343,7 +350,7 @@ def disorder_average_lsr(
             for seed in range(seed_start, seed_start + n_realizations)
         ]
     )
-    stats = bootstrap_mean(per_realization, rng=rng)
+    stats: dict[str, Any] = bootstrap_mean(per_realization, rng=rng)
     cls = syk_symmetry_class(n_majorana)
     stats.update(
         {
@@ -362,6 +369,8 @@ def syk_rmt_reference(
 ) -> dict:
     """Finite-size RMT <r> of the SYK class with the same number of levels and trimming."""
     cls = syk_symmetry_class(n_majorana)
-    res = ensemble_mean_r(cls, sector_level_count(n_majorana), n_samples, trim=trim, rng=rng)
+    res: dict[str, Any] = ensemble_mean_r(
+        cls, sector_level_count(n_majorana), n_samples, trim=trim, rng=rng
+    )
     res["symmetry_class"] = cls
     return res

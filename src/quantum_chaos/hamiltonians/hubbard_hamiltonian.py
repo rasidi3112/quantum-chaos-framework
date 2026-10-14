@@ -32,10 +32,10 @@ class DrivenHubbardHamiltonian:
         self.periodic_boundary = periodic_boundary
 
         self._jw_mapper = JordanWignerMapper(self.n_qubits)
-        self._hopping_matrix = None
-        self._interaction_matrix = None
-        self._static_eigenvalues = None
-        self._static_eigenvectors = None
+        self._hopping_matrix: np.ndarray | None = None
+        self._interaction_matrix: np.ndarray | None = None
+        self._static_eigenvalues: np.ndarray | None = None
+        self._static_eigenvectors: np.ndarray | None = None
 
     def hopping_strength(self, t: float) -> float:
         return self.hopping_amplitude * np.cos(self.driving_frequency * t)
@@ -108,21 +108,20 @@ class DrivenHubbardHamiltonian:
     def static_hamiltonian(self) -> np.ndarray:
         return self.hamiltonian(t=0)
 
-    def _diagonalize_static(self):
-        H_static = self.static_hamiltonian()
-        self._static_eigenvalues, self._static_eigenvectors = np.linalg.eigh(H_static)
+    def _diagonalize_static(self) -> tuple[np.ndarray, np.ndarray]:
+        if self._static_eigenvalues is None or self._static_eigenvectors is None:
+            self._static_eigenvalues, self._static_eigenvectors = np.linalg.eigh(
+                self.static_hamiltonian()
+            )
+        return self._static_eigenvalues, self._static_eigenvectors
 
     @property
     def static_eigenvalues(self) -> np.ndarray:
-        if self._static_eigenvalues is None:
-            self._diagonalize_static()
-        return self._static_eigenvalues
+        return self._diagonalize_static()[0]
 
     @property
     def static_eigenvectors(self) -> np.ndarray:
-        if self._static_eigenvectors is None:
-            self._diagonalize_static()
-        return self._static_eigenvectors
+        return self._diagonalize_static()[1]
 
     def floquet_operator(self, n_steps: int = 100) -> np.ndarray:
         """One-period propagator U(T, 0), T = 2*pi/omega.

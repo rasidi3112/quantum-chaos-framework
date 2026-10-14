@@ -59,6 +59,8 @@ class QuantumKernel:
         return self._device
 
     def feature_map_matrix(self, x: np.ndarray) -> np.ndarray:
+        if self.hamiltonian_constructor is None:
+            raise ValueError("no hamiltonian_constructor given")
         H = self.hamiltonian_constructor(np.asarray(x, dtype=float))
         return expm(-1j * H * self.evolution_time)
 
@@ -75,7 +77,7 @@ class QuantumKernel:
     def kernel_matrix(self, X1: np.ndarray, X2: np.ndarray | None = None) -> np.ndarray:
         symmetric = X2 is None
         states1 = [self.feature_state(x) for x in X1]
-        states2 = states1 if symmetric else [self.feature_state(x) for x in X2]
+        states2 = states1 if X2 is None else [self.feature_state(x) for x in X2]
         A = np.array(states1)
         B = np.array(states2)
         K = np.abs(A.conj() @ B.T) ** 2

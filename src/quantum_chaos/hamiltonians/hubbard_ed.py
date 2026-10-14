@@ -56,7 +56,7 @@ def _ladder(configs, mode: int, create: bool):
     Returns (new_configs, sign, valid) with the Jordan-Wigner sign
     (-1)^(number of occupied modes below ``mode``).
     """
-    bit = np.int64(1) << mode
+    bit = np.int64(1 << mode)
     occupied = (configs & bit) != 0
     valid = ~occupied if create else occupied
     sign = 1 - 2 * (_popcount(configs & (bit - 1)) % 2)
@@ -113,7 +113,7 @@ class HubbardRingED:
     def mode(self, site: int, spin: str) -> int:
         return (site % self.L) + (0 if spin == "up" else self.L)
 
-    def operator(self, terms: list[tuple[complex, Sequence[tuple[bool, int]]]]) -> csr_matrix:
+    def operator(self, terms: Sequence[tuple[complex, Sequence[tuple[bool, int]]]]) -> csr_matrix:
         """Sparse matrix in this (N_up, N_down) sector of sum_k coef_k * word_k.
 
         Every word must conserve N_up and N_down.
@@ -323,8 +323,8 @@ class HubbardRingED:
             eta = _casimir_to_spin(labels["eta2"], "eta") if "eta2" in labels else None
             R = _round_checked(labels["R"], (-1.0, 1.0), "R") if "R" in labels else None
             for k in range(len(energies)):
-                key = (m, S[k], None if eta is None else eta[k], None if R is None else R[k])
-                blocks.setdefault(key, []).append(energies[k])
+                block_key = (m, S[k], None if eta is None else eta[k], None if R is None else R[k])
+                blocks.setdefault(block_key, []).append(energies[k])
         return [
             {
                 "m": key[0],

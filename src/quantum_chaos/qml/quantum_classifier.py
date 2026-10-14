@@ -14,8 +14,8 @@ class QuantumClassifier:
         self.scale_data = scale_data
 
         self.scaler = StandardScaler() if scale_data else None
-        self.classifier = None
-        self.X_train = None
+        self.classifier: SVC | None = None
+        self.X_train: np.ndarray | None = None
         self.is_fitted = False
 
     def fit(self, X: np.ndarray, y: np.ndarray) -> "QuantumClassifier":
@@ -35,14 +35,15 @@ class QuantumClassifier:
             K_train += (-min_eig + 1e-8) * np.eye(len(K_train))
 
         # Train SVM with precomputed kernel
-        self.classifier = SVC(kernel="precomputed", C=self.C)
-        self.classifier.fit(K_train, y)
+        classifier = SVC(kernel="precomputed", C=self.C)
+        classifier.fit(K_train, y)
+        self.classifier = classifier
 
         self.is_fitted = True
         return self
 
     def predict(self, X: np.ndarray) -> np.ndarray:
-        if not self.is_fitted:
+        if not self.is_fitted or self.classifier is None or self.X_train is None:
             raise RuntimeError("Classifier must be fitted before prediction")
 
         # Preprocess
@@ -73,31 +74,38 @@ class QuantumKernelClassificationBenchmark:
         self.n_qubits = n_qubits
         self.evolution_time = evolution_time
 
-        # Initialize kernels
-        self.syk_kernel = None
-        self.hubbard_kernel = None
-        self.syk_classifier = None
-        self.hubbard_classifier = None
+        # Initialised lazily by setup_classifiers()
+        self.syk_kernel: SYKKernel | None = None
+        self.hubbard_kernel: HubbardKernel | None = None
+        self.syk_classifier: QuantumClassifier | None = None
+        self.hubbard_classifier: QuantumClassifier | None = None
 
-    def setup_classifiers(self):
-        # SYK kernel (chaotic)
-        self.syk_kernel = SYKKernel(
-            n_qubits=self.n_qubits,
-            coupling_strength=1.0,
-            evolution_time=self.evolution_time,
-            seed=42,
-        )
-        self.syk_classifier = QuantumClassifier(self.syk_kernel)
-
-        # Hubbard kernel (regular) - use n_qubits/2 sites for matching dimension
-        n_sites = max(2, self.n_qubits // 2)
-        self.hubbard_kernel = HubbardKernel(
-            n_sites=n_sites,
-            hopping_amplitude=1.0,
-            onsite_interaction=1.0,
-            evolution_time=self.evolution_time,
-        )
-        self.hubbard_classifier = QuantumClassifier(self.hubbard_kernel)
+    def setup_classifiers(
+        self,
+    ) -> tuple[SYKKernel, QuantumClassifier, HubbardKernel, QuantumClassifier]:
+        """Create (once) the SYK and Hubbard kernels and their SVM classifiers."""
+        if (
+            self.syk_kernel is None
+            or self.syk_classifier is None
+            or self.hubbard_kernel is None
+            or self.hubbard_classifier is None
+        ):
+            self.syk_kernel = SYKKernel(
+                n_qubits=self.n_qubits,
+                coupling_strength=1.0,
+                evolution_time=self.evolution_time,
+                seed=42,
+            )
+            self.syk_classifier = QuantumClassifier(self.syk_kernel)
+            # n_qubits/2 sites so that both feature maps act on n_qubits qubits
+            self.hubbard_kernel = HubbardKernel(
+                n_sites=max(2, self.n_qubits // 2),
+                hopping_amplitude=1.0,
+                onsite_interaction=1.0,
+                evolution_time=self.evolution_time,
+            )
+            self.hubbard_classifier = QuantumClassifier(self.hubbard_kernel)
+        return self.syk_kernel, self.syk_classifier, self.hubbard_kernel, self.hubbard_classifier
 
     def generate_classification_data(
         self,
@@ -112,8 +120,8 @@ class QuantumKernelClassificationBenchmark:
 
         samples_per_class = n_samples // n_classes
 
-        X = []
-        y = []
+        X_parts = []
+        y_parts: list[int] = []
 
         for c in range(n_classes):
             # Class center
@@ -122,11 +130,11 @@ class QuantumKernelClassificationBenchmark:
             # Generate samples around center
             class_samples = center + noise * rng.standard_normal((samples_per_class, n_features))
 
-            X.append(class_samples)
-            y.extend([c] * samples_per_class)
+            X_parts.append(class_samples)
+            y_parts.extend([c] * samples_per_class)
 
-        X = np.vstack(X)
-        y = np.array(y)
+        X = np.vstack(X_parts)
+        y = np.array(y_parts)
 
         # Split
         return train_test_split(X, y, test_size=0.3, random_state=random_state)
@@ -134,55 +142,34 @@ class QuantumKernelClassificationBenchmark:
     def run_benchmark(
         self, X_train: np.ndarray, y_train: np.ndarray, X_test: np.ndarray, y_test: np.ndarray
     ) -> dict:
-        if self.syk_classifier is None:
-            self.setup_classifiers()
+        """Train and test both kernel SVMs on one split (descriptive; no significance test)."""
+        syk_kernel, syk_classifier, hubbard_kernel, hubbard_classifier = self.setup_classifiers()
 
-        results = {}
-
-        # Train and evaluate SYK classifier
-        print("Training SYK-based classifier...")
-        self.syk_classifier.fit(X_train, y_train)
-        syk_eval = self.syk_classifier.evaluate(X_test, y_test)
-        results["syk"] = {
-            "accuracy": syk_eval["accuracy"],
-            "classification_report": syk_eval["classification_report"],
+        syk_eval = syk_classifier.fit(X_train, y_train).evaluate(X_test, y_test)
+        hubbard_eval = hubbard_classifier.fit(X_train, y_train).evaluate(X_test, y_test)
+        n_stats = min(50, len(X_train))
+        return {
+            "syk": {
+                "accuracy": syk_eval["accuracy"],
+                "classification_report": syk_eval["classification_report"],
+            },
+            "hubbard": {
+                "accuracy": hubbard_eval["accuracy"],
+                "classification_report": hubbard_eval["classification_report"],
+            },
+            "expressivity": {
+                "syk": syk_kernel.expressivity_metric(n_samples=n_stats, rng=0),
+                "hubbard": hubbard_kernel.expressivity_metric(n_samples=n_stats, rng=0),
+            },
+            # Single-split difference; not a significance statement (see PLAN 3E)
+            "accuracy_difference": syk_eval["accuracy"] - hubbard_eval["accuracy"],
         }
-
-        # Train and evaluate Hubbard classifier
-        print("Training Hubbard-based classifier...")
-        self.hubbard_classifier.fit(X_train, y_train)
-        hubbard_eval = self.hubbard_classifier.evaluate(X_test, y_test)
-        results["hubbard"] = {
-            "accuracy": hubbard_eval["accuracy"],
-            "classification_report": hubbard_eval["classification_report"],
-        }
-
-        # Compute kernel expressivity metrics
-        print("Computing expressivity metrics...")
-        syk_expressivity = self.syk_kernel.expressivity_metric(
-            n_samples=min(50, len(X_train)), rng=0
-        )
-        hubbard_expressivity = self.hubbard_kernel.expressivity_metric(
-            n_samples=min(50, len(X_train)), rng=0
-        )
-
-        results["expressivity"] = {"syk": syk_expressivity, "hubbard": hubbard_expressivity}
-
-        # Single-split difference; not a significance statement (see PLAN 3E)
-        results["accuracy_difference"] = syk_eval["accuracy"] - hubbard_eval["accuracy"]
-
-        return results
 
     def run_full_comparison(self, n_trials: int = 5, n_samples: int = 100) -> dict:
-        if self.syk_classifier is None:
-            self.setup_classifiers()
-
         syk_accuracies = []
         hubbard_accuracies = []
 
         for trial in range(n_trials):
-            print(f"Trial {trial + 1}/{n_trials}")
-
             # Generate new data for each trial
             X_train, X_test, y_train, y_test = self.generate_classification_data(
                 n_samples=n_samples, n_features=min(4, self.n_qubits), random_state=trial

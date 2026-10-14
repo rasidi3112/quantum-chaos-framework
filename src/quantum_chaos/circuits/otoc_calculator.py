@@ -6,22 +6,25 @@ class OTOCCalculator:
     def __init__(self, n_qubits: int, hamiltonian: np.ndarray | None = None):
         self.n_qubits = n_qubits
         self.hamiltonian = hamiltonian
-        self._eigenvalues = None
-        self._eigenvectors = None
+        self._eigenvalues: np.ndarray | None = None
+        self._eigenvectors: np.ndarray | None = None
 
     def set_hamiltonian(self, H: np.ndarray):
         self.hamiltonian = H
         self._eigenvalues = None
         self._eigenvectors = None
 
-    def _diagonalize(self):
-        if self._eigenvalues is None:
+    def _diagonalize(self) -> tuple[np.ndarray, np.ndarray]:
+        if self.hamiltonian is None:
+            raise ValueError("Hamiltonian not set")
+        if self._eigenvalues is None or self._eigenvectors is None:
             self._eigenvalues, self._eigenvectors = np.linalg.eigh(self.hamiltonian)
+        return self._eigenvalues, self._eigenvectors
 
     def _time_evolution_operator(self, t: float) -> np.ndarray:
-        self._diagonalize()
-        phases = np.exp(-1j * self._eigenvalues * t)
-        return self._eigenvectors @ np.diag(phases) @ self._eigenvectors.conj().T
+        evals, evecs = self._diagonalize()
+        phases = np.exp(-1j * evals * t)
+        return (evecs * phases) @ evecs.conj().T
 
     def _heisenberg_evolution(self, op: np.ndarray, t: float) -> np.ndarray:
         U = self._time_evolution_operator(t)
@@ -45,11 +48,10 @@ class OTOCCalculator:
         if state is not None:
             rho = np.outer(state, state.conj())
         elif temperature is not None:
-            self._diagonalize()
+            evals, evecs = self._diagonalize()
             beta = 1.0 / temperature
-            boltzmann = np.exp(-beta * (self._eigenvalues - np.min(self._eigenvalues)))
-            Z = np.sum(boltzmann)
-            rho = self._eigenvectors @ np.diag(boltzmann / Z) @ self._eigenvectors.conj().T
+            boltzmann = np.exp(-beta * (evals - np.min(evals)))
+            rho = (evecs * (boltzmann / np.sum(boltzmann))) @ evecs.conj().T
         else:
             # Infinite temperature (identity)
             rho = np.eye(dim) / dim
@@ -71,13 +73,13 @@ class OTOCCalculator:
     def compute_regularized_otoc(
         self, W: np.ndarray, V: np.ndarray, times: np.ndarray, temperature: float
     ) -> np.ndarray:
-        self._diagonalize()
+        evals, evecs = self._diagonalize()
         beta = 1.0 / temperature
 
         # y = rho^(1/4) with rho = exp(-beta H)/Z; energies shifted by E_0 (no overflow)
-        shifted = self._eigenvalues - np.min(self._eigenvalues)
+        shifted = evals - np.min(evals)
         boltzmann_quarter = np.exp(-beta * shifted / 4)
-        rho_quarter = self._eigenvectors @ np.diag(boltzmann_quarter) @ self._eigenvectors.conj().T
+        rho_quarter = (evecs * boltzmann_quarter) @ evecs.conj().T
 
         Z = np.sum(np.exp(-beta * shifted))
         rho_quarter /= Z**0.25

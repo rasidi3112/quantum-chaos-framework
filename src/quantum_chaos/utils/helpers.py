@@ -11,8 +11,8 @@ def as_rng(seed: RngLike = None) -> np.random.Generator:
     return np.random.default_rng(seed)
 
 
-def hermitian_eigh(matrix: np.ndarray, eigvals_only: bool = False):
-    """Eigen-decomposition of a dense Hermitian matrix with LAPACK ``*heevr``.
+def hermitian_eigh(matrix: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
+    """Eigenvalues and eigenvectors of a dense Hermitian matrix (LAPACK ``*heevr``).
 
     The divide-and-conquer driver (``*heevd``, used by ``numpy.linalg.eigh``)
     of Apple Accelerate fails for complex matrices of size n >~ 3000
@@ -21,8 +21,18 @@ def hermitian_eigh(matrix: np.ndarray, eigvals_only: bool = False):
     """
     from scipy.linalg import eigh
 
-    matrix = np.asarray(matrix)
-    return eigh((matrix + matrix.conj().T) / 2, eigvals_only=eigvals_only, driver="evr")
+    m = np.asarray(matrix)
+    evals, evecs = eigh((m + m.conj().T) / 2, driver="evr")
+    return evals, evecs
+
+
+def hermitian_eigvalsh(matrix: np.ndarray) -> np.ndarray:
+    """Eigenvalues of a dense Hermitian matrix (see :func:`hermitian_eigh`)."""
+    from scipy.linalg import eigh
+
+    m = np.asarray(matrix)
+    evals: np.ndarray = eigh((m + m.conj().T) / 2, eigvals_only=True, driver="evr")
+    return evals
 
 
 def generate_random_coupling(
@@ -53,10 +63,10 @@ def _signed_permutations(indices: tuple[int, ...]) -> list[tuple[tuple[int, ...]
     from itertools import permutations
 
     result = []
-    indices = list(indices)
+    index_list = list(indices)
 
     for perm in permutations(range(4)):
-        permuted = tuple(indices[p] for p in perm)
+        permuted = tuple(index_list[p] for p in perm)
         sign = 1
         for i in range(4):
             for j in range(i + 1, 4):
@@ -161,7 +171,11 @@ def entanglement_entropy(
 def spectral_density(
     eigenvalues: np.ndarray, bins: int = 50, normalize: bool = True
 ) -> tuple[np.ndarray, np.ndarray]:
-    density, bin_edges = np.histogram(eigenvalues, bins=bins, density=normalize)
+    values = np.asarray(eigenvalues, dtype=float)
+    if normalize:
+        density, bin_edges = np.histogram(values, bins=int(bins), density=True)
+    else:
+        density, bin_edges = np.histogram(values, bins=int(bins), density=False)
     bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
     return bin_centers, density
 

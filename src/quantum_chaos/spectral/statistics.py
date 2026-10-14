@@ -9,6 +9,7 @@ never discarded silently.
 """
 
 import warnings
+from typing import Any
 
 import numpy as np
 
@@ -94,8 +95,8 @@ def bootstrap_mean(
     samples: np.ndarray,
     n_boot: int = 2000,
     confidence: float = 0.95,
-    rng: np.random.Generator | None = None,
-) -> dict:
+    rng: int | np.random.Generator | None = None,
+) -> dict[str, Any]:
     """Mean, standard error and percentile-bootstrap confidence interval of samples."""
     x = np.asarray(samples, dtype=float)
     rng = np.random.default_rng(rng)

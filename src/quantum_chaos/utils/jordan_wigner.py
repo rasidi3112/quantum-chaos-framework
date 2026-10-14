@@ -88,21 +88,23 @@ def jordan_wigner_transform(
     operator_type: str, indices: int | tuple[int, ...], n_qubits: int
 ) -> np.ndarray:
     mapper = JordanWignerMapper(n_qubits)
+    single = {
+        "creation": mapper.creation_operator,
+        "annihilation": mapper.annihilation_operator,
+        "majorana": mapper.majorana_operator,
+        "number": mapper.number_operator,
+    }
+    pair = {"hopping": mapper.hopping_operator, "interaction": mapper.interaction_operator}
 
-    if operator_type == "creation":
-        return mapper.creation_operator(indices)
-    elif operator_type == "annihilation":
-        return mapper.annihilation_operator(indices)
-    elif operator_type == "majorana":
-        return mapper.majorana_operator(indices)
-    elif operator_type == "number":
-        return mapper.number_operator(indices)
-    elif operator_type == "hopping":
-        return mapper.hopping_operator(indices[0], indices[1])
-    elif operator_type == "interaction":
-        return mapper.interaction_operator(indices[0], indices[1])
-    else:
-        raise ValueError(f"Unknown operator type: {operator_type}")
+    if operator_type in single:
+        if not isinstance(indices, int):
+            raise TypeError(f"{operator_type!r} takes a single mode index")
+        return single[operator_type](indices)
+    if operator_type in pair:
+        if isinstance(indices, int) or len(indices) != 2:
+            raise TypeError(f"{operator_type!r} takes a pair of mode indices")
+        return pair[operator_type](indices[0], indices[1])
+    raise ValueError(f"Unknown operator type: {operator_type}")
 
 
 def get_pauli_string_representation(
