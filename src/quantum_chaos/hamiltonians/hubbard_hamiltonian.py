@@ -120,27 +120,30 @@ class DrivenHubbardHamiltonian:
         return self._static_eigenvectors
     
     def floquet_operator(self, n_steps: int = 100) -> np.ndarray:
+        """One-period propagator U(T, 0), T = 2*pi/omega.
+
+        Product of midpoint exponentials (second-order accurate in T/n_steps).
+        """
         from scipy.linalg import expm
         T = 2 * np.pi / self.driving_frequency
         dt = T / n_steps
         dim = 2 ** self.n_qubits
         F = np.eye(dim, dtype=complex)
         for step in range(n_steps):
-            t = step * dt
-            H_t = self.hamiltonian(t)
-            F = expm(-1j * H_t * dt) @ F
+            t_mid = (step + 0.5) * dt
+            F = expm(-1j * self.hamiltonian(t_mid) * dt) @ F
         return F
-    
+
     def quasi_energies(self, n_steps: int = 100) -> np.ndarray:
+        """Sorted quasi-energies in the zone [-omega/2, omega/2).
+
+        With F = exp(-i H_F T), the eigenvalues are exp(-i eps T), hence
+        eps = -angle(lambda) / T.
+        """
         F = self.floquet_operator(n_steps)
-        eigenvalues = np.linalg.eigvals(F)
         T = 2 * np.pi / self.driving_frequency
-        quasi_E = -1j * np.log(eigenvalues) / T
-        omega = self.driving_frequency
-        quasi_E = np.real(quasi_E)
-        quasi_E = ((quasi_E + omega/2) % omega) - omega/2
-        return np.sort(quasi_E)
-    
+        return np.sort(-np.angle(np.linalg.eigvals(F)) / T)
+
     def time_evolution_operator(self, t: float, n_steps: int = 50) -> np.ndarray:
         from scipy.linalg import expm
         dt = t / n_steps

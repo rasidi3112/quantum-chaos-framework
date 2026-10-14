@@ -11,7 +11,6 @@ def fold(energies, omega):
     return ((np.asarray(energies) + omega / 2) % omega) - omega / 2
 
 
-@pytest.mark.xfail(reason="P0-4: quasi-energy sign is inverted", strict=True)
 @pytest.mark.parametrize("U, omega", [(1.3, 10.0), (7.0, 10.0)])
 def test_static_hamiltonian_quasi_energies_are_folded_eigenvalues(U, omega):
     # J0 = 0 -> H(t) = H_int is time independent, so eps = E folded into [-w/2, w/2)
@@ -34,7 +33,6 @@ def test_floquet_operator_is_unitary():
     np.testing.assert_allclose(F.conj().T @ F, np.eye(F.shape[0]), atol=1e-12)
 
 
-@pytest.mark.xfail(reason="P0-4: left-point product is only first-order accurate", strict=True)
 def test_floquet_operator_converges_at_second_order():
     model = DrivenHubbardHamiltonian(n_sites=2, hopping_amplitude=1.0,
                                      driving_frequency=2.0, onsite_interaction=1.0)
