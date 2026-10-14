@@ -110,3 +110,12 @@ def test_integrable_versus_nonintegrable_level_statistics():
     assert abs(integrable["mean"] - 0.3863) < 4 * integrable["stderr"]
     assert chaotic["mean"] - integrable["mean"] > 10 * np.hypot(chaotic["stderr"],
                                                                integrable["stderr"])
+
+
+@pytest.mark.xfail(reason="P1-4: full-Fock-space <r> mixes all symmetry sectors (0.78 at L=2)",
+                   strict=True)
+def test_unresolved_fock_space_level_statistics_removed():
+    from quantum_chaos.hamiltonians.hubbard_hamiltonian import DrivenHubbardHamiltonian
+
+    assert not hasattr(DrivenHubbardHamiltonian, "get_level_spacing_ratio")
+    assert "level_spacing_ratio" not in DrivenHubbardHamiltonian(n_sites=2).summary()
