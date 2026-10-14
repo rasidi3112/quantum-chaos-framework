@@ -1,0 +1,11 @@
+name: sff
+kind: sff
+output: figures/sff.png
+sff:
+  realisations: {16: 60, 18: 40, 20: 30}
+  beta: 0.0
+  t_min: 0.1
+  t_max: 3000.0
+  n_times: 120
+  n_taus: 60
+  tau_max: 1.6

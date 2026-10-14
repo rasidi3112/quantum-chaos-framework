@@ -1,0 +1,13 @@
+name: chaos_dynamics
+kind: chaos_dynamics
+output: figures/chaos_dynamics.png
+dynamics:
+  n_majorana: 14
+  realisations: 6
+  betas: [0.0, 10.0]
+  t_max: 12.0
+  n_times: 121
+  lanczos_steps: 40
+  page_n_majorana: 20
+  lanczos_n_majorana: 10
+  eth_sizes: [12, 14, 16, 18]

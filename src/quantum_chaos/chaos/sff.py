@@ -39,6 +39,7 @@ def unfold(levels: np.ndarray, degree: int = 9) -> np.ndarray:
     e = np.sort(np.asarray(levels, dtype=float))
     counting = np.arange(1, e.size + 1, dtype=float)
     x = (e - e.mean()) / e.std()
+    degree = int(min(degree, max(1, e.size // 4)))
     coeffs = np.polynomial.polynomial.polyfit(x, counting, degree)
     return np.polynomial.polynomial.polyval(x, coeffs)
 

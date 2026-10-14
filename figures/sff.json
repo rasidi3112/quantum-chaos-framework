@@ -1,0 +1,66 @@
+{
+  "config": {
+    "name": "sff",
+    "kind": "sff",
+    "output": "figures/sff.png",
+    "syk": null,
+    "hubbard": null,
+    "otoc": null,
+    "sff": {
+      "realisations": {
+        "16": 60,
+        "18": 40,
+        "20": 30
+      },
+      "beta": 0.0,
+      "t_min": 0.1,
+      "t_max": 3000.0,
+      "n_times": 120,
+      "n_taus": 60,
+      "tau_max": 1.6
+    },
+    "dynamics": null,
+    "bins": 25,
+    "extra": {}
+  },
+  "provenance": {
+    "git_commit": "184af90",
+    "src_tree": "b71d05a",
+    "dirty": true,
+    "package_version": "0.2.0",
+    "python": "3.13.5",
+    "numpy": "2.5.4",
+    "scipy": "1.18.1",
+    "pennylane": "0.45.1",
+    "platform": "macOS-27.0-arm64-arm-64bit-Mach-O"
+  },
+  "data": {
+    "16": {
+      "class": "GOE",
+      "realisations": 60,
+      "plateau_times_L": 1.0,
+      "late_time_g_times_L": 0.9426107591832702,
+      "dip_time": 4.147470546392851,
+      "dip_value_times_L": 0.06796703094533467,
+      "thouless_tau": 0.7466666666666667
+    },
+    "18": {
+      "class": "GUE",
+      "realisations": 40,
+      "plateau_times_L": 2.0,
+      "late_time_g_times_L": 1.888377491728867,
+      "dip_time": 3.803298768901565,
+      "dip_value_times_L": 0.06992218368088755,
+      "thouless_tau": 0.5066666666666667
+    },
+    "20": {
+      "class": "GSE",
+      "realisations": 30,
+      "plateau_times_L": 2.0,
+      "late_time_g_times_L": 2.0555960698639,
+      "dip_time": 4.932067888483716,
+      "dip_value_times_L": 0.03369673559225524,
+      "thouless_tau": NaN
+    }
+  }
+}

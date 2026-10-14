@@ -35,6 +35,18 @@ TINY = {
     "syk": {"realisations": {10: 3, 12: 3}, "rmt_samples": 5},
     "hubbard": {"n_sites": 5, "n_up": 2, "n_down": 2, "U": 3.0, "tp_values": [0.0, 0.4]},
     "otoc": {"syk_n": 8, "hubbard_sites": 3, "n_times": 5, "t_max": 1.0},
+    "sff": {"realisations": {8: 3, 10: 3}, "n_times": 10, "n_taus": 8},
+    "dynamics": {
+        "n_majorana": 8,
+        "realisations": 2,
+        "betas": [0.0, 2.0],
+        "t_max": 2.0,
+        "n_times": 11,
+        "lanczos_steps": 8,
+        "lanczos_n_majorana": 8,
+        "page_n_majorana": 8,
+        "eth_sizes": [8, 10],
+    },
 }
 
 

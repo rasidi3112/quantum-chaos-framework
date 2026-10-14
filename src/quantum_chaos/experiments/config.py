@@ -38,6 +38,30 @@ class OTOCConfig:
 
 
 @dataclass(frozen=True)
+class SFFConfig:
+    realisations: dict[int, int]
+    beta: float = 0.0
+    t_min: float = 0.1
+    t_max: float = 3000.0
+    n_times: int = 120
+    n_taus: int = 60
+    tau_max: float = 1.6
+
+
+@dataclass(frozen=True)
+class DynamicsConfig:
+    n_majorana: int = 14
+    realisations: int = 6
+    betas: tuple[float, ...] = (0.0, 10.0)
+    t_max: float = 12.0
+    n_times: int = 121
+    lanczos_steps: int = 40
+    lanczos_n_majorana: int = 10
+    page_n_majorana: int = 20
+    eth_sizes: tuple[int, ...] = (12, 14, 16, 18)
+
+
+@dataclass(frozen=True)
 class FigureConfig:
     name: str
     kind: str
@@ -45,11 +69,19 @@ class FigureConfig:
     syk: SYKStatsConfig | None = None
     hubbard: HubbardStatsConfig | None = None
     otoc: OTOCConfig | None = None
+    sff: SFFConfig | None = None
+    dynamics: DynamicsConfig | None = None
     bins: int = 25
     extra: dict[str, Any] = field(default_factory=dict)
 
 
-_SECTIONS = {"syk": SYKStatsConfig, "hubbard": HubbardStatsConfig, "otoc": OTOCConfig}
+_SECTIONS = {
+    "syk": SYKStatsConfig,
+    "hubbard": HubbardStatsConfig,
+    "otoc": OTOCConfig,
+    "sff": SFFConfig,
+    "dynamics": DynamicsConfig,
+}
 
 
 def _build(cls: type, data: dict[str, Any], where: str) -> Any:
@@ -65,12 +97,16 @@ def figure_config_from_dict(data: dict[str, Any], where: str = "config") -> Figu
     for key, cls in _SECTIONS.items():
         if key in data and data[key] is not None:
             section = dict(data[key])
-            if key == "syk":
+            if key in ("syk", "sff"):
                 section["realisations"] = {
                     int(n): int(r) for n, r in section["realisations"].items()
                 }
             if key == "hubbard" and "tp_values" in section:
                 section["tp_values"] = tuple(float(x) for x in section["tp_values"])
+            if key == "dynamics" and "betas" in section:
+                section["betas"] = tuple(float(x) for x in section["betas"])
+            if key == "dynamics" and "eth_sizes" in section:
+                section["eth_sizes"] = tuple(int(x) for x in section["eth_sizes"])
             data[key] = _build(cls, section, f"{where}.{key}")
     return _build(FigureConfig, data, where)
 

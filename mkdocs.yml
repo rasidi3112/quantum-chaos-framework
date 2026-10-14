@@ -19,6 +19,7 @@ nav:
   - API reference:
       - Hamiltonians: api/hamiltonians.md
       - Spectral statistics: api/spectral.md
+      - Chaos diagnostics: api/chaos.md
       - Circuits and OTOCs: api/circuits.md
       - Noise: api/noise.md
       - Quantum kernels: api/qml.md

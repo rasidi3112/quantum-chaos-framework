@@ -105,7 +105,81 @@ Interpretation:
 - The original code reported ⟨r⟩ = 0.7808 for L = 2 with all sectors pooled;
   that number has no meaning and the method was removed.
 
-## 3. Literature values used
+## 3. Chaos diagnostics (phase 3B)
+
+Figures `figures/sff.png` and `figures/chaos_dynamics.png` (numbers in the JSON
+sidecars). Majorana operators with χ² = 1 unless stated; OTOCs use χ² = ½.
+
+### 3.1 Spectral moments and ground-state energy
+
+| Check | Result | Status |
+|---|---|---|
+| Disorder-averaged kurtosis M4/M2² − 3 from Wick contractions vs García-García & Verbaarschot, PRD 94, 126010 (2016), Eq. (8) | identical formula (tested N = 6…34); disorder averages agree (N = 8: −0.922 vs −0.914; N = 12: −1.029 vs −1.034; N = 16: −1.019 vs −1.020) | verified |
+| Second moment M2 = C(N,4)·6J²/N³·(χ²)⁴ | per-realisation identity Tr H²/D = Σ J² and disorder average | verified |
+| Ground-state energy vs the same paper's fit E0 = −0.055 − 0.029 N (Eq. 14, quoted verbatim) | our ensemble ⟨E_min⟩ (χ² = ½): −0.568(3), −0.783(3), −0.963(3), −1.149(3) at N = 12, 16, 20, 24, i.e. −2.14 σ at N = 24 with σ from the exact M2; the fit corresponds to −1.4 σ | **not reconciled — PERLU VERIFIKASI** (convention difference not identifiable from the text) |
+
+### 3.2 Spectral form factor (β = 0)
+
+| N (class) | realisations | plateau × L (exact degeneracies) | late-time g × L | dip time | Thouless τ (10 % or 2σ of RMT) |
+|---|---|---|---|---|---|
+| 16 (GOE) | 60 | 1.000 | 0.94 | 4.1 | 0.75 |
+| 18 (GUE) | 40 | 2.000 | 1.89 | 3.8 | 0.51 |
+| 20 (GSE) | 30 | 2.000 | 2.06 | 4.9 | not resolved |
+
+The plateau heights 1/L (N mod 8 = 0) and 2/L (otherwise) are those stated by
+Cotler et al. (JHEP 05 (2017) 118, sec. 3.1). The analytic GOE/GUE/GSE form
+factors used for the ramp were checked against sampled random matrices. With
+≤ 60 realisations the unfolded ramp agrees with RMT within errors, but the
+Thouless time is not determined reliably at these sizes.
+
+### 3.3 OTOCs and Lyapunov exponent (N = 14, 6 realisations, χ² = ½)
+
+| model | β | late-time F/F(0) | fitted early-time rate | 2πT |
+|---|---|---|---|---|
+| SYK4 | 0 | 0.009 | 1.96 ± 0.21 (stat) ± 0.75 (window) | ∞ |
+| SYK4 | 10 | 0.076 | 1.52 ± 0.14 ± 0.56 | 0.63 |
+| SYK2 (free) | 0 | 0.90 | −0.01 ± 0.09 ± 0.41 | ∞ |
+| SYK2 (free) | 10 | 1.29 | 1.73 ± 0.27 ± 1.41 | 0.63 |
+
+- The late-time OTOC cleanly separates interacting SYK (decays to ≈ 0) from
+  the free SYK2 control.
+- **Negative result:** no Lyapunov exponent can be extracted at these sizes.
+  The early-time rate exceeds 2πT at low temperature, depends strongly on the
+  fit window, and the free model gives rates of the same size at β = 10. The
+  chaos bound λ ≤ 2πT is therefore **not tested** here; this needs much larger
+  N (planned with the sparse methods of phase 3A).
+
+### 3.4 Krylov complexity and operator size
+
+- b₁² = 4 Σ_{α∋0} J_α² holds exactly per realisation; the Krylov amplitude
+  φ₀(t) equals the exact autocorrelation function.
+- SYK4 (N = 10–14): b_n rises over the first ~3 steps and then saturates
+  (≈ 2.7 at N = 14); the linear-growth regime of Parker et al. is too short to
+  be resolved at these sizes.
+- Free SYK2: the Krylov space of χ₀ ends after N − 1 steps (N = 10: b₁₀ ≈ 2·10⁻⁸).
+  **Numerical limitation:** the residual b_N grows with N (1·10⁻⁵ at N = 12,
+  4·10⁻³ at N = 14) and termination is not detected at N = 16 in double
+  precision (Lanczos error amplification); the figure therefore uses N = 10.
+- Mean Majorana size of χ₀(t): stays exactly 1 for SYK2 and saturates at N/2
+  for SYK4.
+
+### 3.5 ETH and eigenstate entanglement (even parity sector)
+
+| N | class | sector dim | diagonal fluctuation of χ₀χ₁χ₂χ₃ | ⟨\|O\|⁴⟩/⟨\|O\|²⟩² off-diagonal |
+|---|---|---|---|---|
+| 12 | GSE | 32 | 0.164 | 2.22 |
+| 14 | GUE | 64 | 0.114 | 1.96 (Gaussian complex: 2) |
+| 16 | GOE | 128 | 0.103 | 2.90 (Gaussian real: 3) |
+| 18 | GUE | 256 | 0.061 | 1.98 |
+
+- Diagonal fluctuations scale as D^−0.485 (N = 10–20; ETH: D^−1/2).
+- The particle-hole-odd operator −iχ₀χ₁ has an exactly vanishing diagonal for
+  N mod 8 = 0 — a symmetry effect, not ETH.
+- N = 20 mid-spectrum eigenstates follow the Page curve within 0.002 for
+  l = 1…5 qubits (Page formula checked against Haar-random states); at N = 16
+  the half-system value is 2.22 vs Page 2.27.
+
+## 4. Literature values used
 
 | Quantity | Value | Source | Status |
 |---|---|---|---|
@@ -115,17 +189,18 @@ Interpretation:
 | SYK class per parity sector | N mod 8 = 0: GOE, 2/6: GUE, 4: GSE | Cotler et al., JHEP 05 (2017) 118, §3.1 | verified |
 | SYK conventions | {ψ_a,ψ_b}=δ_ab, ⟨J²⟩=3!J²/N³ | Cotler et al. §2; Maldacena & Stanford, PRD 94, 106002 (2016) | verified (code: χ²=1 → H_code = 4 H_MS) |
 
-## 4. Not yet verified / open
+## 5. Not yet verified / open
 
 - **Hubbard t' ≠ 0:** consistent with GOE only for L = 10 at N = 4+4 and 5+5;
   smaller or more dilute sectors are still below GOE. Only t' = 0.5 and U = 4
   were studied; the dependence on t' and U (crossover scale) is not.
 - **Residual exact degeneracies of the integrable chain** (0.2–1.7 % of the
   spacings after resolving K, reflection, S and η) are not explained.
-- SYK ground-state energy and density of states vs García-García & Verbaarschot,
-  PRD 94, 126010 (2016): not done (phase 3B).
-- Spectral form factor, OTOC Lyapunov exponents, Krylov complexity, ETH, Page
-  curve: not implemented (phase 3B).
+- SYK ground-state energy vs García-García & Verbaarschot's fit: discrepancy
+  of ~1.5× not reconciled (section 3.1).
+- Lyapunov exponent and the chaos bound: not testable at N ≤ 16 (section 3.3).
+- Thouless time and linear growth of Lanczos coefficients: not resolved at
+  accessible sizes.
 - Higher-order Floquet expansions, heating: not implemented (phase 3C).
 - Trotter commutator bounds, sparse SYK, teleportation protocol, ZNE: not
   implemented (phase 3D).
