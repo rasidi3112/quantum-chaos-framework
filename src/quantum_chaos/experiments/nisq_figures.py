@@ -20,6 +20,7 @@ from ..spectral import R_MEAN, spacing_ratios
 from ..utils.helpers import hermitian_eigvalsh
 from ..utils.jordan_wigner import pauli_operators
 from .config import FigureConfig
+from .style import CLASS_COLORS, GOE, GUE, HUBBARD, POISSON, SYK, suptitle  # noqa: F401
 
 
 def _pauli_matrix(label: str) -> np.ndarray:
@@ -34,6 +35,7 @@ def nisq_figure(cfg: FigureConfig) -> tuple[Figure, dict[str, Any]]:
     assert cfg.nisq is not None
     c = cfg.nisq
     fig, axes = plt.subplots(2, 2, figsize=(12, 9))
+    suptitle(fig, "Quantum Circuits for SYK: Trotter Error, Cost and Noise")
     data: dict[str, Any] = {}
 
     terms = syk_pauli_terms(c.bound_n_majorana, syk_couplings(c.bound_n_majorana, 1))
@@ -116,7 +118,7 @@ def nisq_figure(cfg: FigureConfig) -> tuple[Figure, dict[str, Any]]:
         "SYK4": syk_pauli_terms(N, syk_couplings(N, 1)),
         "SYK2": matrix_to_pauli_terms(syk2_hamiltonian(N, seed=1).toarray(), n),
     }
-    for (name, terms_m), color in zip(models.items(), ("#d95f02", "#7570b3"), strict=True):
+    for (name, terms_m), color in zip(models.items(), (SYK, HUBBARD), strict=True):
         H = np.sum([coef * _pauli_matrix(s) for coef, s in terms_m], axis=0)
         calc = OTOCCalculator(n, H)
         exact = np.real(

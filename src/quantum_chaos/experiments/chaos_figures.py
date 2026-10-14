@@ -26,8 +26,7 @@ from ..chaos.sff import (
 from ..hamiltonians.syk_hamiltonian import SYKHamiltonian, syk2_hamiltonian
 from ..utils.helpers import hermitian_eigh
 from .config import FigureConfig
-
-CLASS_COLORS = {"GOE": "#1b9e77", "GUE": "#7570b3", "GSE": "#d95f02"}
+from .style import CLASS_COLORS, GOE, GUE, HUBBARD, POISSON, SYK, suptitle  # noqa: F401
 
 
 def _sector_spectra(syk: SYKHamiltonian) -> list[np.ndarray]:
@@ -42,6 +41,7 @@ def sff_figure(cfg: FigureConfig) -> tuple[Figure, dict[str, Any]]:
     times = np.logspace(np.log10(c.t_min), np.log10(c.t_max), c.n_times)
     taus = np.linspace(c.tau_max / c.n_taus, c.tau_max, c.n_taus)
     fig, axes = plt.subplots(1, 2, figsize=(12, 4.4))
+    suptitle(fig, "Spectral Form Factor of SYK")
     data: dict[str, Any] = {}
     for N, n_real in sorted(c.realisations.items()):
         syks = [SYKHamiltonian(N, seed=s) for s in range(n_real)]
@@ -105,11 +105,12 @@ def dynamics_figure(cfg: FigureConfig) -> tuple[Figure, dict[str, Any]]:
     half = [x * np.sqrt(0.5) for x in chi]
     times = np.linspace(0, c.t_max, c.n_times)
     fig, axes = plt.subplots(2, 2, figsize=(12, 8.5))
+    suptitle(fig, "Scrambling and Operator Growth: SYK4 vs Free SYK2")
     data: dict[str, Any] = {"otoc": {}, "lanczos": {}, "size": {}, "eth": {}, "page": {}}
 
     ax = axes[0, 0]
     for model, style in (("SYK4", "-"), ("SYK2", "--")):
-        for beta, color in zip(c.betas, ("#d95f02", "#7570b3", "#1b9e77"), strict=False):
+        for beta, color in zip(c.betas, (SYK, HUBBARD, GOE), strict=False):
             curves = []
             for s in range(c.realisations):
                 if model == "SYK4":
@@ -140,12 +141,12 @@ def dynamics_figure(cfg: FigureConfig) -> tuple[Figure, dict[str, Any]]:
         SYKHamiltonian(Nl, seed=0).hamiltonian_matrix, chi_l[0], n_max=c.lanczos_steps
     )
     b2 = lanczos_coefficients(syk2_hamiltonian(Nl, seed=0), chi_l[0], n_max=c.lanczos_steps)
-    ax.semilogy(np.arange(1, b4.size + 1), b4, "o-", color="#d95f02", label="SYK4")
+    ax.semilogy(np.arange(1, b4.size + 1), b4, "o-", color=SYK, label="SYK4")
     ax.semilogy(
         np.arange(1, b2.size + 1),
         b2,
         "s--",
-        color="#7570b3",
+        color=HUBBARD,
         label=f"SYK2 (Krylov space ends after {b2.size} steps)",
     )
     ax.set_xlabel("n")
@@ -158,7 +159,7 @@ def dynamics_figure(cfg: FigureConfig) -> tuple[Figure, dict[str, Any]]:
     E4, V4 = hermitian_eigh(SYKHamiltonian(N, seed=0).hamiltonian_matrix)
     E2, V2 = hermitian_eigh(syk2_hamiltonian(N, seed=0).toarray())
     size_times = np.linspace(0, c.t_max, 25)
-    for label, (E, V), color in (("SYK4", (E4, V4), "#d95f02"), ("SYK2", (E2, V2), "#7570b3")):
+    for label, (E, V), color in (("SYK4", (E4, V4), SYK), ("SYK2", (E2, V2), HUBBARD)):
         sizes = []
         for t in size_times:
             U = (V * np.exp(-1j * E * t)) @ V.conj().T
@@ -183,7 +184,7 @@ def dynamics_figure(cfg: FigureConfig) -> tuple[Figure, dict[str, Any]]:
     full[idx] = V[:, mid]
     ls = list(range(1, n + 1))
     ent = eigenstate_entanglement(full, n, ls, range(mid.size))
-    ax.plot(ls, [ent[l].mean() for l in ls], "o", color="#d95f02", label=f"SYK N={Np} mid-spectrum")
+    ax.plot(ls, [ent[l].mean() for l in ls], "o", color=SYK, label=f"SYK N={Np} mid-spectrum")
     ax.plot(ls, [page_entropy(2**l, 2 ** (n - l)) for l in ls], "k-", label="Page")
     ax.plot(ls, [l * np.log(2) for l in ls], "k:", label="maximal")
     ax.set_xlabel("qubits in subsystem A")

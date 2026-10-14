@@ -32,8 +32,18 @@ from .config import (  # noqa: E402
     SYKStatsConfig,
     config_to_dict,
 )
-
-CLASS_COLORS = {"GOE": "#1b9e77", "GUE": "#7570b3", "GSE": "#d95f02", "Poisson": "#666666"}
+from .style import (  # noqa: E402
+    CLASS_COLORS,
+    GOE,
+    GUE,
+    HUBBARD,
+    POISSON,
+    SYK,
+    apply_style,
+    reference_lines,
+    summary_box,
+    suptitle,
+)
 
 
 def syk_statistics(cfg: SYKStatsConfig) -> list[dict[str, Any]]:
@@ -90,72 +100,93 @@ def overview_figure(cfg: FigureConfig) -> tuple[Figure, dict[str, Any]]:
     hub = hubbard_statistics(cfg.hubbard)
     otoc = infinite_temperature_otocs(cfg.otoc)
 
-    fig, axes = plt.subplots(1, 3, figsize=(16, 4.6))
-    ax = axes[0]
-    for cls in ("GOE", "GUE", "GSE"):
-        ax.axhline(
-            R_MEAN[cls.lower()],
-            color=CLASS_COLORS[cls],
-            ls="--",
-            lw=1,
-            label=f"{cls} (Atas et al. 2013)",
-        )
-    ax.axhline(R_MEAN["poisson"], color=CLASS_COLORS["Poisson"], ls=":", lw=1, label="Poisson")
+    fig, axes = plt.subplots(2, 2, figsize=(12, 10))
+    suptitle(fig, "Quantum Chaos: SYK vs Hubbard Model")
+    ax = axes[0, 0]
+    reference_lines(ax, ("GOE", "GUE", "GSE", "Poisson"))
     for row in syk_rows:
-        color = CLASS_COLORS[row["class"]]
-        ax.errorbar(row["N"], row["mean"], yerr=row["stderr"], fmt="o", color=color, capsize=3)
+        ax.errorbar(
+            row["N"],
+            row["mean"],
+            yerr=row["stderr"],
+            fmt="ko",
+            markersize=8,
+            capsize=5,
+            capthick=2,
+            linewidth=2,
+        )
         ax.errorbar(
             row["N"] + 0.3,
             row["rmt_same_size"],
             yerr=row["rmt_stderr"],
             fmt="s",
             mfc="none",
-            color=color,
-            capsize=3,
+            color=CLASS_COLORS[row["class"]],
+            capsize=5,
+            capthick=2,
         )
     ax.plot([], [], "ko", label="SYK (disorder avg.)")
     ax.plot([], [], "ks", mfc="none", label="RMT, same no. of levels")
     ax.set_xlabel("N (Majorana fermions)")
-    ax.set_ylabel(r"$\langle r\rangle$")
-    ax.set_title("(a) SYK: class set by N mod 8", fontweight="bold")
-    ax.legend(fontsize=7, loc="lower right")
+    ax.set_ylabel(r"Level Spacing Ratio $\langle r\rangle$")
+    ax.set_title("(a) Chaos Diagnostic with Error Bars")
+    ax.legend(fontsize=8, loc="lower right")
 
-    ax = axes[1]
-    labels = [f"t'={tp}" for tp in hub]
+    ax = axes[0, 1]
+    h = cfg.hubbard
+    labels = [f"t'={tp:g}" for tp in hub]
     ax.bar(
         labels,
         [r["mean"] for r in hub.values()],
         yerr=[r["stderr"] for r in hub.values()],
-        color=["#999999", "#1b9e77", "#7570b3", "#d95f02"][: len(hub)],
-        capsize=4,
+        color=[HUBBARD, SYK, GOE, GUE][: len(hub)],
+        alpha=0.7,
+        edgecolor="black",
+        capsize=5,
     )
-    ax.axhline(R_MEAN["poisson"], color=CLASS_COLORS["Poisson"], ls=":", label="Poisson")
-    ax.axhline(R_MEAN["goe"], color=CLASS_COLORS["GOE"], ls="--", label="GOE")
+    reference_lines(ax, ("GOE", "Poisson"))
     ax.set_ylim(0.3, 0.6)
-    ax.set_ylabel(r"$\langle r\rangle$")
-    h = cfg.hubbard
-    ax.set_title(
-        f"(b) Hubbard ring L={h.n_sites}, N={h.n_up}+{h.n_down}, U={h.U:g}\n"
-        "(K, reflection, S resolved; eta for t'=0)",
-        fontweight="bold",
-        fontsize=10,
-    )
+    ax.set_ylabel(r"Level Spacing Ratio $\langle r\rangle$")
+    ax.set_title(f"(b) Hubbard Ring L={h.n_sites}, N={h.n_up}+{h.n_down}, U={h.U:g}")
     ax.legend(fontsize=8)
 
-    ax = axes[2]
-    ax.plot(otoc["times"], otoc["syk"], color="#d95f02", lw=2, label=f"SYK N={cfg.otoc.syk_n}")
+    ax = axes[1, 0]
+    ax.plot(otoc["times"], otoc["syk"], "-", color="red", lw=2.5, label=f"SYK (N={cfg.otoc.syk_n})")
     ax.plot(
         otoc["times"],
         otoc["hubbard"],
-        color="#3498db",
-        lw=2,
-        label=f"Hubbard L={cfg.otoc.hubbard_sites} (t'=0)",
+        "-",
+        color="blue",
+        lw=2.5,
+        label=f"Hubbard (L={cfg.otoc.hubbard_sites})",
     )
-    ax.axhline(0, color="gray", lw=0.8)
-    ax.set_xlabel("t")
-    ax.set_ylabel(r"Re $F(t)$, $T=\infty$")
-    ax.set_title("(c) OTOC, single realisation", fontweight="bold")
-    ax.legend(fontsize=8)
+    ax.fill_between(otoc["times"], otoc["syk"], alpha=0.2, color=SYK)
+    ax.axhline(0, color="gray", ls=":", alpha=0.5)
+    ax.set_xlabel("Time t")
+    ax.set_ylabel(r"OTOC $C(t)$, $T=\infty$")
+    ax.set_title("(c) Information Scrambling (OTOC)")
+    ax.legend(fontsize=9)
+
+    lines = ["SYK MODEL (sector resolved):"]
+    for row in syk_rows:
+        lines.append(
+            f"  N={row['N']:2d} {row['class']}: <r> = {row['mean']:.4f} +/- {row['stderr']:.4f}"
+        )
+    lines += ["", f"HUBBARD RING (L={h.n_sites}, U={h.U:g}):"]
+    for tp, r in hub.items():
+        lines.append(f"  t'={tp:g}: <r> = {r['mean']:.4f} +/- {r['stderr']:.4f}")
+    lines += [
+        "",
+        "REFERENCE VALUES (Atas et al. 2013):",
+        f"  Poisson {R_MEAN['poisson']:.4f}   GOE {R_MEAN['goe']:.4f}",
+        f"  GUE {R_MEAN['gue']:.4f}       GSE {R_MEAN['gse']:.4f}",
+        "",
+        "METHODOLOGY:",
+        "  class from N mod 8, sectors never merged",
+        "  Kramers pairs reduced for GSE",
+        "  error bars: std / sqrt(realisations)",
+    ]
+    summary_box(axes[1, 1], "QUANTITATIVE RESULTS", lines)
     fig.tight_layout()
 
     data = {
@@ -172,7 +203,8 @@ def overview_figure(cfg: FigureConfig) -> tuple[Figure, dict[str, Any]]:
 def ratio_distribution_figure(cfg: FigureConfig) -> tuple[Figure, dict[str, Any]]:
     assert cfg.syk is not None and cfg.hubbard is not None
     grid = np.linspace(0, 1, 201)
-    fig, axes = plt.subplots(1, 2, figsize=(12, 4.4))
+    fig, axes = plt.subplots(1, 2, figsize=(12, 4.8))
+    suptitle(fig, "Level-Spacing-Ratio Distributions vs Random-Matrix Theory")
     data: dict[str, Any] = {"syk": {}, "hubbard": {}}
 
     ax = axes[0]
@@ -201,7 +233,7 @@ def ratio_distribution_figure(cfg: FigureConfig) -> tuple[Figure, dict[str, Any]
 
     ax = axes[1]
     h = cfg.hubbard
-    for tp, color in zip(h.tp_values, ["#666666", "#1b9e77", "#7570b3"], strict=False):
+    for tp, color in zip(h.tp_values, [HUBBARD, SYK, GOE], strict=False):
         blocks = HubbardRingED(h.n_sites, h.n_up, h.n_down, t=h.t, tp=tp, U=h.U).sector_blocks()
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
@@ -219,8 +251,8 @@ def ratio_distribution_figure(cfg: FigureConfig) -> tuple[Figure, dict[str, Any]
             label=f"t'={tp} (n={ratios.size})",
         )
         data["hubbard"][str(tp)] = {"n_ratios": int(ratios.size), "mean": float(ratios.mean())}
-    ax.plot(grid, ratio_density(grid, "poisson"), "k:", label="Poisson")
-    ax.plot(grid, ratio_density(grid, "goe"), "k--", label="GOE (surmise)")
+    ax.plot(grid, ratio_density(grid, "poisson"), color=POISSON, ls=":", lw=2, label="Poisson")
+    ax.plot(grid, ratio_density(grid, "goe"), color=GOE, ls="--", lw=2, label="GOE (surmise)")
     ax.set_title(
         f"(b) Hubbard ring L={h.n_sites}, N={h.n_up}+{h.n_down}, U={h.U:g}", fontweight="bold"
     )
@@ -281,6 +313,7 @@ def make_figure(cfg: FigureConfig, root: str | pathlib.Path = ".") -> pathlib.Pa
     root = pathlib.Path(root)
     if cfg.kind not in BUILDERS:
         raise ValueError(f"unknown figure kind {cfg.kind!r}; expected one of {sorted(BUILDERS)}")
+    apply_style()
     fig, data = BUILDERS[cfg.kind](cfg)
     out = root / cfg.output
     out.parent.mkdir(parents=True, exist_ok=True)

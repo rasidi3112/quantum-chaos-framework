@@ -12,6 +12,7 @@ from ..qml.benchmark import KernelModel, compare_with_rbf_baseline
 from ..qml.concentration import haar_fidelity_moments, kernel_offdiagonal_statistics
 from ..qml.quantum_kernel import HubbardKernel, QuantumKernel, SYKKernel
 from .config import FigureConfig
+from .style import CLASS_COLORS, GOE, GUE, HUBBARD, POISSON, SYK, suptitle  # noqa: F401
 
 
 def _syk_kernel(t: float, n: int) -> QuantumKernel:
@@ -34,6 +35,7 @@ def qml_figure(cfg: FigureConfig) -> tuple[Figure, dict[str, Any]]:
     assert cfg.qml is not None
     c = cfg.qml
     fig, axes = plt.subplots(1, 3, figsize=(17, 4.6))
+    suptitle(fig, "Quantum Kernels: Concentration and Classical Baseline")
     data: dict[str, Any] = {"concentration": {"syk": {}, "hubbard": {}}, "classification": {}}
 
     for t in c.times:
@@ -95,7 +97,7 @@ def qml_figure(cfg: FigureConfig) -> tuple[Figure, dict[str, Any]]:
                 width,
                 yerr=res[model]["std"],
                 capsize=3,
-                color=("#666666", "#d95f02", "#3498db")[j],
+                color=(POISSON, SYK, HUBBARD)[j],
                 label=model if i == 0 else None,
             )
     axes[2].set_xticks([0, 1])

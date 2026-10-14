@@ -16,12 +16,14 @@ from ..floquet import (
 )
 from ..hamiltonians.hubbard_ed import HubbardRingED
 from .config import FigureConfig
+from .style import CLASS_COLORS, GOE, GUE, HUBBARD, POISSON, SYK, suptitle  # noqa: F401
 
 
 def floquet_figure(cfg: FigureConfig) -> tuple[Figure, dict[str, Any]]:
     assert cfg.floquet is not None
     c = cfg.floquet
     fig, axes = plt.subplots(1, 3, figsize=(17, 4.6))
+    suptitle(fig, "Floquet Hubbard Ring: Heating and High-Frequency Expansion")
     data: dict[str, Any] = {"heating": {}, "expansion": {}}
     colors = plt.rcParams["axes.prop_cycle"].by_key()["color"]
     for size in c.sizes:
