@@ -41,10 +41,10 @@
     "extra": {}
   },
   "provenance": {
-    "git_commit": "e919b33",
+    "git_commit": "510c93d",
     "src_tree": "71fb4de",
     "dirty": false,
-    "package_version": "0.2.0",
+    "package_version": "0.3.0",
     "python": "3.13.5",
     "numpy": "2.5.4",
     "scipy": "1.18.1",
