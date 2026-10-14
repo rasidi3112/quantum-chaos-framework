@@ -1,10 +1,3 @@
-"""Figure builders driven by :class:`~quantum_chaos.experiments.config.FigureConfig`.
-
-Each builder returns ``(figure, data)``; :func:`make_figure` writes the PNG and
-a JSON sidecar with the plotted numbers, the configuration and provenance
-(git commit, package source tree, library versions).
-"""
-
 from __future__ import annotations
 
 import json
@@ -41,9 +34,6 @@ from .config import (  # noqa: E402
 )
 
 CLASS_COLORS = {"GOE": "#1b9e77", "GUE": "#7570b3", "GSE": "#d95f02", "Poisson": "#666666"}
-
-
-# -- computations -----------------------------------------------------------------
 
 
 def syk_statistics(cfg: SYKStatsConfig) -> list[dict[str, Any]]:
@@ -88,18 +78,13 @@ def infinite_temperature_otocs(cfg: OTOCConfig) -> dict[str, np.ndarray]:
         periodic_boundary=True,
     )
     hcalc = OTOCCalculator(hub.n_qubits, hub.static_hamiltonian())
-    # qubit 2 = site 1, spin up (interleaved Jordan-Wigner ordering)
     hub_otoc = np.real(
         hcalc.compute_otoc_exact(hcalc.local_pauli("Z", 0), hcalc.local_pauli("Z", 2), times)
     )
     return {"times": times, "syk": syk_otoc, "hubbard": hub_otoc}
 
 
-# -- figures ------------------------------------------------------------------------
-
-
 def overview_figure(cfg: FigureConfig) -> tuple[Figure, dict[str, Any]]:
-    """SYK <r> per N vs RMT, Hubbard t'=0 vs t'!=0, and T=inf OTOCs."""
     assert cfg.syk is not None and cfg.hubbard is not None and cfg.otoc is not None
     syk_rows = syk_statistics(cfg.syk)
     hub = hubbard_statistics(cfg.hubbard)
@@ -185,7 +170,6 @@ def overview_figure(cfg: FigureConfig) -> tuple[Figure, dict[str, Any]]:
 
 
 def ratio_distribution_figure(cfg: FigureConfig) -> tuple[Figure, dict[str, Any]]:
-    """Histograms of r~ for SYK (one per class) and the Hubbard ring, with surmises."""
     assert cfg.syk is not None and cfg.hubbard is not None
     grid = np.linspace(0, 1, 201)
     fig, axes = plt.subplots(1, 2, figsize=(12, 4.4))
@@ -255,9 +239,6 @@ BUILDERS: dict[str, Callable[[FigureConfig], tuple[Figure, dict[str, Any]]]] = {
 }
 
 
-# -- provenance and output -----------------------------------------------------------
-
-
 def _git(args: list[str], cwd: pathlib.Path) -> str:
     try:
         return subprocess.run(
@@ -287,7 +268,6 @@ def provenance(root: pathlib.Path) -> dict[str, Any]:
 
 
 def make_figure(cfg: FigureConfig, root: str | pathlib.Path = ".") -> pathlib.Path:
-    """Build the figure, save ``cfg.output`` (PNG) and a ``.json`` sidecar next to it."""
     root = pathlib.Path(root)
     if cfg.kind not in BUILDERS:
         raise ValueError(f"unknown figure kind {cfg.kind!r}; expected one of {sorted(BUILDERS)}")

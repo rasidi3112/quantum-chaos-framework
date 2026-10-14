@@ -1,5 +1,3 @@
-"""The README quick start must actually run (PLAN: criteria for completion)."""
-
 import contextlib
 import io
 import pathlib

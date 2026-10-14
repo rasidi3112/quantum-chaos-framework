@@ -1,5 +1,3 @@
-"""Jordan-Wigner fermion algebra and Pauli decomposition."""
-
 import numpy as np
 import pytest
 

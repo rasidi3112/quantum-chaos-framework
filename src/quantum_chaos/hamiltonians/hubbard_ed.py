@@ -1,33 +1,3 @@
-"""Exact diagonalisation of the 1D Hubbard ring, resolved by symmetry sectors.
-
-Model (L sites, periodic boundary conditions for the fermion operators)::
-
-    H = -t  sum_{j,s} (c+_{j+1,s} c_{j,s} + h.c.)
-        -t' sum_{j,s} (c+_{j+2,s} c_{j,s} + h.c.)
-        + U sum_j n_{j,up} n_{j,down}
-
-Resolved symmetries
--------------------
-* N_up, N_down (the basis is built inside one (N_up, N_down) sector);
-* lattice momentum K = 2 pi m / L (translation T, T c+_j T^-1 = c+_{j+1},
-  T|K> = exp(-iK)|K>); only m = 0..L//2 are needed because K and -K are
-  related by reflection;
-* site reflection j -> -j (mod L) at K = 0 and K = pi;
-* total spin S (S^2) - the Hamiltonian is SU(2) invariant for any t';
-* eta-spin (eta^2, eta^+ = sum_j (-1)^j c+_{j,up} c+_{j,down}) when t' = 0
-  and L is even. The next-nearest-neighbour hopping t' connects sites of the
-  same sublattice, breaks the eta-SU(2) symmetry and the Lieb-Wu
-  integrability of the t' = 0 chain.
-
-For t' != 0 the Hamiltonian is real in the occupation basis, so time reversal
-times reflection is an antiunitary symmetry squaring to +1 inside every
-momentum sector: the expected class is GOE, also at K != 0, pi.
-
-Mode ordering: up modes 0..L-1, down modes L..2L-1; a configuration is an
-integer whose bit p is the occupation of mode p, and states are
-c+_{p1} c+_{p2} ... |0> with p1 < p2 < ... .
-"""
-
 import warnings
 from collections.abc import Sequence
 from itertools import combinations
@@ -51,11 +21,6 @@ def _popcount(a: np.ndarray) -> np.ndarray:
 
 
 def _ladder(configs, mode: int, create: bool):
-    """Apply c+_mode (create=True) or c_mode to every configuration.
-
-    Returns (new_configs, sign, valid) with the Jordan-Wigner sign
-    (-1)^(number of occupied modes below ``mode``).
-    """
     bit = np.int64(1 << mode)
     occupied = (configs & bit) != 0
     valid = ~occupied if create else occupied
@@ -64,7 +29,6 @@ def _ladder(configs, mode: int, create: bool):
 
 
 def _apply_word(configs, word: Sequence[tuple[bool, int]]):
-    """Apply a product of ladder operators, written left to right as ``word``."""
     out = configs.copy()
     amp = np.ones(configs.shape, dtype=np.int64)
     valid = np.ones(configs.shape, dtype=bool)
@@ -76,17 +40,6 @@ def _apply_word(configs, word: Sequence[tuple[bool, int]]):
 
 
 class HubbardRingED:
-    """Symmetry-resolved exact diagonalisation of the 1D Hubbard ring.
-
-    Parameters
-    ----------
-    n_sites : L (>= 3; >= 5 if ``tp != 0`` so that next-nearest-neighbour
-        bonds are not double counted).
-    n_up, n_down : particle numbers per spin species.
-    t, tp, U : nearest-neighbour hopping, next-nearest-neighbour hopping and
-        on-site interaction.
-    """
-
     def __init__(
         self, n_sites: int, n_up: int, n_down: int, t: float = 1.0, tp: float = 0.0, U: float = 4.0
     ):
@@ -108,16 +61,10 @@ class HubbardRingED:
         self.dim = self.configs.size
         self._H = None
 
-    # -- modes and generic operators ---------------------------------------------
-
     def mode(self, site: int, spin: str) -> int:
         return (site % self.L) + (0 if spin == "up" else self.L)
 
     def operator(self, terms: Sequence[tuple[complex, Sequence[tuple[bool, int]]]]) -> csr_matrix:
-        """Sparse matrix in this (N_up, N_down) sector of sum_k coef_k * word_k.
-
-        Every word must conserve N_up and N_down.
-        """
         rows, cols, vals = [], [], []
         for coef, word in terms:
             new, amp, valid = _apply_word(self.configs, word)
@@ -141,7 +88,6 @@ class HubbardRingED:
         return M
 
     def site_permutation(self, site_map: Sequence[int]) -> csr_matrix:
-        """Unitary U with U c+_{j,s} U^-1 = c+_{site_map[j], s} (fermionic signs included)."""
         L = self.L
         perm = np.array([site_map[p] if p < L else L + site_map[p - L] for p in range(2 * L)])
         new = np.zeros_like(self.configs)
@@ -158,8 +104,6 @@ class HubbardRingED:
         return coo_matrix(
             (sign.astype(complex), (idx, np.arange(self.dim))), shape=(self.dim, self.dim)
         ).tocsr()
-
-    # -- physical operators ----------------------------------------------------------
 
     @property
     def hamiltonian(self) -> csr_matrix:
@@ -195,7 +139,6 @@ class HubbardRingED:
         return self.site_permutation([(-j) % self.L for j in range(self.L)])
 
     def spin_squared(self) -> csr_matrix:
-        """S^2 = S^- S^+ + S_z^2 + S_z."""
         L = self.L
         sz = (self.n_up - self.n_down) / 2
         terms = [
@@ -214,7 +157,6 @@ class HubbardRingED:
         return (self.operator(terms) + (sz * sz + sz) * _identity(self.dim)).tocsr()
 
     def eta_squared(self) -> csr_matrix:
-        """eta^2 = eta^- eta^+ + eta_z^2 + eta_z, eta_z = (N - L)/2 (bipartite ring, L even)."""
         if self.L % 2:
             raise ValueError("eta-pairing needs a bipartite ring (even L)")
         L = self.L
@@ -238,10 +180,7 @@ class HubbardRingED:
     def has_eta_symmetry(self) -> bool:
         return self.tp == 0 and self.L % 2 == 0
 
-    # -- momentum sectors ---------------------------------------------------------------
-
     def momentum_basis(self, m: int) -> csr_matrix:
-        """Isometry V (dim x n_m) onto the sector T|psi> = exp(-2 pi i m / L)|psi>."""
         T = self.translation().tocoo()
         target = np.empty(self.dim, dtype=np.int64)
         sign = np.empty(self.dim)
@@ -265,7 +204,7 @@ class HubbardRingED:
                 signs.append(acc)
             visited[states] = True
             R = len(states)
-            if not np.isclose(np.exp(1j * K * R), acc):  # T^R|r> = acc |r>
+            if not np.isclose(np.exp(1j * K * R), acc):
                 continue
             d = np.arange(R)
             rows.append(np.array(states))
@@ -284,13 +223,6 @@ class HubbardRingED:
         momenta: Sequence[int] | None = None,
         shifts: tuple[float, float, float] = (0.1234567, 0.0765432, 0.0321987),
     ) -> list[dict]:
-        """Eigenvalues of every symmetry block (m, S, eta, reflection parity).
-
-        Within each momentum sector, H + a S^2 + b eta^2 + c R is diagonalised
-        (generic a, b, c lift coincidences between blocks); each eigenvector is
-        labelled by its S^2, eta^2 and R expectation values, which are checked
-        to be exact quantum numbers. Default momenta: m = 0..L//2.
-        """
         L = self.L
         momenta = range(L // 2 + 1) if momenta is None else momenta
         H, S2 = self.hamiltonian, self.spin_squared()
@@ -339,7 +271,6 @@ class HubbardRingED:
 
 
 def _expectations(vecs: np.ndarray, op: np.ndarray) -> np.ndarray:
-    """Real parts of <v_k|op|v_k> for every column v_k (one BLAS matmul)."""
     return np.real(np.sum(vecs.conj() * (op @ vecs), axis=0))
 
 
@@ -361,7 +292,6 @@ def _round_checked(values, allowed, name, tol=1e-6):
 
 
 def _casimir_to_spin(casimir, name, tol=1e-6):
-    """Map j(j+1) to j (in steps of 1/2), checking that the value is exact."""
     casimir = np.asarray(casimir)
     j = np.round(2 * (-1 + np.sqrt(1 + 4 * np.clip(casimir, 0, None))) / 2) / 2
     deviation = np.max(np.abs(casimir - j * (j + 1))) if casimir.size else 0.0
@@ -383,14 +313,6 @@ def hubbard_level_statistics(
     trim: float = 0.0,
     min_levels: int = 10,
 ) -> dict:
-    """Spacing ratios pooled over fully resolved symmetry blocks (m = 0..L//2).
-
-    Blocks with fewer than ``min_levels`` levels are skipped. The standard error
-    treats ratios as independent (neighbouring ratios are weakly correlated, so
-    it is a slight underestimate). ``degenerate_fraction`` counts exactly
-    degenerate spacings left after symmetry resolution (should be ~0 for a
-    generic non-integrable model).
-    """
     ed = HubbardRingED(n_sites, n_up, n_down, t=t, tp=tp, U=U)
     blocks = ed.sector_blocks()
     ratios, sizes, n_degenerate, n_spacings = [], [], 0, 0

@@ -5,14 +5,6 @@ from ..utils.jordan_wigner import JordanWignerMapper
 
 
 class DrivenHubbardHamiltonian:
-    """Periodically driven Hubbard chain in the full Fock space (Jordan-Wigner).
-
-    H(t) = J0 cos(omega t) H_hop + U sum_j n_{j,up} n_{j,down}. For level
-    statistics use :class:`quantum_chaos.hamiltonians.hubbard_ed.HubbardRingED`,
-    which resolves the symmetry sectors; pooling the whole Fock space is not
-    meaningful.
-    """
-
     def __init__(
         self,
         n_sites: int,
@@ -124,10 +116,6 @@ class DrivenHubbardHamiltonian:
         return self._diagonalize_static()[1]
 
     def floquet_operator(self, n_steps: int = 100) -> np.ndarray:
-        """One-period propagator U(T, 0), T = 2*pi/omega.
-
-        Product of midpoint exponentials (second-order accurate in T/n_steps).
-        """
         from scipy.linalg import expm
 
         T = 2 * np.pi / self.driving_frequency
@@ -140,11 +128,6 @@ class DrivenHubbardHamiltonian:
         return F
 
     def quasi_energies(self, n_steps: int = 100) -> np.ndarray:
-        """Sorted quasi-energies in the zone [-omega/2, omega/2).
-
-        With F = exp(-i H_F T), the eigenvalues are exp(-i eps T), hence
-        eps = -angle(lambda) / T.
-        """
         F = self.floquet_operator(n_steps)
         T = 2 * np.pi / self.driving_frequency
         return np.sort(-np.angle(np.linalg.eigvals(F)) / T)
@@ -199,17 +182,10 @@ class DrivenHubbardHamiltonian:
         return S_z
 
     def effective_hamiltonian(self, order: int = 0) -> np.ndarray:
-        """High-frequency effective Hamiltonian truncated at O(omega^-order).
-
-        Only the leading term is implemented: the period average
-        (1/T) int_0^T H(t) dt. For J(t) = J0 cos(omega t) the hopping averages
-        to zero, so this equals the interaction term. Higher orders (van Vleck /
-        Floquet-Magnus) are planned (PLAN 3C) and raise NotImplementedError.
-        """
         if order != 0:
             raise NotImplementedError("only the order-0 (period-averaged) term is implemented")
         T = 2 * np.pi / self.driving_frequency
-        n = 64  # midpoint rule, exact for trigonometric polynomials of degree < 64
+        n = 64
         mean_hopping = np.mean([self.hopping_strength((k + 0.5) * T / n) for k in range(n)])
         return mean_hopping * self.hopping_matrix + self.interaction_matrix
 

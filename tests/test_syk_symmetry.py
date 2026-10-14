@@ -1,5 +1,3 @@
-"""SYK symmetry classes and sector-resolved level statistics (PLAN P1-2, P1-3)."""
-
 import numpy as np
 import pytest
 
@@ -29,11 +27,7 @@ def test_cross_class_finite_size_extrapolation_removed():
     assert not hasattr(syk_module, "finite_size_scaling")
 
 
-# --- construction ----------------------------------------------------------
-
-
 def jordan_wigner_reference(syk):
-    """Original dense construction: products of Jordan-Wigner Majorana matrices."""
     from itertools import combinations
 
     chi = [syk.get_majorana_operator(a) for a in range(syk.n_majorana)]
@@ -57,7 +51,6 @@ def test_maldacena_stanford_normalisation_is_a_quarter():
 
 
 def test_hamiltonian_variance_matches_coupling_convention():
-    # chi^2 = 1: Tr H^2 / D = sum_{i<j<k<l} J_ijkl^2 exactly (Pauli strings are orthonormal)
     from itertools import combinations
 
     syk = SYKHamiltonian(12, seed=5)
@@ -66,19 +59,14 @@ def test_hamiltonian_variance_matches_coupling_convention():
     assert np.trace(H @ H).real / H.shape[0] == pytest.approx(J2, rel=1e-12)
 
 
-# --- particle-hole symmetry ------------------------------------------------------
-
-
 @pytest.mark.parametrize("N", [8, 10, 12, 14, 16])
 def test_particle_hole_operator(N):
     syk = SYKHamiltonian(N, seed=1)
     H = syk.hamiltonian_matrix
     U = syk.particle_hole_unitary()
     n = N // 2
-    np.testing.assert_allclose(U @ H.conj() @ U.conj().T, H, atol=1e-12)  # [P, H] = 0
-    np.testing.assert_allclose(
-        U @ U.conj(), (-1) ** (n * (n - 1) // 2) * np.eye(2**n), atol=1e-12
-    )  # P^2
+    np.testing.assert_allclose(U @ H.conj() @ U.conj().T, H, atol=1e-12)
+    np.testing.assert_allclose(U @ U.conj(), (-1) ** (n * (n - 1) // 2) * np.eye(2**n), atol=1e-12)
     gamma = np.diag((-1.0) ** np.array([bin(b).count("1") for b in range(2**n)]))
     np.testing.assert_allclose(U @ gamma @ U.conj().T, (-1) ** n * gamma, atol=1e-12)
     p2 = (-1) ** (n * (n - 1) // 2)
@@ -114,9 +102,6 @@ def test_goe_sectors_have_no_systematic_degeneracy(N):
         assert np.min(np.diff(syk.sector_eigenvalues(sector))) > 1e-8
 
 
-# --- statistics vs random-matrix theory ---------------------------------------
-
-
 def _compare_with_rmt(N, n_realizations, n_rmt):
     from quantum_chaos.hamiltonians.syk_hamiltonian import syk_rmt_reference
 
@@ -124,7 +109,6 @@ def _compare_with_rmt(N, n_realizations, n_rmt):
     ref = syk_rmt_reference(N, n_samples=n_rmt, rng=1)
     z = (data["mean"] - ref["mean"]) / np.hypot(data["stderr"], ref["stderr"])
     assert abs(z) < 3, (data["mean"], ref["mean"], z)
-    # large-N Atas value within statistical error + measured finite-size offset (< 5e-3)
     assert abs(data["mean"] - data["reference"]) < 3 * data["stderr"] + 5e-3
 
 

@@ -1,5 +1,3 @@
-"""Kraus channels and the T1/T2 noise model (PLAN P0-5, P0-6)."""
-
 import numpy as np
 import pytest
 
@@ -17,9 +15,6 @@ def all_kraus_sets(nc):
         "bit_flip": nc.bit_flip_kraus(0.1),
         "phase_flip": nc.phase_flip_kraus(0.25),
     }
-
-
-# --- P0-5 -------------------------------------------------------------------
 
 
 def test_apply_channel_accepts_real_density_matrix():
@@ -49,7 +44,6 @@ def test_kraus_sets_are_trace_preserving(name):
 
 
 def test_depolarizing_convention_is_replacement_by_maximally_mixed_state():
-    # rho -> (1 - p) rho + p I/2 ; average gate fidelity 1 - p/2
     nc = NoiseChannels(1)
     p = 0.3
     out = nc.apply_channel(EXCITED, nc.depolarizing_kraus(p), 0)
@@ -57,11 +51,7 @@ def test_depolarizing_convention_is_replacement_by_maximally_mixed_state():
     assert nc.channel_fidelity(nc.depolarizing_kraus(p)) == pytest.approx(1 - p / 2, abs=1e-15)
 
 
-# --- P0-6 -------------------------------------------------------------------
-
-
 def relax(rho, model, n_calls=1):
-    """Apply the noise model n_calls times, each for the default duration gate_time."""
     nc = NoiseChannels(1)
     for _ in range(n_calls):
         rho = nc.full_noise_model(rho, model)

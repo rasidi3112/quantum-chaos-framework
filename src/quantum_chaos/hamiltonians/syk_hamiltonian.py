@@ -1,23 +1,3 @@
-"""Sachdev-Ye-Kitaev model of N Majorana fermions with q = 4.
-
-Conventions
------------
-H = sum_{i<j<k<l} J_ijkl chi_i chi_j chi_k chi_l, with independent Gaussian
-J_ijkl of variance 3! J^2 / N^3 (Maldacena & Stanford, PRD 94, 106002 (2016);
-Cotler et al., JHEP 05 (2017) 118). The Majoranas are realised by the
-Jordan-Wigner strings chi_{2j} = Z_0...Z_{j-1} X_j and
-chi_{2j+1} = Z_0...Z_{j-1} Y_j, i.e. chi^2 = 1 ({chi_a, chi_b} = 2 delta_ab).
-The references above use {chi_a, chi_b} = delta_ab (chi^2 = 1/2); with the same
-couplings their Hamiltonian is H/4. Pass ``chi_squared=0.5`` to work in that
-normalisation.
-
-Symmetry classes (Cotler et al. 2017, sec. 3.1): the fermion parity
-Gamma = prod_j Z_j splits the spectrum into two sectors, and the antiunitary
-particle-hole operator P gives, per sector, GOE for N mod 8 = 0 (P^2 = +1),
-GSE for N mod 8 = 4 (P^2 = -1, Kramers pairs inside each sector) and GUE for
-N mod 8 = 2, 6 (P exchanges the sectors, whose spectra are then identical).
-"""
-
 from itertools import combinations
 from typing import Any
 
@@ -40,7 +20,6 @@ _CLASS_BY_N_MOD_8 = {0: "GOE", 2: "GUE", 4: "GSE", 6: "GUE"}
 
 
 def syk_symmetry_class(n_majorana: int) -> str:
-    """Random-matrix class of one parity sector of the q=4 SYK model (N even)."""
     if n_majorana % 2:
         raise ValueError("N must be even")
     return _CLASS_BY_N_MOD_8[n_majorana % 8]
@@ -58,11 +37,6 @@ def _popcount(a: np.ndarray) -> np.ndarray:
 
 
 def majorana_pauli(index: int, n_qubits: int) -> tuple[int, int, complex]:
-    """(x_mask, z_mask, phase) with chi_index = phase * X^x Z^z.
-
-    Bit (n_qubits - 1 - q) of a mask refers to qubit q, so masks act directly
-    on computational-basis indices in Kronecker order (qubit 0 most significant).
-    """
     site = index // 2
 
     def bit(q: int) -> int:
@@ -73,7 +47,7 @@ def majorana_pauli(index: int, n_qubits: int) -> tuple[int, int, complex]:
         z |= bit(q)
     if index % 2 == 0:
         return bit(site), z, 1.0
-    return bit(site), z | bit(site), 1j  # Y = i X Z
+    return bit(site), z | bit(site), 1j
 
 
 def _pauli_product(a, b):
@@ -84,7 +58,6 @@ def _pauli_product(a, b):
 
 
 def pauli_terms_to_sparse(terms, n_qubits: int) -> csr_matrix:
-    """Sparse matrix of sum_k c_k * X^{x_k} Z^{z_k} from (x, z, c) triples."""
     dim = 2**n_qubits
     basis = np.arange(dim, dtype=np.uint64)
     by_x: dict[int, np.ndarray] = {}
@@ -104,11 +77,6 @@ def pauli_terms_to_sparse(terms, n_qubits: int) -> csr_matrix:
 
 
 class SYKHamiltonian:
-    """
-    SYK (Sachdev-Ye-Kitaev) model, q = 4, built as a sparse matrix from
-    Pauli strings (see module docstring for conventions and symmetry classes).
-    """
-
     def __init__(
         self,
         n_majorana: int,
@@ -159,7 +127,6 @@ class SYKHamiltonian:
 
     @property
     def hamiltonian_matrix(self):
-        """Dense matrix (or CSR if ``use_sparse``)."""
         if self.use_sparse:
             return self.sparse_hamiltonian
         if self._hamiltonian_matrix is None:
@@ -210,7 +177,6 @@ class SYKHamiltonian:
         return spectral_density(self.eigenvalues, bins=bins)
 
     def get_level_spacing_ratio(self, trim: float = 0.0) -> float:
-        """Sector-resolved mean spacing ratio (see :meth:`spacing_ratios`)."""
         r = self.spacing_ratios(trim=trim)
         return float(np.mean(r)) if r.size else float("nan")
 
@@ -219,7 +185,6 @@ class SYKHamiltonian:
             raise ValueError("Temperature must be positive")
 
         beta = 1.0 / temperature
-        # shift by E_0 so that the largest weight is exp(0) = 1 (no overflow)
         boltzmann_factors = np.exp(-beta * (self.eigenvalues - self.eigenvalues[0]))
         Z = np.sum(boltzmann_factors)
         thermal_diag = np.diag(boltzmann_factors / Z)
@@ -239,7 +204,6 @@ class SYKHamiltonian:
         return self._jw_mapper.majorana_operator(index)
 
     def parity_sector_indices(self, sector: str = "even") -> np.ndarray:
-        """Basis indices with fermion parity Gamma = prod_j Z_j = +1 ('even') or -1 ('odd')."""
         if sector not in ("even", "odd"):
             raise ValueError("sector must be 'even' or 'odd'")
         basis = np.arange(2**self.n_qubits, dtype=np.uint64)
@@ -247,7 +211,6 @@ class SYKHamiltonian:
         return np.flatnonzero(parity == (0 if sector == "even" else 1))
 
     def parity_projection(self, sector: str = "even") -> np.ndarray:
-        """Dense Hamiltonian block of one fermion-parity sector."""
         idx = self.parity_sector_indices(sector)
         return self.sparse_hamiltonian[idx][:, idx].toarray()
 
@@ -257,13 +220,6 @@ class SYKHamiltonian:
         return self._sector_levels[sector]
 
     def particle_hole_unitary(self) -> np.ndarray:
-        """Unitary part U of the antiunitary particle-hole operator P = U K.
-
-        U = chi_0 chi_2 ... chi_{N-2} and K is complex conjugation in the
-        computational basis. Then P chi_a P^-1 = (-1)^(N/2-1) chi_a, so
-        U H^* U^dag = H, P^2 = U U^* = (-1)^(n(n-1)/2) with n = N/2, and
-        U Gamma U^dag = (-1)^n Gamma (P exchanges the parity sectors iff n is odd).
-        """
         n = self.n_qubits
         x, z, phase = 0, 0, 1.0 + 0j
         for j in range(n):
@@ -271,18 +227,12 @@ class SYKHamiltonian:
         return pauli_terms_to_sparse([(x, z, phase)], n).toarray()
 
     def _sectors_for_statistics(self) -> list[tuple[str, bool]]:
-        """(sector, kramers) pairs entering the level statistics of this N."""
         if self.symmetry_class == "GUE":
-            return [("even", False)]  # the odd sector has the identical spectrum
+            return [("even", False)]
         kramers = self.symmetry_class == "GSE"
         return [("even", kramers), ("odd", kramers)]
 
     def spacing_ratios(self, trim: float = 0.0) -> np.ndarray:
-        """Spacing ratios of the independent parity sectors, Kramers-reduced for GSE.
-
-        Sectors are never merged: ratios are computed inside each sector and then
-        concatenated.
-        """
         return np.concatenate(
             [
                 spacing_ratios(self.sector_eigenvalues(sector), kramers=kramers, trim=trim)
@@ -291,7 +241,6 @@ class SYKHamiltonian:
         )
 
     def get_level_spacing_ratio_parity(self, sector: str = "even", trim: float = 0.0) -> float:
-        """Mean spacing ratio inside one parity sector (Kramers-reduced for GSE)."""
         r = spacing_ratios(
             self.sector_eigenvalues(sector), kramers=self.symmetry_class == "GSE", trim=trim
         )
@@ -320,7 +269,6 @@ class SYKHamiltonian:
 
 
 def sector_level_count(n_majorana: int) -> int:
-    """Number of distinct levels per parity sector used in the statistics."""
     dim = 2 ** (n_majorana // 2 - 1)
     return dim // 2 if syk_symmetry_class(n_majorana) == "GSE" else dim
 
@@ -333,15 +281,6 @@ def disorder_average_lsr(
     coupling_strength: float = 1.0,
     rng: RngLike = None,
 ) -> dict:
-    """Disorder-averaged, sector-resolved mean spacing ratio.
-
-    Realisation ``k`` uses seed ``seed_start + k``. Each realisation contributes
-    the mean ratio of its independent sectors; mean, standard error and a
-    percentile-bootstrap 95% interval are taken over realisations
-    (``rng`` seeds the bootstrap). ``reference`` is the large-N value of the
-    symmetry class (Atas et al. 2013); see :func:`syk_rmt_reference` for a
-    finite-size reference with the same number of levels.
-    """
     per_realization = np.array(
         [
             SYKHamiltonian(
@@ -367,7 +306,6 @@ def disorder_average_lsr(
 def syk_rmt_reference(
     n_majorana: int, n_samples: int = 500, trim: float = 0.0, rng: RngLike = None
 ) -> dict:
-    """Finite-size RMT <r> of the SYK class with the same number of levels and trimming."""
     cls = syk_symmetry_class(n_majorana)
     res: dict[str, Any] = ensemble_mean_r(
         cls, sector_level_count(n_majorana), n_samples, trim=trim, rng=rng

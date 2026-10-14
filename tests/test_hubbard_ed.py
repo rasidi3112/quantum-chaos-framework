@@ -1,5 +1,3 @@
-"""Symmetry-resolved exact diagonalisation of the Hubbard ring (PLAN P1-4)."""
-
 from itertools import combinations
 
 import numpy as np
@@ -98,7 +96,7 @@ def test_invalid_geometries_are_rejected():
     with pytest.raises(ValueError):
         HubbardRingED(2, 1, 1)
     with pytest.raises(ValueError):
-        HubbardRingED(4, 2, 2, tp=0.5)  # NNN bonds would be double counted
+        HubbardRingED(4, 2, 2, tp=0.5)
 
 
 def test_level_statistics_report_is_complete():
@@ -109,11 +107,6 @@ def test_level_statistics_report_is_complete():
 
 @pytest.mark.slow
 def test_integrable_versus_nonintegrable_level_statistics():
-    """L = 8, U = 4: t' = 0 is close to Poisson, t' = 0.5 is clearly not.
-
-    Measured (2026-10-14): t'=0: 0.3865(53); t'=0.5: 0.5173(48), i.e. still below
-    GOE 0.5307 at this size - reported in VALIDATION.md, not hidden by the bound.
-    """
     integrable = hubbard_level_statistics(8, 4, 4, tp=0.0, U=4.0)
     chaotic = hubbard_level_statistics(8, 4, 4, tp=0.5, U=4.0)
     assert abs(integrable["mean"] - 0.3863) < 4 * integrable["stderr"]

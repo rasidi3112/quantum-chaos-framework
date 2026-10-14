@@ -7,18 +7,10 @@ RngLike = None | int | np.random.Generator
 
 
 def as_rng(seed: RngLike = None) -> np.random.Generator:
-    """Return a ``numpy.random.Generator`` from None, an int seed or a Generator."""
     return np.random.default_rng(seed)
 
 
 def hermitian_eigh(matrix: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
-    """Eigenvalues and eigenvectors of a dense Hermitian matrix (LAPACK ``*heevr``).
-
-    The divide-and-conquer driver (``*heevd``, used by ``numpy.linalg.eigh``)
-    of Apple Accelerate fails for complex matrices of size n >~ 3000
-    ("illegal value in argument 10"; observed with NumPy 2.5.4 / SciPy 1.18.1
-    on macOS); the MRRR driver does not.
-    """
     from scipy.linalg import eigh
 
     m = np.asarray(matrix)
@@ -27,7 +19,6 @@ def hermitian_eigh(matrix: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
 
 
 def hermitian_eigvalsh(matrix: np.ndarray) -> np.ndarray:
-    """Eigenvalues of a dense Hermitian matrix (see :func:`hermitian_eigh`)."""
     from scipy.linalg import eigh
 
     m = np.asarray(matrix)
@@ -38,11 +29,6 @@ def hermitian_eigvalsh(matrix: np.ndarray) -> np.ndarray:
 def generate_random_coupling(
     n_majorana: int, variance: float = 1.0, seed: RngLike = None, antisymmetric: bool = True
 ) -> np.ndarray:
-    """Gaussian SYK couplings with <J_ijkl^2> = 3! * variance / N^3.
-
-    ``seed`` may be None, an int or a ``numpy.random.Generator``; the global
-    NumPy RNG is never touched.
-    """
     rng = as_rng(seed)
     sigma = np.sqrt(variance * 6.0 / (n_majorana**3))
     J = np.zeros((n_majorana, n_majorana, n_majorana, n_majorana))
@@ -90,12 +76,6 @@ def matrix_exponential(H: np.ndarray, t: float = 1.0) -> np.ndarray:
 
 
 def partial_trace(rho: np.ndarray, keep: list[int], dims: list[int]) -> np.ndarray:
-    """Reduced density matrix on the subsystems ``keep``.
-
-    ``rho`` acts on the tensor product of subsystems with dimensions ``dims``
-    (subsystem 0 is the most significant factor of the Kronecker product).
-    The kept subsystems are returned in increasing index order.
-    """
     dims = [int(d) for d in dims]
     n = len(dims)
     total = int(np.prod(dims))
@@ -107,7 +87,6 @@ def partial_trace(rho: np.ndarray, keep: list[int], dims: list[int]) -> np.ndarr
     if n > 26:
         raise ValueError("partial_trace supports at most 26 subsystems")
 
-    # Row indices get letters a.., column indices A..; traced subsystems share a letter.
     row = [chr(ord("a") + i) for i in range(n)]
     col = [row[i] if i not in keep else chr(ord("A") + i) for i in range(n)]
     out = [row[i] for i in keep] + [col[i] for i in keep]
@@ -119,31 +98,17 @@ def partial_trace(rho: np.ndarray, keep: list[int], dims: list[int]) -> np.ndarr
 
 
 def _clip_psd_spectrum(evals: np.ndarray) -> np.ndarray:
-    """Zero out eigenvalues that are round-off noise of a PSD matrix.
-
-    The square root amplifies noise (sqrt(1e-17) ~ 3e-9), so eigenvalues
-    below ``dim * eps * max|lambda|`` are treated as exact zeros.
-    """
     tol = evals.size * np.finfo(float).eps * max(np.max(np.abs(evals)), 1e-300)
     return np.where(evals > tol, evals, 0.0)
 
 
 def _psd_sqrt(rho: np.ndarray) -> np.ndarray:
-    """Square root of a Hermitian positive semi-definite matrix.
-
-    Uses an eigendecomposition (stable for rank-deficient states, unlike
-    ``scipy.linalg.sqrtm``).
-    """
     rho = (rho + rho.conj().T) / 2
     evals, evecs = np.linalg.eigh(rho)
     return (evecs * np.sqrt(_clip_psd_spectrum(evals))) @ evecs.conj().T
 
 
 def fidelity(rho: np.ndarray, sigma: np.ndarray) -> float:
-    """Uhlmann fidelity F(rho, sigma) = (Tr sqrt(sqrt(rho) sigma sqrt(rho)))^2.
-
-    Squared convention: F(|psi><psi|, |phi><phi|) = |<psi|phi>|^2.
-    """
     sqrt_rho = _psd_sqrt(np.asarray(rho, dtype=complex))
     inner = sqrt_rho @ np.asarray(sigma, dtype=complex) @ sqrt_rho
     inner = (inner + inner.conj().T) / 2
@@ -181,11 +146,6 @@ def spectral_density(
 
 
 def level_spacing_ratio(eigenvalues: np.ndarray) -> float:
-    """Mean spacing ratio of one symmetry sector; see :mod:`quantum_chaos.spectral`.
-
-    Exact degeneracies are kept (r = 0) and reported with a
-    ``DegenerateSpectrumWarning``; ``nan`` for fewer than three levels.
-    """
     from ..spectral.statistics import mean_spacing_ratio
 
     return mean_spacing_ratio(eigenvalues)

@@ -18,19 +18,17 @@ class QuantumVisualizer:
         self.dpi = dpi
         self.save_dir = Path(save_dir) if save_dir else None
 
-        # Try to use specified style, fall back to default
         try:
             plt.style.use(style)
-        except OSError:  # unknown style name
+        except OSError:
             plt.style.use("default")
 
-        # Color palette for SYK vs Hubbard comparison
         self.colors = {
             "syk": "#E74C3C",
             "hubbard": "#3498DB",
-            "ideal": "#2ECC71",  # Green for ideal
-            "noisy": "#9B59B6",  # Purple for noisy
-            "error": "#E67E22",  # Orange for error
+            "ideal": "#2ECC71",
+            "noisy": "#9B59B6",
+            "error": "#E67E22",
         }
 
     def _save_figure(self, fig: Figure, name: str):
@@ -47,7 +45,6 @@ class QuantumVisualizer:
     ) -> Figure:
         fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
-        # SYK spectral density
         axes[0].hist(
             syk_eigenvalues,
             bins=bins,
@@ -68,7 +65,6 @@ class QuantumVisualizer:
         )
         axes[0].legend()
 
-        # Hubbard spectral density
         axes[1].hist(
             hubbard_eigenvalues,
             bins=bins,
@@ -102,12 +98,6 @@ class QuantumVisualizer:
         bins: int = 25,
         title: str = "Spacing-ratio distributions",
     ) -> Figure:
-        """Histograms of r~ = min(s_n, s_{n-1})/max(s_n, s_{n-1}) with RMT surmises.
-
-        ``ratios`` maps a label to the ratios of one or more *symmetry-resolved*
-        sectors (e.g. ``SYKHamiltonian.spacing_ratios()``); no unfolding is needed.
-        ``references`` are drawn with the Wigner-like surmise of Atas et al. (2013).
-        """
         from ..spectral.rmt import ratio_density
 
         fig, ax = plt.subplots(figsize=self.figsize)
@@ -176,7 +166,6 @@ class QuantumVisualizer:
     ) -> Figure:
         fig, axes = plt.subplots(1, 2, figsize=(14, 5))
 
-        # Real part of OTOC
         axes[0].plot(
             times, np.real(syk_otoc), "-", color=self.colors["syk"], linewidth=2, label="SYK"
         )
@@ -194,11 +183,9 @@ class QuantumVisualizer:
         axes[0].legend()
         axes[0].grid(True, alpha=0.3)
 
-        # 1 - Re[OTOC] on log scale (shows exponential scrambling)
         deviation_syk = 1 - np.real(syk_otoc)
         deviation_hub = 1 - np.real(hubbard_otoc)
 
-        # Avoid log(0)
         deviation_syk = np.maximum(deviation_syk, 1e-15)
         deviation_hub = np.maximum(deviation_hub, 1e-15)
 
@@ -261,7 +248,6 @@ class QuantumVisualizer:
 
         times = comparison_results["times"]
 
-        # Expectation value comparison
         axes[0].plot(
             times,
             comparison_results["ideal_expectation"],
@@ -284,7 +270,6 @@ class QuantumVisualizer:
         axes[0].legend()
         axes[0].grid(True, alpha=0.3)
 
-        # Fidelity decay
         axes[1].plot(
             times, comparison_results["fidelity"], "-", color=self.colors["error"], linewidth=2
         )
@@ -294,7 +279,6 @@ class QuantumVisualizer:
         axes[1].set_ylim(0, 1.05)
         axes[1].grid(True, alpha=0.3)
 
-        # Expectation error
         axes[2].plot(
             times,
             comparison_results["expectation_error"],
@@ -318,7 +302,6 @@ class QuantumVisualizer:
     def plot_qml_comparison(
         self, benchmark_results: dict, title: str = "Kernel SVM accuracy: SYK vs Hubbard kernels"
     ) -> Figure:
-        """Per-trial accuracies and mean +/- std. Descriptive only: no significance test."""
         fig, axes = plt.subplots(1, 2, figsize=(12, 4))
 
         trials = np.arange(1, benchmark_results["n_trials"] + 1)
@@ -379,8 +362,6 @@ class QuantumVisualizer:
 
         steps = error_analysis["steps"]
 
-        # State error is O(t^2/n) (order 1) and O(t^3/n^2) (order 2), so the
-        # infidelity 1 - F ~ |error|^2 scales as n^-2 and n^-4.
         ax.loglog(
             steps,
             error_analysis["error_order1"],
@@ -400,7 +381,6 @@ class QuantumVisualizer:
             label="Second order",
         )
 
-        # Reference slopes anchored at the first data point
         steps_arr = np.array(steps, dtype=float)
         e1, e2 = error_analysis["error_order1"][0], error_analysis["error_order2"][0]
         ax.loglog(
@@ -443,8 +423,6 @@ class QuantumVisualizer:
         if n_rows == 1:
             axes = axes.reshape(1, -1)
 
-        # Row 1: Spectral and OTOC
-        # Spectral density
         ax = axes[0, 0]
         if "eigenvalues" in syk_data:
             ax.hist(
@@ -469,7 +447,6 @@ class QuantumVisualizer:
         ax.set_title("Spectral Density", fontweight="bold")
         ax.legend()
 
-        # Level spacing ratio
         ax = axes[0, 1]
         x = [0, 1]
         lsr_values = [
@@ -499,7 +476,6 @@ class QuantumVisualizer:
         ax.set_title("Level Spacing Ratio", fontweight="bold")
         ax.legend(fontsize=9)
 
-        # Summary text
         ax = axes[0, 2]
         ax.axis("off")
         summary_text = "SUMMARY\n" + "=" * 40 + "\n\n"
@@ -523,7 +499,6 @@ class QuantumVisualizer:
         )
         ax.set_title("Analysis Summary", fontweight="bold")
 
-        # Row 2: NISQ and QML (if available)
         if n_rows > 1 and (nisq_data or qml_data):
             if nisq_data:
                 ax = axes[1, 0]

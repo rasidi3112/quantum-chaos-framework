@@ -1,16 +1,9 @@
-"""Quantum chaos and scrambling toolkit for SYK and Hubbard models.
-
-Public names are resolved lazily (PEP 562) so that importing a light
-subpackage such as :mod:`quantum_chaos.hamiltonians` does not pull in
-optional heavy dependencies (PennyLane, scikit-learn, matplotlib).
-"""
-
 from importlib import import_module
 from importlib.metadata import PackageNotFoundError, version
 
 try:
     __version__ = version("quantum-chaos")
-except PackageNotFoundError:  # running from a source tree without installation
+except PackageNotFoundError:
     __version__ = "0.0.0+unknown"
 
 _LAZY = {

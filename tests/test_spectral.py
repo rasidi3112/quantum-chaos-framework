@@ -1,5 +1,3 @@
-"""Spacing-ratio statistics and RMT references (PLAN P1-1, P1-2)."""
-
 import numpy as np
 import pytest
 
@@ -30,14 +28,12 @@ def test_kramers_pairs_reduce_to_unique_levels():
 
 @pytest.mark.parametrize("ensemble", ["poisson", "goe", "gue", "gse"])
 def test_sampled_ensembles_reproduce_atas_values(ensemble):
-    # dim 64, no trimming: measured finite-size offsets are below 5e-4 (PLAN §8)
     res = ensemble_mean_r(ensemble, dim=64, n_samples=600, rng=7)
     assert abs(res["mean"] - R_MEAN[ensemble]) < 3 * res["stderr"] + 1e-3
 
 
 @pytest.mark.slow
 def test_hermitian_eigh_handles_large_complex_matrices():
-    # zheevd from Apple Accelerate fails for n >~ 3000 (see helpers.hermitian_eigh)
     from quantum_chaos.utils.helpers import hermitian_eigh
 
     rng = np.random.default_rng(0)

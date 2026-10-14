@@ -5,24 +5,6 @@ import numpy as np
 
 @dataclass
 class NoiseModel:
-    """Single-qubit noise parameters.
-
-    Conventions
-    -----------
-    depolarizing_rate : p
-        Per-gate-layer replacement probability, rho -> (1 - p) rho + p I/2
-        (average gate fidelity 1 - p/2). PennyLane's ``DepolarizingChannel``
-        uses a different parametrisation; convert with
-        :func:`pennylane_depolarizing_parameter`.
-    t1, t2 :
-        Relaxation and coherence times in the same time unit as the
-        Hamiltonian evolution (hbar = 1). Physical bound: t2 <= 2 t1.
-        ``np.inf`` disables the corresponding process.
-    gate_time :
-        Default duration over which T1/T2 relaxation acts per call of
-        :meth:`NoiseChannels.full_noise_model`.
-    """
-
     depolarizing_rate: float = 0.01
     t1: float = 1000.0
     t2: float = 500.0
@@ -31,21 +13,10 @@ class NoiseModel:
 
 
 def pennylane_depolarizing_parameter(p: float) -> float:
-    """PennyLane ``DepolarizingChannel`` parameter equivalent to our ``p``.
-
-    Ours: (1 - p) rho + p I/2 = (1 - 3p/4) rho + (p/4) sum_P P rho P.
-    PennyLane: (1 - q) rho + (q/3) sum_P P rho P, hence q = 3p/4.
-    """
     return 3.0 * p / 4.0
 
 
 def relaxation_parameters(duration: float, t1: float, t2: float) -> tuple[float, float]:
-    """Amplitude- and phase-damping parameters (gamma_1, gamma_phi) for a duration.
-
-    Amplitude damping multiplies rho_01 by sqrt(1 - gamma_1) = exp(-t/(2 T1));
-    phase damping multiplies it by sqrt(1 - gamma_phi) = exp(-t/T_phi) with
-    1/T_phi = 1/T2 - 1/(2 T1). Together |rho_01| decays as exp(-t/T2).
-    """
     if t1 <= 0 or t2 <= 0:
         raise ValueError("T1 and T2 must be positive")
     if t2 > 2 * t1 * (1 + 1e-12):
@@ -60,7 +31,6 @@ class NoiseChannels:
     def __init__(self, n_qubits: int):
         self.n_qubits = n_qubits
 
-        # Pauli matrices
         self.I = np.array([[1, 0], [0, 1]], dtype=complex)
         self.X = np.array([[0, 1], [1, 0]], dtype=complex)
         self.Y = np.array([[0, -1j], [1j, 0]], dtype=complex)
@@ -78,8 +48,6 @@ class NoiseChannels:
         return result
 
     def depolarizing_kraus(self, p: float) -> list[np.ndarray]:
-        # Note: Different normalization conventions exist
-        # This uses: E_0 = √(1-3p/4)I, E_1 = √(p/4)X, E_2 = √(p/4)Y, E_3 = √(p/4)Z
         sqrt_1mp = np.sqrt(1 - 3 * p / 4)
         sqrt_p = np.sqrt(p / 4)
 
@@ -171,14 +139,12 @@ class NoiseChannels:
         error_rate: float,
         rng: None | int | np.random.Generator = None,
     ) -> np.ndarray:
-        """Flip each classical bit independently with probability ``error_rate``."""
         noise = np.random.default_rng(rng).random(np.shape(measurement_results)) < error_rate
         return np.logical_xor(measurement_results, noise).astype(int)
 
     def full_noise_model(
         self, rho: np.ndarray, noise_model: NoiseModel, duration: float | None = None
     ) -> np.ndarray:
-        """T1/T2 relaxation for ``duration`` (default ``gate_time``), then depolarizing."""
         if duration is None:
             duration = noise_model.gate_time
         gamma_1, gamma_phi = relaxation_parameters(duration, noise_model.t1, noise_model.t2)
@@ -199,10 +165,8 @@ class NoiseChannels:
     def channel_fidelity(self, kraus_ops: list[np.ndarray]) -> float:
         dim = kraus_ops[0].shape[0]
 
-        # Entanglement fidelity
         F_e = sum(np.abs(np.trace(K)) ** 2 for K in kraus_ops) / dim**2
 
-        # Average fidelity
         F_avg = (dim * F_e + 1) / (dim + 1)
 
         return float(F_avg)

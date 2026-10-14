@@ -1,5 +1,3 @@
-"""Partial trace and entanglement entropy (PLAN P0-2)."""
-
 import numpy as np
 import pytest
 
@@ -47,7 +45,6 @@ def test_reduced_state_has_unit_trace():
 
 
 def test_pure_product_state_reduces_to_projector():
-    # |0>|1>: the original code returned the zero matrix here
     psi = np.kron([1.0, 0.0], [0.0, 1.0]).astype(complex)
     rho_a = partial_trace(np.outer(psi, psi.conj()), [0], [2, 2])
     np.testing.assert_allclose(rho_a, np.diag([1.0, 0.0]), atol=1e-12)

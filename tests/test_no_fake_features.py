@@ -1,5 +1,3 @@
-"""No placeholder or misleading functionality (PLAN P0-9)."""
-
 import pathlib
 import re
 
@@ -50,9 +48,6 @@ def test_source_has_no_placeholders_or_unsupported_claims():
     assert not offenders, "\n".join(offenders)
 
 
-# --- create_otoc_circuit -------------------------------------------------
-
-
 def random_hamiltonian(n_qubits, seed):
     rng = np.random.default_rng(seed)
     a = rng.normal(size=(2**n_qubits,) * 2) + 1j * rng.normal(size=(2**n_qubits,) * 2)
@@ -75,14 +70,12 @@ def test_otoc_circuit_matches_exact_otoc(pure):
     exact = np.real(calc.compute_otoc_exact(W, V, times, state=psi))
     if pure:
         circuit = calc.create_otoc_circuit("X", 0, "Z", 2, initial_state=psi)
-    else:  # infinite temperature; same call signature as the original code
+    else:
         circuit = calc.create_otoc_circuit("X", 0, "Z", 2)
     got = np.array([float(circuit(t)) for t in times])
     np.testing.assert_allclose(got, exact, atol=1e-8)
-    assert np.ptp(exact) > 0.1  # the check is not trivially satisfied by a constant
+    assert np.ptp(exact) > 0.1
 
-
-# --- create_pennylane_noisy_circuit ---------------------------------------
 
 PAULI = {
     "I": np.eye(2, dtype=complex),
@@ -133,11 +126,8 @@ def test_noisy_trotter_circuit_matches_numpy_noise_model():
     rho = np.outer(psi0, psi0.conj())
     for _ in range(3):
         rho = U @ rho @ U.conj().T
-        rho = sim.noise_channels.full_noise_model(rho, model)  # duration = gate_time
+        rho = sim.noise_channels.full_noise_model(rho, model)
     np.testing.assert_allclose(rho_pl, rho, atol=1e-10)
-
-
-# --- effective Hamiltonian --------------------------------------------------
 
 
 def test_lowest_order_effective_hamiltonian_is_period_average():

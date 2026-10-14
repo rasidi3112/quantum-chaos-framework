@@ -13,10 +13,8 @@ class NISQSimulator:
         self.n_qubits = n_qubits
         self.noise_model = noise_model or NoiseModel()
 
-        # Initialize noise channels
         self.noise_channels = NoiseChannels(n_qubits)
 
-        # Create devices
         self._ideal_device = None
         self._noisy_device = None
 
@@ -35,13 +33,6 @@ class NISQSimulator:
     def evolve_with_noise(
         self, initial_rho: np.ndarray, hamiltonian: np.ndarray, total_time: float, n_steps: int = 10
     ) -> np.ndarray:
-        """Split-step noisy evolution: exp(-i H dt), then noise, repeated n_steps times.
-
-        T1/T2 relaxation acts for the physical step duration dt = total_time/n_steps
-        (same time unit as H), so for H = 0 the result does not depend on n_steps.
-        The depolarizing error is a per-step (gate-layer) error and therefore does
-        scale with n_steps.
-        """
         dt = total_time / n_steps
         rho = np.asarray(initial_rho, dtype=complex).copy()
         U = expm(-1j * hamiltonian * dt)
@@ -60,11 +51,6 @@ class NISQSimulator:
         observable: np.ndarray,
         steps_per_unit_time: int = 10,
     ) -> dict:
-        """Ideal vs noisy expectation values and Uhlmann fidelity versus time.
-
-        The noisy run uses ``max(1, int(steps_per_unit_time * t))`` split steps.
-        """
-        # Initial density matrix
         rho_0 = np.outer(initial_state, initial_state.conj())
 
         ideal_values = []
@@ -72,19 +58,16 @@ class NISQSimulator:
         fidelities = []
 
         for t in times:
-            # Ideal evolution
             U = expm(-1j * hamiltonian * t)
             rho_ideal = U @ rho_0 @ U.conj().T
             ideal_exp = np.real(np.trace(observable @ rho_ideal))
             ideal_values.append(ideal_exp)
 
-            # Noisy evolution
             n_steps = max(1, int(steps_per_unit_time * t))
             rho_noisy = self.evolve_with_noise(rho_0, hamiltonian, t, n_steps)
             noisy_exp = np.real(np.trace(observable @ rho_noisy))
             noisy_values.append(noisy_exp)
 
-            # State fidelity
             fidelities.append(fidelity(rho_ideal, rho_noisy))
 
         return {
@@ -96,12 +79,6 @@ class NISQSimulator:
         }
 
     def estimate_circuit_depth_limit(self, target_fidelity: float = 0.9) -> float:
-        """Heuristic depth limit from depolarizing noise only.
-
-        Largest depth d such that the probability that no qubit is depolarized,
-        (1 - p)^(n_qubits * d), stays above ``target_fidelity``. Ignores T1/T2
-        and two-qubit gate errors; returns ``inf`` for p = 0.
-        """
         p = self.noise_model.depolarizing_rate
         if p <= 0:
             return float("inf")
@@ -112,15 +89,6 @@ class NISQSimulator:
     def create_pennylane_noisy_circuit(
         self, pauli_terms: list[tuple[float, str]], total_time: float, n_steps: int, order: int = 1
     ) -> Callable:
-        """Noisy Trotter circuit on ``default.mixed``.
-
-        Each of the ``n_steps`` Trotter layers (order 1 or 2, same gate
-        decomposition as :class:`TrotterEvolution`) is followed, on every
-        qubit, by T1/T2 relaxation for ``noise_model.gate_time`` and one
-        depolarizing error - the same channel sequence as
-        :meth:`NoiseChannels.full_noise_model`. Returns a function
-        ``initial_state -> density matrix``.
-        """
         from ..circuits.trotter_evolution import TrotterEvolution
         from .noise_channels import pennylane_depolarizing_parameter, relaxation_parameters
 

@@ -1,5 +1,3 @@
-"""Smoke tests: every plotting routine runs and saves a figure (Agg backend)."""
-
 import matplotlib
 
 matplotlib.use("Agg")

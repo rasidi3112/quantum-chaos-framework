@@ -1,5 +1,3 @@
-"""Compatibility with the current PennyLane API (PLAN P0-1)."""
-
 import importlib
 import warnings
 

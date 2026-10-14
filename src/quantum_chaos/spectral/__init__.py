@@ -1,5 +1,3 @@
-"""Spectral statistics and random-matrix references."""
-
 from .rmt import R_MEAN, R_SURMISE, ensemble_mean_r, ratio_density, sample_spectrum
 from .statistics import (
     DegenerateSpectrumWarning,

@@ -44,7 +44,6 @@ class OTOCCalculator:
         dim = 2**self.n_qubits
         otoc_values = []
 
-        # Prepare density matrix
         if state is not None:
             rho = np.outer(state, state.conj())
         elif temperature is not None:
@@ -53,7 +52,6 @@ class OTOCCalculator:
             boltzmann = np.exp(-beta * (evals - np.min(evals)))
             rho = (evecs * (boltzmann / np.sum(boltzmann))) @ evecs.conj().T
         else:
-            # Infinite temperature (identity)
             rho = np.eye(dim) / dim
 
         V_dag = V.conj().T
@@ -62,7 +60,6 @@ class OTOCCalculator:
             W_t = self._heisenberg_evolution(W, t)
             W_t_dag = W_t.conj().T
 
-            # C(t) = Tr[ρ W†(t) V† W(t) V]
             product = rho @ W_t_dag @ V_dag @ W_t @ V
             C_t = np.trace(product)
 
@@ -76,7 +73,6 @@ class OTOCCalculator:
         evals, evecs = self._diagonalize()
         beta = 1.0 / temperature
 
-        # y = rho^(1/4) with rho = exp(-beta H)/Z; energies shifted by E_0 (no overflow)
         shifted = evals - np.min(evals)
         boltzmann_quarter = np.exp(-beta * shifted / 4)
         rho_quarter = (evecs * boltzmann_quarter) @ evecs.conj().T
@@ -89,7 +85,6 @@ class OTOCCalculator:
         for t in times:
             W_t = self._heisenberg_evolution(W, t)
 
-            # Regularized correlator
             product = rho_quarter @ W_t @ rho_quarter @ V @ rho_quarter @ W_t @ rho_quarter @ V
             C_t = np.trace(product)
             otoc_values.append(C_t)
@@ -131,10 +126,8 @@ class OTOCCalculator:
         for t in times:
             op_t = self._heisenberg_evolution(initial_op, t)
 
-            # Decompose into Pauli strings
             pauli_decomp = get_pauli_string_representation(op_t, self.n_qubits)
 
-            # Compute average weight
             total_weight = 0
             total_magnitude = 0
 
@@ -161,20 +154,6 @@ class OTOCCalculator:
         V_site: int,
         initial_state: np.ndarray | None = None,
     ):
-        """Interferometric (Hadamard-test) circuit for Re F(t).
-
-        F(t) = Tr[rho W(t)^dag V^dag W(t) V].
-
-        Uses controlled-(U^dag X U) = U^dag (controlled-X) U, so the time
-        evolution U = exp(-iHt) itself is never controlled (Swingle et al.,
-        PRA 94, 040302 (2016)). Here U is applied exactly as a matrix
-        (``qml.QubitUnitary``); a Trotterised version is planned (PLAN 3D).
-
-        ``initial_state=None`` gives infinite temperature, rho = I/D, realised
-        by purification with n reference qubits in Bell pairs; otherwise
-        rho = |psi><psi|. Returns a function ``t -> Re F(t)`` equal to
-        ``Re compute_otoc_exact(W, V, [t], state=initial_state)``.
-        """
         if self.hamiltonian is None:
             raise ValueError("Hamiltonian not set")
         n = self.n_qubits
@@ -193,8 +172,6 @@ class OTOCCalculator:
             else:
                 qml.StatePrep(initial_state, wires=system)
             qml.Hadamard(wires=ancilla)
-            # controlled-A, A = U^dag W U V^dag U^dag W U V (Paulis are Hermitian),
-            # applied right to left
             qml.ctrl(gate[V_pauli](wires=V_site), control=ancilla)
             qml.QubitUnitary(U, wires=system)
             qml.ctrl(gate[W_pauli](wires=W_site), control=ancilla)

@@ -14,11 +14,10 @@ def _basis_state(n_qubits: int, index: int = 0) -> np.ndarray:
 
 
 def _preparation_unitary(psi: np.ndarray) -> np.ndarray:
-    """Unitary V with V|0...0> = psi (up to a global phase), via a Householder reflection."""
     psi = np.asarray(psi, dtype=complex)
     psi = psi / np.linalg.norm(psi)
     phase = np.exp(1j * np.angle(psi[0])) if abs(psi[0]) > 1e-15 else 1.0
-    v = psi / phase  # v[0] is real and >= 0
+    v = psi / phase
     e0 = _basis_state(int(np.log2(len(psi))))
     w = e0 - v
     norm = np.linalg.norm(w)
@@ -29,13 +28,6 @@ def _preparation_unitary(psi: np.ndarray) -> np.ndarray:
 
 
 class QuantumKernel:
-    """Fidelity kernel K(x, x') = |<psi(x)|psi(x')>|^2 with |psi(x)> = U(x)|psi_0>.
-
-    U(x) = exp(-i H(x) t) for a user-supplied ``hamiltonian_constructor``.
-    The reference state ``initial_state`` (default |0...0>) must not be an
-    eigenstate of every H(x), otherwise the kernel is identically 1.
-    """
-
     def __init__(
         self,
         n_qubits: int,
@@ -87,23 +79,13 @@ class QuantumKernel:
         return K
 
     def expressivity_metric(self, n_samples: int = 100, rng: RngLike = None) -> dict:
-        """Descriptive statistics of the kernel on standard-normal random inputs.
-
-        A small spread of off-diagonal values signals kernel concentration
-        (Thanasilp et al., arXiv:2208.11060); these numbers are not a figure
-        of merit by themselves.
-        """
-        # Generate random data
-        data_dim = self.n_qubits  # Assume input dimension = n_qubits
+        data_dim = self.n_qubits
         X = as_rng(rng).standard_normal((n_samples, data_dim))
 
-        # Compute kernel matrix
         K = self.kernel_matrix(X)
 
-        # Extract off-diagonal elements
         off_diag = K[np.triu_indices(n_samples, k=1)]
 
-        # Compute metrics
         return {
             "mean_kernel": float(np.mean(off_diag)),
             "std_kernel": float(np.std(off_diag)),
@@ -122,11 +104,6 @@ class QuantumKernel:
         return float(np.exp(-np.sum(eigenvalues * np.log(eigenvalues + 1e-12))))
 
     def create_pennylane_kernel(self) -> Callable:
-        """Circuit estimate of K(x1, x2) = |<psi_0| U(x2)^dagger U(x1) |psi_0>|^2.
-
-        Prepares |psi_0> with a unitary V (V|0> = psi_0), applies U(x1), then
-        U(x2)^dagger and V^dagger, and returns the probability of |0...0>.
-        """
         wires = list(range(self.n_qubits))
         V = _preparation_unitary(self.initial_state)
 
@@ -146,14 +123,6 @@ class QuantumKernel:
 
 
 class HamiltonianEncodingKernel(QuantumKernel):
-    """Hamiltonian ("local-field") encoding of classical data.
-
-    U(x) = prod_l exp(-i t [H_model + alpha * sum_j x_{l,j} O_j]), where the
-    features are split into consecutive blocks of ``len(local_operators)``
-    (zero-padded); each block is one layer (data re-uploading). Every feature
-    therefore enters the feature map.
-    """
-
     def __init__(
         self,
         model_hamiltonian: np.ndarray,
@@ -192,13 +161,6 @@ class HamiltonianEncodingKernel(QuantumKernel):
 
 
 class SYKKernel(HamiltonianEncodingKernel):
-    """SYK dynamics with local fields: O_j = Z_j = -i chi_{2j} chi_{2j+1}.
-
-    Reference state |0...0> (not an eigenstate of H_SYK for N >= 6). For N = 4
-    the SYK Hamiltonian is a single term -J Z_0 Z_1, which commutes with every
-    Z_j, so the kernel would be identically 1; n_qubits >= 3 is required.
-    """
-
     def __init__(
         self,
         n_qubits: int,
@@ -227,13 +189,6 @@ class SYKKernel(HamiltonianEncodingKernel):
 
 
 class HubbardKernel(HamiltonianEncodingKernel):
-    """Static Hubbard dynamics with site potentials: O_j = n_{j,up} + n_{j,down}.
-
-    Reference state: half-filled Neel Fock state (up on even sites, down on odd
-    sites). Because the particle number is conserved, a uniform shift of all
-    features within one layer only adds a global phase (K is invariant).
-    """
-
     def __init__(
         self,
         n_sites: int,
@@ -266,7 +221,6 @@ class HubbardKernel(HamiltonianEncodingKernel):
 
 
 def neel_state(hubbard) -> np.ndarray:
-    """Half-filled Neel Fock state of a ``DrivenHubbardHamiltonian`` (qubit 0 most significant)."""
     n_qubits = hubbard.n_qubits
     occupied = [
         hubbard._site_spin_to_qubit(j, "up" if j % 2 == 0 else "down")
@@ -282,7 +236,6 @@ def compare_kernel_expressivity(
     n_samples: int = 100,
     rng: RngLike = None,
 ) -> dict:
-    """Kernel statistics of both models on the same random inputs (no ranking)."""
     seed = int(as_rng(rng).integers(2**63))
     return {
         "syk": syk_kernel.expressivity_metric(n_samples, rng=seed),

@@ -1,7 +1,3 @@
-"""
-Hamiltonian Constructors Module
-"""
-
 from .hubbard_ed import HubbardRingED, hubbard_level_statistics
 from .hubbard_hamiltonian import DrivenHubbardHamiltonian
 from .syk_hamiltonian import SYKHamiltonian

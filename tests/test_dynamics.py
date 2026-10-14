@@ -1,5 +1,3 @@
-"""Time evolution: driven Hubbard propagators, OTOC variants, Trotter diagnostics."""
-
 import numpy as np
 import pytest
 from scipy.linalg import expm
@@ -26,7 +24,6 @@ def test_stroboscopic_evolution_applies_the_floquet_operator():
     states = model.stroboscopic_evolution(psi, n_periods=3, n_steps_per_period=40)
     F = model.floquet_operator(n_steps=40)
     np.testing.assert_allclose(states[3], np.linalg.matrix_power(F, 3) @ psi, atol=1e-12)
-    # one period of the midpoint propagator is the Floquet operator
     np.testing.assert_allclose(
         model.time_evolution_operator(2 * np.pi / 3.0, n_steps=40), F, atol=1e-12
     )
@@ -54,9 +51,9 @@ def test_otoc_at_zero_time_and_commutator_relation():
     W, V = calc.local_pauli("Z", 0), calc.local_pauli("X", 2)
     times = np.array([0.0, 0.7])
     F = calc.compute_otoc_exact(W, V, times)
-    assert F[0].real == pytest.approx(1.0)  # Z0 and X2 commute at t = 0
+    assert F[0].real == pytest.approx(1.0)
     anti = calc.compute_otoc_exact(W, calc.local_pauli("X", 0), np.array([0.0]))
-    assert anti[0].real == pytest.approx(-1.0)  # Z0 and X0 anticommute
+    assert anti[0].real == pytest.approx(-1.0)
     np.testing.assert_allclose(
         calc.compute_commutator_squared(W, V, times), 2 * (1 - F.real), atol=1e-12
     )

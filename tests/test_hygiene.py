@@ -1,5 +1,3 @@
-"""Reproducibility, numerical robustness and repository hygiene (PLAN P0-10)."""
-
 import pathlib
 import re
 import warnings
@@ -15,9 +13,6 @@ def global_state_untouched(fn):
     before = np.random.get_state()[1].copy()
     fn()
     return np.array_equal(before, np.random.get_state()[1])
-
-
-# --- explicit RNG -------------------------------------------------------------
 
 
 def test_couplings_are_reproducible_without_global_rng():
@@ -72,9 +67,6 @@ def test_trotter_error_analysis_is_reproducible():
     assert r1["error_order1"] == r2["error_order1"]
 
 
-# --- numerical robustness ---------------------------------------------------
-
-
 def test_thermal_states_at_low_temperature_are_finite():
     from quantum_chaos.circuits.otoc_calculator import OTOCCalculator
     from quantum_chaos.hamiltonians.syk_hamiltonian import SYKHamiltonian
@@ -88,7 +80,6 @@ def test_thermal_states_at_low_temperature_are_finite():
         c = calc.compute_otoc_exact(W, V, np.array([0.0, 0.5]), temperature=1e-3)
         c_reg = calc.compute_regularized_otoc(W, V, np.array([0.0, 0.5]), temperature=1e-3)
     assert np.all(np.isfinite(rho)) and np.trace(rho) == pytest.approx(1.0)
-    # beta -> infinity: thermal state -> ground-state projector
     np.testing.assert_allclose(
         rho, np.outer(syk.eigenvectors[:, 0], syk.eigenvectors[:, 0].conj()), atol=1e-8
     )
@@ -106,9 +97,6 @@ def test_matrix_to_pauli_terms_warns_for_non_hermitian_input():
 
     with pytest.warns(UserWarning):
         matrix_to_pauli_terms(np.array([[0, 1], [0, 0]], dtype=complex), 1)
-
-
-# --- hygiene ------------------------------------------------------------------
 
 
 def test_no_bare_except():

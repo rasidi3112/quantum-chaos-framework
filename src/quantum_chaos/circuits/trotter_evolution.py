@@ -13,12 +13,10 @@ class TrotterEvolution:
         self.shots = shots
         self._device = None
 
-        # Pauli mapping for PennyLane
         self.pauli_map = {"I": qml.Identity, "X": qml.PauliX, "Y": qml.PauliY, "Z": qml.PauliZ}
 
     @property
     def device(self) -> qml.devices.Device:
-        """Analytic device; finite ``shots`` are applied per QNode with ``qml.set_shots``."""
         if self._device is None:
             self._device = qml.device(self.device_name, wires=self.n_qubits)
         return self._device
@@ -33,14 +31,12 @@ class TrotterEvolution:
             if np.abs(coeff) < 1e-12:
                 continue
 
-            # Build tensor product of Paulis
             ops = []
             for i, p in enumerate(pauli_str):
                 if p != "I":
                     ops.append(self.pauli_map[p](i))
 
             if len(ops) == 0:
-                # All identity - contributes constant
                 coeffs.append(np.real(coeff))
                 observables.append(qml.Identity(0))
             elif len(ops) == 1:
@@ -53,7 +49,6 @@ class TrotterEvolution:
         return qml.Hamiltonian(coeffs, observables)
 
     def _pauli_rotation(self, pauli_string: str, angle: float):
-        # Find non-identity qubits and their Pauli types
         active_qubits = []
         pauli_types = []
 
@@ -63,11 +58,9 @@ class TrotterEvolution:
                 pauli_types.append(p)
 
         if len(active_qubits) == 0:
-            # All identity - global phase, skip
             return
 
         if len(active_qubits) == 1:
-            # Single Pauli rotation
             q = active_qubits[0]
             p = pauli_types[0]
             if p == "X":
@@ -78,26 +71,20 @@ class TrotterEvolution:
                 qml.RZ(2 * angle, wires=q)
             return
 
-        # Multi-qubit Pauli rotation using CNOT ladder
-        # 1. Change basis for X and Y
         for q, p in zip(active_qubits, pauli_types, strict=True):
             if p == "X":
                 qml.Hadamard(wires=q)
             elif p == "Y":
                 qml.RX(np.pi / 2, wires=q)
 
-        # 2. CNOT ladder to compute parity
         for i in range(len(active_qubits) - 1):
             qml.CNOT(wires=[active_qubits[i], active_qubits[i + 1]])
 
-        # 3. Z rotation on last qubit
         qml.RZ(2 * angle, wires=active_qubits[-1])
 
-        # 4. Reverse CNOT ladder
         for i in range(len(active_qubits) - 2, -1, -1):
             qml.CNOT(wires=[active_qubits[i], active_qubits[i + 1]])
 
-        # 5. Undo basis change
         for q, p in zip(active_qubits, pauli_types, strict=True):
             if p == "X":
                 qml.Hadamard(wires=q)
@@ -110,12 +97,10 @@ class TrotterEvolution:
             self._pauli_rotation(pauli_str, angle)
 
     def second_order_trotter_layer(self, pauli_terms: list[tuple[float, str]], dt: float):
-        # Forward sweep with dt/2
         for coeff, pauli_str in pauli_terms:
             angle = coeff * dt / 2
             self._pauli_rotation(pauli_str, angle)
 
-        # Backward sweep with dt/2
         for coeff, pauli_str in reversed(pauli_terms):
             angle = coeff * dt / 2
             self._pauli_rotation(pauli_str, angle)
@@ -132,11 +117,9 @@ class TrotterEvolution:
 
         @qml.qnode(self.device)
         def circuit():
-            # Prepare initial state if provided
             if initial_state is not None:
                 qml.StatePrep(initial_state, wires=range(self.n_qubits))
 
-            # Apply Trotter layers
             for _ in range(n_steps):
                 if order == 1:
                     self.first_order_trotter_layer(pauli_terms, dt)
@@ -160,7 +143,6 @@ class TrotterEvolution:
     ) -> Callable:
         dt = total_time / n_steps
 
-        # Build observable
         obs_ops = []
         for i, p in enumerate(observable):
             if p != "I":
@@ -217,14 +199,11 @@ class TrotterEvolution:
         for t in times:
             n_steps = max(1, int(n_steps_per_unit_time * t))
 
-            # Trotter evolution
             trotter_state = self.evolve_state(initial_state, pauli_terms, t, n_steps, order)
 
-            # Exact evolution
             U_exact = expm(-1j * hamiltonian_matrix * t)
             exact_state = U_exact @ initial_state
 
-            # Fidelity
             fid = np.abs(np.vdot(trotter_state, exact_state)) ** 2
             fidelities.append(fid)
 
@@ -238,13 +217,11 @@ class TrotterEvolution:
         max_steps: int = 100,
         rng: None | int | np.random.Generator = None,
     ) -> dict:
-        """Infidelity of order-1/2 Trotter evolution vs exact, from a random state."""
         rng = np.random.default_rng(rng)
         dim = 2**self.n_qubits
         initial_state = rng.standard_normal(dim) + 1j * rng.standard_normal(dim)
         initial_state /= np.linalg.norm(initial_state)
 
-        # Exact evolution
         U_exact = expm(-1j * hamiltonian_matrix * total_time)
         exact_state = U_exact @ initial_state
 
@@ -255,12 +232,10 @@ class TrotterEvolution:
         errors_order2 = []
 
         for n_steps in steps_list:
-            # First order
             state1 = self.evolve_state(initial_state, pauli_terms, total_time, n_steps, order=1)
             err1 = 1 - np.abs(np.vdot(state1, exact_state)) ** 2
             errors_order1.append(err1)
 
-            # Second order
             state2 = self.evolve_state(initial_state, pauli_terms, total_time, n_steps, order=2)
             err2 = 1 - np.abs(np.vdot(state2, exact_state)) ** 2
             errors_order2.append(err2)
@@ -280,7 +255,6 @@ def matrix_to_pauli_terms(
 
     pauli_decomp = get_pauli_string_representation(H, n_qubits, threshold)
 
-    # Filter to real coefficients (Hamiltonian is Hermitian)
     result = []
     for coeff, pauli_str in pauli_decomp:
         if np.abs(np.imag(coeff)) > 1e-10:

@@ -1,5 +1,3 @@
-"""Kernel SVM wrapper and the (descriptive) SYK-vs-Hubbard kernel benchmark."""
-
 import numpy as np
 import pytest
 
@@ -12,8 +10,6 @@ from quantum_chaos.qml.quantum_kernel import QuantumKernel
 
 
 class GaussianKernel(QuantumKernel):
-    """Classical RBF kernel through the same interface (a sanity baseline)."""
-
     def __init__(self, gamma=0.5):
         super().__init__(n_qubits=1)
         self.gamma = gamma
@@ -66,5 +62,4 @@ def test_kernel_pca_features():
     X, _ = blobs(rng, n=12)
     feats = generate_quantum_embedded_features(GaussianKernel(), X, n_components=3)
     assert feats.shape == (12, 3)
-    # centred kernel -> embedded features have zero mean
     np.testing.assert_allclose(feats.mean(axis=0), 0, atol=1e-10)

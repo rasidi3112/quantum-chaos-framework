@@ -1,5 +1,3 @@
-"""Fidelity quantum kernels with Hamiltonian encoding (PLAN P0-7)."""
-
 import numpy as np
 import pytest
 
@@ -57,6 +55,5 @@ def test_pennylane_kernel_matches_statevector_kernel():
 
 
 def test_syk_kernel_rejects_trivial_n4_model():
-    # N = 4: H_SYK = -J Z0 Z1 commutes with all Z_j fields -> K == 1
     with pytest.raises(ValueError):
         SYKKernel(n_qubits=2)

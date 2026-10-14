@@ -1,11 +1,4 @@
 #!/usr/bin/env python3
-"""Quick-start demonstration: symmetry-resolved level statistics and OTOCs.
-
-Builds the overview figure from ``configs/figures/overview.yaml`` (all seeds
-fixed) and prints the numbers it shows. Runtime ~30 s. ``make figures``
-regenerates every figure; ``scripts/validate_level_statistics.py`` the
-validation tables.
-"""
 
 import json
 import pathlib

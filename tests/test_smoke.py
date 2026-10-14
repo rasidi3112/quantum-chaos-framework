@@ -1,5 +1,3 @@
-"""Smoke tests for the src-layout package (no physics assertions)."""
-
 import numpy as np
 
 import quantum_chaos

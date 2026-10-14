@@ -1,9 +1,4 @@
 #!/usr/bin/env python3
-"""Regenerate every figure from ``configs/figures/*.yaml`` (``make figures``).
-
-Each figure is written with a JSON sidecar (plotted numbers, configuration,
-git commit, package source tree and library versions).
-"""
 
 import argparse
 import pathlib

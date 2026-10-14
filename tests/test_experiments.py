@@ -1,5 +1,3 @@
-"""Configuration-driven figure generation (PLAN phase 2)."""
-
 import json
 import pathlib
 

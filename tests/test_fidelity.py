@@ -1,5 +1,3 @@
-"""Uhlmann fidelity (PLAN P0-3)."""
-
 import numpy as np
 import pytest
 

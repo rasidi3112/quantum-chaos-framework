@@ -1,13 +1,4 @@
 #!/usr/bin/env python3
-"""Level-statistics validation tables (PLAN phase 1, VALIDATION.md section 2).
-
-Writes ``results/level_statistics.json`` and prints Markdown tables. All seeds
-are fixed: SYK realisation k uses seed k; RMT references use rng=1; bootstrap
-uses rng=0.
-
-    python scripts/validate_level_statistics.py           # full (~30-40 min)
-    python scripts/validate_level_statistics.py --quick   # N <= 18, L <= 8
-"""
 
 import argparse
 import json
@@ -35,7 +26,6 @@ U = 4.0
 
 
 def git_revision(spec="HEAD"):
-    """Short hash of ``spec``; ``HEAD:src`` identifies the package source tree itself."""
     try:
         return subprocess.run(
             ["git", "rev-parse", "--short", spec],

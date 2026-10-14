@@ -1,5 +1,3 @@
-"""Floquet operator and quasi-energies of the driven Hubbard model (PLAN P0-4)."""
-
 import numpy as np
 import pytest
 from scipy.linalg import expm
@@ -13,7 +11,6 @@ def fold(energies, omega):
 
 @pytest.mark.parametrize("U, omega", [(1.3, 10.0), (7.0, 10.0)])
 def test_static_hamiltonian_quasi_energies_are_folded_eigenvalues(U, omega):
-    # J0 = 0 -> H(t) = H_int is time independent, so eps = E folded into [-w/2, w/2)
     model = DrivenHubbardHamiltonian(
         n_sites=2, hopping_amplitude=0.0, driving_frequency=omega, onsite_interaction=U
     )

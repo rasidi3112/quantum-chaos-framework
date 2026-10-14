@@ -1,10 +1,3 @@
-"""Experiment configurations: YAML files validated into frozen dataclasses.
-
-Every figure is described by one YAML file under ``configs/figures/``; all
-random seeds are explicit fields. Unknown keys are rejected so that a typo
-cannot silently fall back to a default.
-"""
-
 from __future__ import annotations
 
 import dataclasses
@@ -17,8 +10,6 @@ import yaml
 
 @dataclass(frozen=True)
 class SYKStatsConfig:
-    """Disorder-averaged SYK level statistics: N -> number of realisations."""
-
     realisations: dict[int, int]
     rmt_samples: int = 600
     trim: float = 0.0
@@ -28,8 +19,6 @@ class SYKStatsConfig:
 
 @dataclass(frozen=True)
 class HubbardStatsConfig:
-    """Symmetry-resolved Hubbard-ring statistics for several t' values."""
-
     n_sites: int = 8
     n_up: int = 4
     n_down: int = 4
@@ -40,8 +29,6 @@ class HubbardStatsConfig:
 
 @dataclass(frozen=True)
 class OTOCConfig:
-    """Infinite-temperature OTOCs of one SYK realisation and a small Hubbard ring."""
-
     syk_n: int = 12
     syk_seed: int = 7
     hubbard_sites: int = 4
@@ -52,8 +39,6 @@ class OTOCConfig:
 
 @dataclass(frozen=True)
 class FigureConfig:
-    """One figure: ``kind`` selects the builder in :mod:`quantum_chaos.experiments.figures`."""
-
     name: str
     kind: str
     output: str

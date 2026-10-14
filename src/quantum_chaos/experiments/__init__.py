@@ -1,5 +1,3 @@
-"""Configuration-driven experiments and figure generation."""
-
 from .config import FigureConfig, load_figure_config
 from .figures import BUILDERS, make_figure
 
