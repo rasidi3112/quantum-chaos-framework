@@ -152,16 +152,11 @@ def spectral_density(eigenvalues: np.ndarray, bins: int = 50, normalize: bool = 
 
 
 def level_spacing_ratio(eigenvalues: np.ndarray) -> float:
-    sorted_eigs = np.sort(eigenvalues)
-    spacings = np.diff(sorted_eigs)
-    spacings = spacings[spacings > 1e-12]
-    
-    if len(spacings) < 2:
-        return float('nan')
-    
-    ratios = []
-    for i in range(len(spacings) - 1):
-        r = min(spacings[i], spacings[i+1]) / max(spacings[i], spacings[i+1])
-        ratios.append(r)
-    
-    return float(np.mean(ratios))
+    """Mean spacing ratio of one symmetry sector; see :mod:`quantum_chaos.spectral`.
+
+    Exact degeneracies are kept (r = 0) and reported with a
+    ``DegenerateSpectrumWarning``; ``nan`` for fewer than three levels.
+    """
+    from ..spectral.statistics import mean_spacing_ratio
+
+    return mean_spacing_ratio(eigenvalues)

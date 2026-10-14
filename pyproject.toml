@@ -29,12 +29,12 @@ packages = ["src/quantum_chaos"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = ["-ra", "--strict-markers"]
+addopts = ["-ra", "--strict-markers", "-m", "not slow"]
 xfail_strict = true
 filterwarnings = [
     "error::pennylane.exceptions.PennyLaneDeprecationWarning",
     "error:Glyph .* missing from font:UserWarning",
 ]
 markers = [
-    "slow: long-running statistical tests (deselect with '-m \"not slow\"')",
+    "slow: long-running statistical tests, skipped by default (run with '-m slow')",
 ]

@@ -5,7 +5,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from scipy.linalg import expm
 
-from quantum_chaos.hamiltonians.syk_hamiltonian import SYKHamiltonian, disorder_average_lsr, finite_size_scaling
+from quantum_chaos.hamiltonians.syk_hamiltonian import SYKHamiltonian, disorder_average_lsr
 from quantum_chaos.hamiltonians.hubbard_hamiltonian import DrivenHubbardHamiltonian
 
 print("=" * 60)
