@@ -12,6 +12,7 @@ class DrivenHubbardHamiltonian:
         driving_frequency: float = 1.0,
         onsite_interaction: float = 1.0,
         periodic_boundary: bool = False,
+        static_hopping: float = 0.0,
     ):
         if n_sites < 2:
             raise ValueError("Need at least 2 lattice sites")
@@ -22,6 +23,7 @@ class DrivenHubbardHamiltonian:
         self.driving_frequency = driving_frequency
         self.onsite_interaction = onsite_interaction
         self.periodic_boundary = periodic_boundary
+        self.static_hopping = static_hopping
 
         self._jw_mapper = JordanWignerMapper(self.n_qubits)
         self._hopping_matrix: np.ndarray | None = None
@@ -30,7 +32,7 @@ class DrivenHubbardHamiltonian:
         self._static_eigenvectors: np.ndarray | None = None
 
     def hopping_strength(self, t: float) -> float:
-        return self.hopping_amplitude * np.cos(self.driving_frequency * t)
+        return self.static_hopping + self.hopping_amplitude * np.cos(self.driving_frequency * t)
 
     @property
     def hopping_matrix(self) -> np.ndarray:
@@ -182,12 +184,11 @@ class DrivenHubbardHamiltonian:
         return S_z
 
     def effective_hamiltonian(self, order: int = 0) -> np.ndarray:
-        if order != 0:
-            raise NotImplementedError("only the order-0 (period-averaged) term is implemented")
-        T = 2 * np.pi / self.driving_frequency
-        n = 64
-        mean_hopping = np.mean([self.hopping_strength((k + 0.5) * T / n) for k in range(n)])
-        return mean_hopping * self.hopping_matrix + self.interaction_matrix
+        from ..floquet.high_frequency import van_vleck_hamiltonian
+
+        H0 = self.static_hopping * self.hopping_matrix + self.interaction_matrix
+        H1 = self.hopping_amplitude / 2 * self.hopping_matrix
+        return van_vleck_hamiltonian({0: H0, 1: H1, -1: H1}, self.driving_frequency, order)
 
     def summary(self) -> dict:
         return {

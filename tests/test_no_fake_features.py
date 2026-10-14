@@ -141,9 +141,23 @@ def test_lowest_order_effective_hamiltonian_is_period_average():
 
 
 def test_higher_order_effective_hamiltonian_is_not_faked():
+    from quantum_chaos.floquet import floquet_operator, quasi_energies, quasi_energy_distance
     from quantum_chaos.hamiltonians.hubbard_hamiltonian import DrivenHubbardHamiltonian
 
-    model = DrivenHubbardHamiltonian(n_sites=2)
-    for order in (1, 2, 5):
-        with pytest.raises(NotImplementedError):
-            model.effective_hamiltonian(order=order)
+    errors = []
+    for omega in (20.0, 40.0):
+        model = DrivenHubbardHamiltonian(
+            n_sites=2, hopping_amplitude=1.0, driving_frequency=omega, static_hopping=0.7
+        )
+        T = 2 * np.pi / omega
+        q = quasi_energies(floquet_operator(model.hamiltonian, T, n_steps=64), T)
+        errors.append(
+            [
+                quasi_energy_distance(np.linalg.eigvalsh(model.effective_hamiltonian(o)), q, omega)
+                for o in (0, 2)
+            ]
+        )
+    errors = np.array(errors)
+    assert np.all(errors[:, 1] < errors[:, 0] / 10)
+    with pytest.raises(NotImplementedError):
+        DrivenHubbardHamiltonian(n_sites=2).effective_hamiltonian(order=5)

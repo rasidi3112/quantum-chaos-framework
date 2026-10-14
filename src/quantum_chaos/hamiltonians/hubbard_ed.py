@@ -132,6 +132,23 @@ class HubbardRingED:
             )
         ).tocsr()
 
+    def hopping_operator(self, distance: int = 1) -> csr_matrix:
+        terms = []
+        for j in range(self.L):
+            for s in ("up", "down"):
+                a, b = self.mode(j, s), self.mode(j + distance, s)
+                terms.append((-1.0, [(True, b), (False, a)]))
+                terms.append((-1.0, [(True, a), (False, b)]))
+        return self.operator(terms)
+
+    def double_occupancy(self) -> csr_matrix:
+        L = self.L
+        doublons = _popcount(self.configs & (self.configs >> L) & ((1 << L) - 1))
+        return coo_matrix(
+            (doublons.astype(complex), (np.arange(self.dim), np.arange(self.dim))),
+            shape=(self.dim, self.dim),
+        ).tocsr()
+
     def translation(self) -> csr_matrix:
         return self.site_permutation([(j + 1) % self.L for j in range(self.L)])
 
