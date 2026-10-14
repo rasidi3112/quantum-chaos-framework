@@ -1,7 +1,7 @@
 # VALIDATION
 
 What has been tested, with which tolerance, what came out, and what is **not**
-yet verified. Status after phase 1 of [PLAN.md](PLAN.md) (2026-10-14).
+yet verified. Status after phase 1 of [PLAN.md](https://github.com/rasidi3112/quantum-chaos-framework/blob/main/PLAN.md) (2026-10-14).
 
 Environment of the recorded runs: macOS (Apple M1, 16 GB), Python 3.13.5 and
 3.14.6, NumPy 2.5.4, SciPy 1.18.1, PennyLane 0.45.1. The test suite has **not**
@@ -41,7 +41,7 @@ code (`git log` shows the failing-first commits with the original output).
 ## 2. Level statistics
 
 Produced by `scripts/validate_level_statistics.py` (raw numbers and provenance
-in [results/level_statistics.json](results/level_statistics.json); package
+in [results/level_statistics.json](https://github.com/rasidi3112/quantum-chaos-framework/blob/main/results/level_statistics.json); package
 source tree `03c1a9a`). Errors are one standard error. Same-size RMT: random
 GOE/GUE/GSE matrices with the same number of distinct levels as one SYK
 sector, analysed identically (`syk_rmt_reference`); z is the difference in

@@ -1,0 +1,55 @@
+site_name: Quantum Chaos Framework
+site_description: Symmetry-resolved diagnostics of quantum chaos and scrambling in SYK and Hubbard models
+repo_url: https://github.com/rasidi3112/quantum-chaos-framework
+edit_uri: ""
+
+theme:
+  name: material
+  features:
+    - content.code.copy
+    - navigation.sections
+
+nav:
+  - Home: index.md
+  - Conventions: conventions.md
+  - Tutorials:
+      - Level statistics and symmetry classes: tutorials/01_level_statistics.py
+      - OTOCs, circuits and noise: tutorials/02_otoc_circuits_noise.py
+  - Validation: validation.md
+  - API reference:
+      - Hamiltonians: api/hamiltonians.md
+      - Spectral statistics: api/spectral.md
+      - Circuits and OTOCs: api/circuits.md
+      - Noise: api/noise.md
+      - Quantum kernels: api/qml.md
+      - Experiments: api/experiments.md
+      - Utilities: api/utils.md
+
+plugins:
+  - search
+  - mkdocs-jupyter:
+      include: ["tutorials/*.py"]
+      execute: true
+      allow_errors: false
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src]
+          options:
+            docstring_style: numpy
+            show_source: false
+            members_order: source
+            show_root_heading: true
+
+markdown_extensions:
+  - admonition
+  - tables
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.snippets:
+      base_path: ["."]
+      check_paths: true
+  - pymdownx.superfences
+
+extra_javascript:
+  - https://cdn.jsdelivr.net/npm/mathjax@3.2.2/es5/tex-mml-chtml.js
