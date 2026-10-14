@@ -59,20 +59,32 @@ def matrix_exponential(H: np.ndarray, t: float = 1.0) -> np.ndarray:
 
 
 def partial_trace(rho: np.ndarray, keep: List[int], dims: List[int]) -> np.ndarray:
-    n_subsystems = len(dims)
-    keep = sorted(keep)
-    trace_out = [i for i in range(n_subsystems) if i not in keep]
-    
-    shape = dims + dims
-    rho_reshaped = rho.reshape(shape)
-    
-    for i in sorted(trace_out, reverse=True):
-        n_remaining = len(dims) - len(trace_out) + len([t for t in trace_out if t > i])
-        rho_reshaped = np.trace(rho_reshaped, axis1=i, axis2=i + n_remaining)
-        shape = [d for j, d in enumerate(shape) if j != i and j != i + n_remaining]
-    
+    """Reduced density matrix on the subsystems ``keep``.
+
+    ``rho`` acts on the tensor product of subsystems with dimensions ``dims``
+    (subsystem 0 is the most significant factor of the Kronecker product).
+    The kept subsystems are returned in increasing index order.
+    """
+    dims = [int(d) for d in dims]
+    n = len(dims)
+    total = int(np.prod(dims))
+    if rho.shape != (total, total):
+        raise ValueError(f"rho has shape {rho.shape}, expected {(total, total)} for dims={dims}")
+    keep = sorted(set(keep))
+    if any(k < 0 or k >= n for k in keep):
+        raise ValueError(f"keep={keep} out of range for {n} subsystems")
+    if n > 26:
+        raise ValueError("partial_trace supports at most 26 subsystems")
+
+    # Row indices get letters a.., column indices A..; traced subsystems share a letter.
+    row = [chr(ord("a") + i) for i in range(n)]
+    col = [row[i] if i not in keep else chr(ord("A") + i) for i in range(n)]
+    out = [row[i] for i in keep] + [col[i] for i in keep]
+    spec = "".join(row) + "".join(col) + "->" + "".join(out)
+    reduced = np.einsum(spec, rho.reshape(dims + dims))
+
     kept_dim = int(np.prod([dims[i] for i in keep]))
-    return rho_reshaped.reshape(kept_dim, kept_dim)
+    return reduced.reshape(kept_dim, kept_dim)
 
 
 def fidelity(rho: np.ndarray, sigma: np.ndarray) -> float:

@@ -5,8 +5,6 @@ import pytest
 
 from quantum_chaos.utils.helpers import entanglement_entropy, partial_trace
 
-BUG = "P0-2: partial_trace contracts the wrong axes"
-
 
 def random_density_matrix(dim, rng):
     a = rng.normal(size=(dim, dim)) + 1j * rng.normal(size=(dim, dim))
@@ -21,10 +19,6 @@ def kron_all(*ops):
     return out
 
 
-# --- failing-first tests (fail on the original implementation) -------------
-
-
-@pytest.mark.xfail(reason=BUG, strict=True)
 @pytest.mark.parametrize("dims", [(2, 2), (2, 3), (3, 2)])
 def test_trace_out_second_factor_of_product_state(dims):
     rng = np.random.default_rng(1)
@@ -35,7 +29,6 @@ def test_trace_out_second_factor_of_product_state(dims):
     np.testing.assert_allclose(partial_trace(rho, [1], list(dims)), rho_b, atol=1e-12)
 
 
-@pytest.mark.xfail(reason=BUG, strict=True)
 def test_three_subsystems_keep_non_adjacent():
     rng = np.random.default_rng(2)
     rhos = [random_density_matrix(d, rng) for d in (2, 3, 2)]
@@ -46,7 +39,6 @@ def test_three_subsystems_keep_non_adjacent():
     np.testing.assert_allclose(partial_trace(rho, [1], [2, 3, 2]), rhos[1], atol=1e-12)
 
 
-@pytest.mark.xfail(reason=BUG, strict=True)
 def test_reduced_state_has_unit_trace():
     rng = np.random.default_rng(3)
     rho = random_density_matrix(8, rng)
@@ -54,15 +46,11 @@ def test_reduced_state_has_unit_trace():
         assert np.trace(partial_trace(rho, keep, [2, 2, 2])) == pytest.approx(1.0, abs=1e-12)
 
 
-@pytest.mark.xfail(reason=BUG, strict=True)
 def test_pure_product_state_reduces_to_projector():
     # |0>|1>: the original code returned the zero matrix here
     psi = np.kron([1.0, 0.0], [0.0, 1.0]).astype(complex)
     rho_a = partial_trace(np.outer(psi, psi.conj()), [0], [2, 2])
     np.testing.assert_allclose(rho_a, np.diag([1.0, 0.0]), atol=1e-12)
-
-
-# --- regression tests (already pass on the original code, by accident) -----
 
 
 def test_entropy_of_product_state_is_zero():
@@ -75,7 +63,6 @@ def test_entropy_of_bell_state_is_one_bit():
     assert entanglement_entropy(bell, [0], 2) == pytest.approx(1.0, abs=1e-12)
 
 
-@pytest.mark.xfail(reason=BUG, strict=True)
 def test_entropy_ghz_and_complementary_subsystems():
     ghz = np.zeros(8, dtype=complex)
     ghz[0] = ghz[-1] = 1 / np.sqrt(2)
