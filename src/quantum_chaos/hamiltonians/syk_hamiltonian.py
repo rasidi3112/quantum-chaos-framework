@@ -312,3 +312,17 @@ def syk_rmt_reference(
     )
     res["symmetry_class"] = cls
     return res
+
+
+def syk2_hamiltonian(
+    n_majorana: int, seed: RngLike = None, coupling_strength: float = 1.0, chi_squared: float = 1.0
+) -> csr_matrix:
+    rng = np.random.default_rng(seed)
+    n = n_majorana // 2
+    chis = [majorana_pauli(a, n) for a in range(n_majorana)]
+    sigma = coupling_strength / np.sqrt(n_majorana)
+    terms = []
+    for i, j in combinations(range(n_majorana), 2):
+        x, z, phase = _pauli_product(chis[i], chis[j])
+        terms.append((x, z, 1j * rng.normal(0, sigma) * chi_squared * phase))
+    return pauli_terms_to_sparse(terms, n)
