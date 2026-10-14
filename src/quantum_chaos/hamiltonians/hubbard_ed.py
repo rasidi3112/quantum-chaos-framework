@@ -281,8 +281,8 @@ class HubbardRingED:
             labels = {}
             for key in ("S2", "eta2", "R"):
                 if key in mats:
-                    labels[key] = np.einsum("ik,ij,jk->k", vecs.conj(), mats[key], vecs).real
-            energies = np.einsum("ik,ij,jk->k", vecs.conj(), mats["H"], vecs).real
+                    labels[key] = _expectations(vecs, mats[key])
+            energies = _expectations(vecs, mats["H"])
             S = _casimir_to_spin(labels["S2"], "S")
             eta = _casimir_to_spin(labels["eta2"], "eta") if "eta2" in labels else None
             R = _round_checked(labels["R"], (-1.0, 1.0), "R") if "R" in labels else None
@@ -292,6 +292,11 @@ class HubbardRingED:
         return [{"m": key[0], "K": 2 * np.pi * key[0] / L, "S": key[1], "eta": key[2],
                  "reflection": key[3], "energies": np.sort(np.array(levels))}
                 for key, levels in sorted(blocks.items(), key=lambda kv: str(kv[0]))]
+
+
+def _expectations(vecs: np.ndarray, op: np.ndarray) -> np.ndarray:
+    """Real parts of <v_k|op|v_k> for every column v_k (one BLAS matmul)."""
+    return np.real(np.sum(vecs.conj() * (op @ vecs), axis=0))
 
 
 def _identity(dim: int) -> csr_matrix:
