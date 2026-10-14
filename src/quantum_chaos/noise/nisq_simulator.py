@@ -13,12 +13,10 @@ class NISQSimulator:
     def __init__(
         self,
         n_qubits: int,
-        noise_model: Optional[NoiseModel] = None,
-        shots: int = 1000
+        noise_model: Optional[NoiseModel] = None
     ):
         self.n_qubits = n_qubits
         self.noise_model = noise_model or NoiseModel()
-        self.shots = shots
         
         # Initialize noise channels
         self.noise_channels = NoiseChannels(n_qubits)
@@ -28,23 +26,15 @@ class NISQSimulator:
         self._noisy_device = None
     
     @property
-    def ideal_device(self) -> qml.Device:
+    def ideal_device(self) -> qml.devices.Device:
         if self._ideal_device is None:
-            self._ideal_device = qml.device(
-                'default.qubit',
-                wires=self.n_qubits,
-                shots=self.shots
-            )
+            self._ideal_device = qml.device('default.qubit', wires=self.n_qubits)
         return self._ideal_device
     
     @property
-    def noisy_device(self) -> qml.Device:
+    def noisy_device(self) -> qml.devices.Device:
         if self._noisy_device is None:
-            self._noisy_device = qml.device(
-                'default.mixed',
-                wires=self.n_qubits,
-                shots=self.shots
-            )
+            self._noisy_device = qml.device('default.mixed', wires=self.n_qubits)
         return self._noisy_device
     
     def create_noisy_circuit(
@@ -302,7 +292,7 @@ class NISQSimulator:
         @qml.qnode(self.noisy_device)
         def noisy_evolution_circuit(initial_state):
             # Prepare initial state
-            qml.QubitStateVector(initial_state, wires=range(self.n_qubits))
+            qml.StatePrep(initial_state, wires=range(self.n_qubits))
             
             for _ in range(n_steps):
                 # Trotter step (simplified)
@@ -323,7 +313,6 @@ class NISQSimulator:
     def summary(self) -> Dict:
         return {
             'n_qubits': self.n_qubits,
-            'shots': self.shots,
             'depolarizing_rate': self.noise_model.depolarizing_rate,
             'amplitude_damping_rate': self.noise_model.amplitude_damping_rate,
             'T1': self.noise_model.t1,

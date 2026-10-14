@@ -1,7 +1,6 @@
 """Compatibility with the current PennyLane API (PLAN P0-1)."""
 
 import importlib
-import sys
 import warnings
 
 import numpy as np
@@ -28,15 +27,12 @@ def pauli_matrix(terms):
     return out
 
 
-@pytest.mark.xfail(sys.version_info < (3, 14), strict=True,
-                   reason="P0-1: annotation qml.Device is evaluated at import on Python < 3.14")
 @pytest.mark.parametrize("name", ["hamiltonians", "circuits", "noise", "qml", "utils",
                                   "visualization"])
 def test_subpackage_imports(name):
     importlib.import_module(f"quantum_chaos.{name}")
 
 
-@pytest.mark.xfail(reason="P0-1: qml.operation.Tensor was removed", strict=True)
 def test_hamiltonian_to_pennylane_reproduces_matrix():
     from quantum_chaos.circuits.trotter_evolution import TrotterEvolution
 
@@ -44,7 +40,6 @@ def test_hamiltonian_to_pennylane_reproduces_matrix():
     np.testing.assert_allclose(qml.matrix(H, wire_order=[0, 1]), pauli_matrix(TERMS), atol=1e-12)
 
 
-@pytest.mark.xfail(reason="P0-1: qml.QubitStateVector was removed", strict=True)
 def test_evolve_state_from_given_initial_state():
     from quantum_chaos.circuits.trotter_evolution import TrotterEvolution
 
@@ -56,7 +51,6 @@ def test_evolve_state_from_given_initial_state():
     assert abs(np.vdot(exact, got)) ** 2 == pytest.approx(1.0, abs=1e-8)
 
 
-@pytest.mark.xfail(reason="P0-1: shots set on the device is deprecated", strict=True)
 def test_sampled_expectation_without_deprecation_warning():
     from quantum_chaos.circuits.trotter_evolution import TrotterEvolution
 

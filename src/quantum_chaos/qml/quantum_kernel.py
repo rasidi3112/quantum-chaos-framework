@@ -22,7 +22,7 @@ class QuantumKernel:
         self._device = None
     
     @property
-    def device(self) -> qml.Device:
+    def device(self) -> qml.devices.Device:
         if self._device is None:
             self._device = qml.device('default.qubit', wires=self.n_qubits)
         return self._device

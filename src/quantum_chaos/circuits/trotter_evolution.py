@@ -28,19 +28,16 @@ class TrotterEvolution:
         }
     
     @property
-    def device(self) -> qml.Device:
+    def device(self) -> qml.devices.Device:
+        """Analytic device; finite ``shots`` are applied per QNode with ``qml.set_shots``."""
         if self._device is None:
-            self._device = qml.device(
-                self.device_name, 
-                wires=self.n_qubits, 
-                shots=self.shots
-            )
+            self._device = qml.device(self.device_name, wires=self.n_qubits)
         return self._device
     
     def hamiltonian_to_pennylane(
         self,
         pauli_terms: List[Tuple[complex, str]]
-    ) -> qml.Hamiltonian:
+    ) -> qml.ops.LinearCombination:
         coeffs = []
         observables = []
         
@@ -63,7 +60,7 @@ class TrotterEvolution:
                 observables.append(ops[0])
             else:
                 coeffs.append(np.real(coeff))
-                observables.append(qml.operation.Tensor(*ops))
+                observables.append(qml.prod(*ops))
         
         return qml.Hamiltonian(coeffs, observables)
     
@@ -161,7 +158,7 @@ class TrotterEvolution:
         def circuit():
             # Prepare initial state if provided
             if initial_state is not None:
-                qml.QubitStateVector(initial_state, wires=range(self.n_qubits))
+                qml.StatePrep(initial_state, wires=range(self.n_qubits))
             
             # Apply Trotter layers
             for _ in range(n_steps):
@@ -198,12 +195,12 @@ class TrotterEvolution:
         elif len(obs_ops) == 1:
             obs = obs_ops[0]
         else:
-            obs = qml.operation.Tensor(*obs_ops)
+            obs = qml.prod(*obs_ops)
         
         @qml.qnode(self.device)
         def circuit():
             if initial_state is not None:
-                qml.QubitStateVector(initial_state, wires=range(self.n_qubits))
+                qml.StatePrep(initial_state, wires=range(self.n_qubits))
             
             for _ in range(n_steps):
                 if order == 1:
@@ -213,6 +210,8 @@ class TrotterEvolution:
             
             return qml.expval(obs)
         
+        if self.shots is not None:
+            circuit = qml.set_shots(circuit, shots=self.shots)
         return circuit
     
     def evolve_state(
