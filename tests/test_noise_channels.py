@@ -22,7 +22,6 @@ def all_kraus_sets(nc):
 # --- P0-5 -------------------------------------------------------------------
 
 
-@pytest.mark.xfail(reason="P0-5: apply_channel accumulates into a real array", strict=True)
 def test_apply_channel_accepts_real_density_matrix():
     nc = NoiseChannels(1)
     rho_real = np.array([[0.75, 0.25], [0.25, 0.25]])
@@ -67,7 +66,6 @@ def relax(rho, model, n_calls=1):
     return rho
 
 
-@pytest.mark.xfail(reason="P0-6: dephasing uses T2 instead of T_phi", strict=True)
 @pytest.mark.parametrize("t1, t2", [(100.0, 80.0), (50.0, 100.0), (30.0, 5.0)])
 def test_coherence_decays_as_exp_minus_t_over_t2(t1, t2):
     t = 20.0
@@ -83,13 +81,11 @@ def test_population_decays_as_exp_minus_t_over_t1(t1, t2):
     assert rho[1, 1].real == pytest.approx(np.exp(-20.0 / t1), rel=1e-12)
 
 
-@pytest.mark.xfail(reason="P0-6: no validation of the physical bound T2 <= 2 T1", strict=True)
 def test_unphysical_t2_is_rejected():
     with pytest.raises(ValueError):
         relax(PLUS, NoiseModel(depolarizing_rate=0.0, t1=10.0, t2=25.0))
 
 
-@pytest.mark.xfail(reason="P0-6/A5: decoherence scales with the number of steps", strict=True)
 def test_evolve_with_noise_is_independent_of_step_count_for_h_zero():
     from quantum_chaos.noise.nisq_simulator import NISQSimulator
 
@@ -103,7 +99,6 @@ def test_evolve_with_noise_is_independent_of_step_count_for_h_zero():
         assert rho[1, 1].real == pytest.approx(0.5 * np.exp(-t / 40.0), rel=1e-10)
 
 
-@pytest.mark.xfail(reason="P0-6/A4: summary reports 1-3p/4 as the gate fidelity", strict=True)
 def test_summary_reports_average_gate_fidelity():
     from quantum_chaos.noise.nisq_simulator import NISQSimulator
 
@@ -114,7 +109,6 @@ def test_summary_reports_average_gate_fidelity():
         nc.channel_fidelity(nc.depolarizing_kraus(p)), abs=1e-15)
 
 
-@pytest.mark.xfail(reason="P0-6/A4: PennyLane depolarizing uses a different convention", strict=True)
 def test_pennylane_depolarizing_parameter_matches_numpy_convention():
     import pennylane as qml
 
@@ -130,3 +124,14 @@ def test_pennylane_depolarizing_parameter_matches_numpy_convention():
     expected = nc.apply_channel(rho, nc.depolarizing_kraus(p), 0)
     got = sum(K @ rho @ K.conj().T for K in kraus_pl)
     np.testing.assert_allclose(got, expected, atol=1e-14)
+
+
+def test_depth_limit_is_largest_depth_above_target():
+    from quantum_chaos.noise.nisq_simulator import NISQSimulator
+
+    p, n, target = 0.01, 3, 0.9
+    d = NISQSimulator(n_qubits=n, noise_model=NoiseModel(depolarizing_rate=p)) \
+        .estimate_circuit_depth_limit(target)
+    assert (1 - p) ** (n * d) >= target > (1 - p) ** (n * (d + 1))
+    noiseless = NISQSimulator(n_qubits=n, noise_model=NoiseModel(depolarizing_rate=0.0))
+    assert noiseless.estimate_circuit_depth_limit(target) == float("inf")
