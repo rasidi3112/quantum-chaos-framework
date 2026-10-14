@@ -6,6 +6,7 @@ from typing import List, Tuple, Optional, Dict, Callable
 from scipy.linalg import expm
 
 from .noise_channels import NoiseChannels, NoiseModel
+from ..utils.helpers import fidelity
 
 
 class NISQSimulator:
@@ -221,10 +222,7 @@ class NISQSimulator:
             noisy_values.append(noisy_exp)
             
             # State fidelity
-            fid = np.real(np.trace(
-                np.sqrt(np.sqrt(rho_ideal) @ rho_noisy @ np.sqrt(rho_ideal))
-            )) ** 2
-            fidelities.append(fid)
+            fidelities.append(fidelity(rho_ideal, rho_noisy))
         
         return {
             'times': times,

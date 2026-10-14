@@ -87,14 +87,37 @@ def partial_trace(rho: np.ndarray, keep: List[int], dims: List[int]) -> np.ndarr
     return reduced.reshape(kept_dim, kept_dim)
 
 
+def _clip_psd_spectrum(evals: np.ndarray) -> np.ndarray:
+    """Zero out eigenvalues that are round-off noise of a PSD matrix.
+
+    The square root amplifies noise (sqrt(1e-17) ~ 3e-9), so eigenvalues
+    below ``dim * eps * max|lambda|`` are treated as exact zeros.
+    """
+    tol = evals.size * np.finfo(float).eps * max(np.max(np.abs(evals)), 1e-300)
+    return np.where(evals > tol, evals, 0.0)
+
+
+def _psd_sqrt(rho: np.ndarray) -> np.ndarray:
+    """Square root of a Hermitian positive semi-definite matrix.
+
+    Uses an eigendecomposition (stable for rank-deficient states, unlike
+    ``scipy.linalg.sqrtm``).
+    """
+    rho = (rho + rho.conj().T) / 2
+    evals, evecs = np.linalg.eigh(rho)
+    return (evecs * np.sqrt(_clip_psd_spectrum(evals))) @ evecs.conj().T
+
+
 def fidelity(rho: np.ndarray, sigma: np.ndarray) -> float:
-    from scipy.linalg import sqrtm
-    
-    sqrt_rho = sqrtm(rho)
-    prod = sqrt_rho @ sigma @ sqrt_rho
-    sqrt_prod = sqrtm(prod)
-    
-    return np.real(np.trace(sqrt_prod)) ** 2
+    """Uhlmann fidelity F(rho, sigma) = (Tr sqrt(sqrt(rho) sigma sqrt(rho)))^2.
+
+    Squared convention: F(|psi><psi|, |phi><phi|) = |<psi|phi>|^2.
+    """
+    sqrt_rho = _psd_sqrt(np.asarray(rho, dtype=complex))
+    inner = sqrt_rho @ np.asarray(sigma, dtype=complex) @ sqrt_rho
+    inner = (inner + inner.conj().T) / 2
+    evals = _clip_psd_spectrum(np.linalg.eigvalsh(inner))
+    return float(np.sum(np.sqrt(evals)) ** 2)
 
 
 def state_fidelity(psi: np.ndarray, phi: np.ndarray) -> float:

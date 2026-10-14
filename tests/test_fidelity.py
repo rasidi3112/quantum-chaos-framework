@@ -5,10 +5,6 @@ import pytest
 
 from quantum_chaos.utils.helpers import fidelity
 
-BUG = "P0-3: compare_ideal_vs_noisy takes element-wise square roots"
-SQRTM = "P0-3: scipy sqrtm is inaccurate (~1e-7) for rank-deficient states"
-
-
 def random_pure(dim, rng):
     psi = rng.normal(size=dim) + 1j * rng.normal(size=dim)
     return psi / np.linalg.norm(psi)
@@ -20,7 +16,6 @@ def random_mixed(dim, rank, rng):
     return rho / np.trace(rho)
 
 
-@pytest.mark.xfail(reason=BUG, strict=True)
 def test_noiseless_compare_ideal_vs_noisy_has_unit_fidelity():
     from quantum_chaos.noise.nisq_simulator import NISQSimulator
     from quantum_chaos.noise.noise_channels import NoiseModel
@@ -34,17 +29,15 @@ def test_noiseless_compare_ideal_vs_noisy_has_unit_fidelity():
     np.testing.assert_allclose(out["fidelity"], 1.0, atol=1e-10)
 
 
-@pytest.mark.xfail(reason=SQRTM, strict=True)
 @pytest.mark.parametrize("dim", [2, 4, 8])
 def test_fidelity_of_state_with_itself_is_one(dim):
     rng = np.random.default_rng(dim)
-    for rho in (np.outer(*(2 * [random_pure(dim, rng)])), random_mixed(dim, 1, rng),
-                random_mixed(dim, 2, rng), random_mixed(dim, dim, rng)):
-        rho = rho / np.trace(rho)
+    psi = random_pure(dim, rng)
+    pure = np.outer(psi, psi.conj())
+    for rho in (pure, random_mixed(dim, 1, rng), random_mixed(dim, 2, rng), random_mixed(dim, dim, rng)):
         assert fidelity(rho, rho) == pytest.approx(1.0, abs=1e-10)
 
 
-@pytest.mark.xfail(reason=SQRTM, strict=True)
 def test_pure_states_reduce_to_squared_overlap():
     rng = np.random.default_rng(7)
     for _ in range(5):
@@ -54,7 +47,6 @@ def test_pure_states_reduce_to_squared_overlap():
         assert got == pytest.approx(expected, abs=1e-10)
 
 
-@pytest.mark.xfail(reason=SQRTM, strict=True)
 def test_symmetric_and_bounded():
     rng = np.random.default_rng(8)
     for _ in range(5):
