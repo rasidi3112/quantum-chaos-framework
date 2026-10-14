@@ -36,6 +36,7 @@ import numpy as np
 from scipy.sparse import coo_matrix, csr_matrix
 
 from ..spectral.statistics import spacing_ratios
+from ..utils.helpers import hermitian_eigh
 
 _POP_LUT = np.array([bin(i).count("1") for i in range(1 << 16)], dtype=np.int64)
 
@@ -277,7 +278,7 @@ class HubbardRingED:
                 M = M + shifts[1] * mats["eta2"]
             if "R" in mats:
                 M = M + shifts[2] * mats["R"]
-            _, vecs = np.linalg.eigh((M + M.conj().T) / 2)
+            _, vecs = hermitian_eigh(M)
             labels = {}
             for key in ("S2", "eta2", "R"):
                 if key in mats:

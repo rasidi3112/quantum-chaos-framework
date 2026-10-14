@@ -21,12 +21,11 @@ N mod 8 = 2, 6 (P exchanges the sectors, whose spectra are then identical).
 import numpy as np
 from scipy.sparse import coo_matrix, csr_matrix
 from scipy.sparse.linalg import eigsh
-from scipy.linalg import eigh
 from typing import Optional, Tuple, Dict, List
 from itertools import combinations
 
 from ..utils.jordan_wigner import JordanWignerMapper
-from ..utils.helpers import RngLike, generate_random_coupling, spectral_density
+from ..utils.helpers import RngLike, generate_random_coupling, hermitian_eigh, spectral_density
 from ..spectral.rmt import R_MEAN, ensemble_mean_r
 from ..spectral.statistics import bootstrap_mean, spacing_ratios
 
@@ -186,7 +185,7 @@ class SYKHamiltonian:
                 self.sparse_hamiltonian, k=n_eigenvalues, which='SA'
             )
         else:
-            self._eigenvalues, self._eigenvectors = eigh(self.sparse_hamiltonian.toarray())
+            self._eigenvalues, self._eigenvectors = hermitian_eigh(self.sparse_hamiltonian.toarray())
     
     def get_ground_state(self) -> Tuple[float, np.ndarray]:
         return self.eigenvalues[0], self.eigenvectors[:, 0]
@@ -238,7 +237,8 @@ class SYKHamiltonian:
     
     def sector_eigenvalues(self, sector: str = 'even') -> np.ndarray:
         if sector not in self._sector_levels:
-            self._sector_levels[sector] = np.linalg.eigvalsh(self.parity_projection(sector))
+            self._sector_levels[sector] = hermitian_eigh(self.parity_projection(sector),
+                                                         eigvals_only=True)
         return self._sector_levels[sector]
     
     def particle_hole_unitary(self) -> np.ndarray:

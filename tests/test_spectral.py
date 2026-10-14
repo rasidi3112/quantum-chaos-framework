@@ -28,3 +28,15 @@ def test_sampled_ensembles_reproduce_atas_values(ensemble):
     # dim 64, no trimming: measured finite-size offsets are below 5e-4 (PLAN §8)
     res = ensemble_mean_r(ensemble, dim=64, n_samples=600, rng=7)
     assert abs(res["mean"] - R_MEAN[ensemble]) < 3 * res["stderr"] + 1e-3
+
+
+@pytest.mark.slow
+def test_hermitian_eigh_handles_large_complex_matrices():
+    # zheevd from Apple Accelerate fails for n >~ 3000 (see helpers.hermitian_eigh)
+    from quantum_chaos.utils.helpers import hermitian_eigh
+
+    rng = np.random.default_rng(0)
+    a = rng.standard_normal((3200, 3200)) + 1j * rng.standard_normal((3200, 3200))
+    a = (a + a.conj().T) / 2
+    w, v = hermitian_eigh(a)
+    np.testing.assert_allclose(a @ v[:, :5], v[:, :5] * w[:5], atol=1e-8)

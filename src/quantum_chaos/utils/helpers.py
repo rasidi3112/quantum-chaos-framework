@@ -11,6 +11,20 @@ def as_rng(seed: RngLike = None) -> np.random.Generator:
     return np.random.default_rng(seed)
 
 
+def hermitian_eigh(matrix: np.ndarray, eigvals_only: bool = False):
+    """Eigen-decomposition of a dense Hermitian matrix with LAPACK ``*heevr``.
+
+    The divide-and-conquer driver (``*heevd``, used by ``numpy.linalg.eigh``)
+    of Apple Accelerate fails for complex matrices of size n >~ 3000
+    ("illegal value in argument 10"; observed with NumPy 2.5.4 / SciPy 1.18.1
+    on macOS); the MRRR driver does not.
+    """
+    from scipy.linalg import eigh
+
+    matrix = np.asarray(matrix)
+    return eigh((matrix + matrix.conj().T) / 2, eigvals_only=eigvals_only, driver="evr")
+
+
 def generate_random_coupling(
     n_majorana: int,
     variance: float = 1.0,
