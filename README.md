@@ -26,8 +26,8 @@ negative ones — and what is not verified).
 - Main negative results: no Lyapunov exponent can be extracted at the
   accessible sizes (the chaos bound is not tested); quantum kernels are
   significantly worse than a tuned RBF-SVM on the benchmarks used.
-- Open: CI has never run (nothing pushed), citation metadata/DOI, the
-  choice of the Floquet drive protocol.
+- CI (GitHub Actions) passes on Ubuntu and macOS for Python 3.11–3.13 (and 3.14).
+- Open: citation metadata/DOI, the choice of the Floquet drive protocol.
 
 ## Installation
 
