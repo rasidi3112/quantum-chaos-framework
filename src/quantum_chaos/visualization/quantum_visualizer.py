@@ -4,7 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.figure import Figure
 from matplotlib.axes import Axes
-from typing import Dict, List, Tuple, Optional, Union
+from typing import Dict, List, Tuple, Optional, Union, Sequence
 from pathlib import Path
 
 
@@ -99,49 +99,35 @@ class QuantumVisualizer:
     
     def plot_level_spacing_statistics(
         self,
-        syk_eigenvalues: np.ndarray,
-        hubbard_eigenvalues: np.ndarray,
-        title: str = "Level Spacing Statistics"
+        ratios: Dict[str, np.ndarray],
+        references: Sequence[str] = ('poisson', 'goe'),
+        bins: int = 25,
+        title: str = "Spacing-ratio distributions"
     ) -> Figure:
-        fig, axes = plt.subplots(1, 2, figsize=(14, 5))
+        """Histograms of r~ = min(s_n, s_{n-1})/max(s_n, s_{n-1}) with RMT surmises.
+
+        ``ratios`` maps a label to the ratios of one or more *symmetry-resolved*
+        sectors (e.g. ``SYKHamiltonian.spacing_ratios()``); no unfolding is needed.
+        ``references`` are drawn with the Wigner-like surmise of Atas et al. (2013).
+        """
+        from ..spectral.rmt import ratio_density
         
-        # Compute level spacings
-        syk_spacings = np.diff(np.sort(syk_eigenvalues))
-        syk_spacings = syk_spacings / np.mean(syk_spacings)  # mean-spacing normalisation, not an unfolding
+        fig, ax = plt.subplots(figsize=self.figsize)
+        palette = plt.rcParams['axes.prop_cycle'].by_key()['color']
+        for i, (label, r) in enumerate(ratios.items()):
+            ax.hist(r, bins=bins, range=(0, 1), density=True, histtype='step', linewidth=2,
+                    color=palette[i % len(palette)], label=f"{label} (n={len(r)})")
+        grid = np.linspace(0, 1, 201)
+        for ens in references:
+            ax.plot(grid, ratio_density(grid, ens), 'k', linestyle={'poisson': ':', 'goe': '--',
+                    'gue': '-.', 'gse': '-'}[ens.lower()], label=f"{ens.upper()} (surmise)")
+        ax.set_xlabel(r'$\tilde r$', fontsize=12)
+        ax.set_ylabel(r'$P(\tilde r)$', fontsize=12)
+        ax.set_xlim(0, 1)
+        ax.set_title(title, fontsize=14, fontweight='bold')
+        ax.legend(fontsize=9)
         
-        hubbard_spacings = np.diff(np.sort(hubbard_eigenvalues))
-        hubbard_spacings = hubbard_spacings / np.mean(hubbard_spacings)
-        
-        # Reference distributions
-        s = np.linspace(0, 4, 100)
-        poisson = np.exp(-s)
-        goe = (np.pi * s / 2) * np.exp(-np.pi * s**2 / 4)
-        
-        # SYK
-        axes[0].hist(syk_spacings, bins=30, density=True, alpha=0.7, 
-                     color=self.colors['syk'], label='SYK')
-        axes[0].plot(s, poisson, 'k--', label='Poisson (Integrable)', linewidth=2)
-        axes[0].plot(s, goe, 'k-', label='GOE (Chaotic)', linewidth=2)
-        axes[0].set_xlabel('Normalized Spacing s', fontsize=12)
-        axes[0].set_ylabel('P(s)', fontsize=12)
-        axes[0].set_title('SYK Level Spacing', fontsize=14, fontweight='bold')
-        axes[0].legend()
-        axes[0].set_xlim(0, 4)
-        
-        # Hubbard
-        axes[1].hist(hubbard_spacings, bins=30, density=True, alpha=0.7,
-                     color=self.colors['hubbard'], label='Hubbard')
-        axes[1].plot(s, poisson, 'k--', label='Poisson (Integrable)', linewidth=2)
-        axes[1].plot(s, goe, 'k-', label='GOE (Chaotic)', linewidth=2)
-        axes[1].set_xlabel('Normalized Spacing s', fontsize=12)
-        axes[1].set_ylabel('P(s)', fontsize=12)
-        axes[1].set_title('Hubbard Level Spacing', fontsize=14, fontweight='bold')
-        axes[1].legend()
-        axes[1].set_xlim(0, 4)
-        
-        fig.suptitle(title, fontsize=16, fontweight='bold', y=1.02)
         plt.tight_layout()
-        
         self._save_figure(fig, 'level_spacing_statistics')
         return fig
     
@@ -398,8 +384,11 @@ class QuantumVisualizer:
             hubbard_data.get('level_spacing_ratio', 0)
         ]
         ax.bar(x, lsr_values, color=[self.colors['syk'], self.colors['hubbard']], alpha=0.8)
-        ax.axhline(0.386, color='gray', linestyle='--', label='Poisson (0.386)')
-        ax.axhline(0.530, color='black', linestyle='-', label='GOE (0.530)')
+        from ..spectral.rmt import R_MEAN
+        ax.axhline(R_MEAN['poisson'], color='gray', linestyle=':', label=f"Poisson ({R_MEAN['poisson']:.4f})")
+        for ens, ls in (('goe', '--'), ('gue', '-.'), ('gse', '-')):
+            ax.axhline(R_MEAN[ens], color='black', linestyle=ls, linewidth=0.8,
+                       label=f"{ens.upper()} ({R_MEAN[ens]:.4f})")
         ax.set_xticks(x)
         ax.set_xticklabels(['SYK', 'Hubbard'])
         ax.set_ylabel(r'$\langle r\rangle$')

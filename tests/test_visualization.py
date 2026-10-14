@@ -22,7 +22,8 @@ def test_all_plots_render_and_save(viz, tmp_path):
     e1, e2 = np.sort(rng.normal(size=64)), np.sort(rng.normal(size=64))
     times = np.linspace(0, 2, 11)
     viz.plot_spectral_density_comparison(e1, e2, bins=10)
-    viz.plot_level_spacing_statistics(e1, e2)
+    viz.plot_level_spacing_statistics({"a": rng.uniform(size=50), "b": rng.uniform(size=40)},
+                                      references=("poisson", "goe", "gue", "gse"))
     viz.plot_fidelity_evolution(times, np.exp(-times), np.exp(-times / 2))
     viz.plot_otoc_comparison(times, np.cos(times), np.cos(times / 2))
     viz.plot_error_rate_comparison([0.001, 0.01], [0.1, 0.2], [0.05, 0.1])

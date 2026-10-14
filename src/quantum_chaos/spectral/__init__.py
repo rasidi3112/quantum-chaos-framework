@@ -1,6 +1,6 @@
 """Spectral statistics and random-matrix references."""
 
-from .rmt import R_MEAN, R_SURMISE, ensemble_mean_r, sample_spectrum
+from .rmt import R_MEAN, R_SURMISE, ensemble_mean_r, ratio_density, sample_spectrum
 from .statistics import (
     DegenerateSpectrumWarning,
     bootstrap_mean,
@@ -16,6 +16,7 @@ __all__ = [
     "bootstrap_mean",
     "ensemble_mean_r",
     "mean_spacing_ratio",
+    "ratio_density",
     "remove_kramers_pairs",
     "sample_spectrum",
     "spacing_ratios",

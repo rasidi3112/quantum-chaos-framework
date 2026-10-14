@@ -109,3 +109,25 @@ def closest_ensemble(mean_r: float, candidates: Optional[list] = None) -> str:
     """Name of the reference ensemble whose large-N <r~> is closest (descriptive only)."""
     candidates = candidates or list(R_MEAN)
     return min(candidates, key=lambda k: abs(R_MEAN[_normalise(k)] - mean_r))
+
+
+_Z_BETA = {1: 8 / 27, 2: 4 / 81 * np.pi / np.sqrt(3), 4: 4 / 729 * np.pi / np.sqrt(3)}
+
+
+def ratio_density(r: np.ndarray, ensemble: str) -> np.ndarray:
+    """Density of r~ = min(r, 1/r) on [0, 1].
+
+    Poisson: 2/(1+r)^2. GOE/GUE/GSE: Wigner-like surmise of Atas et al.
+    (2013), Eq. (7), P_W(r) = (r + r^2)^beta / Z_beta / (1 + r + r^2)^(1 + 3 beta/2)
+    with Z_1 = 8/27, Z_2 = 4 pi / (81 sqrt 3), Z_4 = 4 pi / (729 sqrt 3), and
+    P(r~) = 2 P(r) Theta(1 - r).
+    """
+    key = _normalise(ensemble)
+    r = np.asarray(r, dtype=float)
+    inside = (r >= 0) & (r <= 1)
+    if key == "poisson":
+        p = 2.0 / (1.0 + r) ** 2
+    else:
+        beta = DYSON_INDEX[key]
+        p = 2.0 * (r + r * r) ** beta / _Z_BETA[beta] / (1.0 + r + r * r) ** (1.0 + 1.5 * beta)
+    return np.where(inside, p, 0.0)

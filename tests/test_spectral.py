@@ -40,3 +40,15 @@ def test_hermitian_eigh_handles_large_complex_matrices():
     a = (a + a.conj().T) / 2
     w, v = hermitian_eigh(a)
     np.testing.assert_allclose(a @ v[:, :5], v[:, :5] * w[:5], atol=1e-8)
+
+
+@pytest.mark.parametrize("ensemble", ["poisson", "goe", "gue", "gse"])
+def test_surmise_density_is_normalised_and_reproduces_table_means(ensemble):
+    from scipy.integrate import quad
+
+    from quantum_chaos.spectral import R_SURMISE, ratio_density
+
+    norm = quad(lambda r: ratio_density(r, ensemble), 0, 1)[0]
+    mean = quad(lambda r: r * ratio_density(r, ensemble), 0, 1)[0]
+    assert norm == pytest.approx(1.0, abs=1e-10)
+    assert mean == pytest.approx(R_SURMISE[ensemble], abs=1e-10)
