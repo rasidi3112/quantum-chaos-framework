@@ -24,9 +24,9 @@
     "extra": {}
   },
   "provenance": {
-    "git_commit": "184af90",
-    "src_tree": "b71d05a",
-    "dirty": true,
+    "git_commit": "1b1da9b",
+    "src_tree": "6f52901",
+    "dirty": false,
     "package_version": "0.2.0",
     "python": "3.13.5",
     "numpy": "2.5.4",

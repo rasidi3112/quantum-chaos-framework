@@ -18,15 +18,21 @@
       "n_times": 121,
       "lanczos_steps": 40,
       "lanczos_n_majorana": 10,
-      "page_n_majorana": 20
+      "page_n_majorana": 20,
+      "eth_sizes": [
+        12,
+        14,
+        16,
+        18
+      ]
     },
     "bins": 25,
     "extra": {}
   },
   "provenance": {
-    "git_commit": "184af90",
-    "src_tree": "b71d05a",
-    "dirty": true,
+    "git_commit": "1b1da9b",
+    "src_tree": "6f52901",
+    "dirty": false,
     "package_version": "0.2.0",
     "python": "3.13.5",
     "numpy": "2.5.4",
