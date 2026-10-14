@@ -1,6 +1,7 @@
 # PLAN.md — Rencana Kerja `quantum-chaos-framework`
 
 > **Status:** DISETUJUI 2026-10-14 ("setuju semua rekomendasi"). Keputusan dicatat di §10.
+> **Progres:** pra-0 ✓, Fase 0 ✓, Fase 1 ✓ (2026-10-15; hasil di VALIDATION.md). Fase 2–3 belum.
 > **Basis audit:** commit `69396f5` (branch `main`, working tree bersih).
 > **Tanggal:** 2026-10-14
 
@@ -378,13 +379,13 @@ di kode atau README.
 
 | Referensi | Dipakai untuk | Status |
 |---|---|---|
-| Atas, Bogomolny, Giraud, Roux, PRL 110, 084101 (2013) | ⟨r⟩ RMT | B, I |
-| García-García & Verbaarschot, PRD 94, 126010 (2016) | Spektrum dan E₀ SYK | B, I (nomor halaman V) |
-| Maldacena & Stanford, PRD 94, 106002 (2016) | Konvensi SYK | B, I |
-| You, Ludwig, Xu, PRB 95, 115150 (2017) | Klasifikasi N mod 8 | V |
-| Cotler et al., "Black holes and random matrices", JHEP (2017) | SFF | B, I (volume V) |
-| Maldacena, Shenker, Stanford, JHEP (2016) | Batas chaos | I |
-| Swingle, Bentsen, Schleier-Smith, Hayden, PRA 94, 040302 (2016) | OTOC interferometrik | I |
+| Atas, Bogomolny, Giraud, Roux, PRL 110, 084101 (2013) | ⟨r⟩ RMT | **✓ diverifikasi** (Tabel I via arXiv:1212.5611) |
+| García-García & Verbaarschot, *Spectral and thermodynamic properties of the SYK model*, PRD 94, 126010 (2016) | Spektrum dan E₀ SYK | **✓ referensi diverifikasi**; nilai E₀ belum diambil (Fase 3B) |
+| Maldacena & Stanford, *Comments on the SYK model*, PRD 94, 106002 (2016) | Konvensi SYK | **✓ diverifikasi** (judul README lama salah) |
+| You, Ludwig, Xu, *SYK model and thermalization on the boundary of MBL fermionic SPT states*, PRB 95, 115150 (2017) | Klasifikasi N mod 8 | **✓ referensi diverifikasi** (isi klasifikasi dicek lewat Cotler et al.) |
+| Cotler et al., "Black holes and random matrices", JHEP 05 (2017) 118 | SFF, kelas N mod 8, konvensi {ψ,ψ}=δ | **✓ diverifikasi** (§2–3.1) |
+| Maldacena, Shenker, Stanford, JHEP 08 (2016) 106 | Batas chaos | **✓ diverifikasi** |
+| Swingle, Bentsen, Schleier-Smith, Hayden, PRA 94, 040302 (2016) | OTOC interferometrik | **✓ diverifikasi** |
 | Yoshida & Yao, PRX 9, 011006 (2019) | Scrambling vs dekoherensi | B, I |
 | Childs, Su, Tran, Wiebe, Zhu, PRX 11, 011020 (2021) | Galat Trotter | B, I |
 | Xu, Susskind, Su, Swingle, arXiv:2008.02303 (2020) | Sparse SYK | B, I |
@@ -398,6 +399,8 @@ di kode atau README.
 | Bartsch & Gemmer, PRL 102, 110403 (2009) | Dynamical typicality | I |
 | D'Alessio, Kafri, Polkovnikov, Rigol, Adv. Phys. 65, 239 (2016) | ETH | I |
 | Page, PRL 71, 1291 (1993) | Kurva Page | I |
+| Oganesyan & Huse, PRB 75, 155111 (2007) | Definisi rasio spasi | **✓ diverifikasi** |
+| Sachdev & Ye, PRL 70, 3339 (1993) | Model SY | **✓ diverifikasi** |
 | Temme, Bravyi, Gambetta, PRL 119, 180509 (2017); Giurgica-Tiron et al. (2020); LaRose et al., Quantum 6, 774 (2022) | ZNE / Mitiq | I (detail V) |
 | Swingle & Yunger Halpern, PRA (2018) | Echo Loschmidt dan resiliensi OTOC | V |
 
