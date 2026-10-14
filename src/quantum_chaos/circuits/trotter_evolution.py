@@ -307,10 +307,7 @@ def matrix_to_pauli_terms(
     n_qubits: int,
     threshold: float = 1e-10
 ) -> List[Tuple[float, str]]:
-    try:
-        from ..utils.jordan_wigner import get_pauli_string_representation
-    except ImportError:
-        from utils.jordan_wigner import get_pauli_string_representation
+    from ..utils.jordan_wigner import get_pauli_string_representation
     
     pauli_decomp = get_pauli_string_representation(H, n_qubits, threshold)
     

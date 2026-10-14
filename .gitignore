@@ -40,3 +40,6 @@ Thumbs.db
 .pytest_cache/
 .coverage
 htmlcov/
+
+# Local virtual environments
+.venv/

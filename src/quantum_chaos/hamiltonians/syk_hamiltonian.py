@@ -5,12 +5,8 @@ from scipy.linalg import eigh
 from typing import Optional, Tuple, Dict, List
 from itertools import combinations
 
-try:
-    from ..utils.jordan_wigner import JordanWignerMapper
-    from ..utils.helpers import generate_random_coupling, spectral_density, level_spacing_ratio
-except ImportError:
-    from utils.jordan_wigner import JordanWignerMapper
-    from utils.helpers import generate_random_coupling, spectral_density, level_spacing_ratio
+from ..utils.jordan_wigner import JordanWignerMapper
+from ..utils.helpers import generate_random_coupling, spectral_density, level_spacing_ratio
 
 
 class SYKHamiltonian:

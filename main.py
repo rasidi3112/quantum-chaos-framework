@@ -1,15 +1,12 @@
 #!/usr/bin/env pyt
-import sys
-sys.path.insert(0, '.')
-
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from scipy.linalg import expm
 
-from hamiltonians.syk_hamiltonian import SYKHamiltonian, disorder_average_lsr, finite_size_scaling
-from hamiltonians.hubbard_hamiltonian import DrivenHubbardHamiltonian
+from quantum_chaos.hamiltonians.syk_hamiltonian import SYKHamiltonian, disorder_average_lsr, finite_size_scaling
+from quantum_chaos.hamiltonians.hubbard_hamiltonian import DrivenHubbardHamiltonian
 
 print("=" * 60)
 print("  QUANTUM CHAOS FRAMEWORK")

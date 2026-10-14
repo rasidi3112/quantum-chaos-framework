@@ -1,12 +1,8 @@
 import numpy as np
 from typing import Optional, Tuple, Dict, List, Callable
 
-try:
-    from ..utils.jordan_wigner import JordanWignerMapper
-    from ..utils.helpers import spectral_density, level_spacing_ratio
-except ImportError:
-    from utils.jordan_wigner import JordanWignerMapper
-    from utils.helpers import spectral_density, level_spacing_ratio
+from ..utils.jordan_wigner import JordanWignerMapper
+from ..utils.helpers import spectral_density, level_spacing_ratio
 
 
 class DrivenHubbardHamiltonian:

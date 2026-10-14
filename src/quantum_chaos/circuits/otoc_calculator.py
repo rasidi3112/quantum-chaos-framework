@@ -232,10 +232,7 @@ class OTOCCalculator:
         initial_op: np.ndarray,
         times: np.ndarray
     ) -> np.ndarray:
-        try:
-            from ..utils.jordan_wigner import get_pauli_string_representation
-        except ImportError:
-            from utils.jordan_wigner import get_pauli_string_representation
+        from ..utils.jordan_wigner import get_pauli_string_representation
         
         sizes = []
         

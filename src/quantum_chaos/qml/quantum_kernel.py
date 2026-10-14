@@ -147,10 +147,7 @@ class SYKKernel(QuantumKernel):
         evolution_time: float = 1.0,
         seed: Optional[int] = None
     ):
-        try:
-            from ..hamiltonians.syk_hamiltonian import SYKHamiltonian
-        except ImportError:
-            from hamiltonians.syk_hamiltonian import SYKHamiltonian
+        from ..hamiltonians.syk_hamiltonian import SYKHamiltonian
         
         self.coupling_strength = coupling_strength
         self.seed = seed
@@ -182,10 +179,7 @@ class HubbardKernel(QuantumKernel):
         onsite_interaction: float = 1.0,
         evolution_time: float = 1.0
     ):
-        try:
-            from ..hamiltonians.hubbard_hamiltonian import DrivenHubbardHamiltonian
-        except ImportError:
-            from hamiltonians.hubbard_hamiltonian import DrivenHubbardHamiltonian
+        from ..hamiltonians.hubbard_hamiltonian import DrivenHubbardHamiltonian
         
         self.n_sites = n_sites
         self.hopping_amplitude = hopping_amplitude

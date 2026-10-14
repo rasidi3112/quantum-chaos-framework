@@ -2,7 +2,7 @@
 
 A Python framework for studying quantum chaos and information scrambling in many-body quantum systems, with focus on the Sachdev-Ye-Kitaev (SYK) model and driven Hubbard model.
 
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Overview
@@ -44,11 +44,12 @@ This framework provides tools for:
 ```bash
 git clone https://github.com/yourusername/quantum-chaos-framework.git
 cd quantum-chaos-framework
-pip install -r requirements.txt
+pip install -e ".[test]"
+pytest
 ```
 
 ### Requirements
-- Python >= 3.8
+- Python >= 3.11
 - NumPy >= 1.20
 - SciPy >= 1.7
 - Matplotlib >= 3.4
@@ -58,7 +59,7 @@ pip install -r requirements.txt
 ## Quick Start
 
 ```python
-from hamiltonians.syk_hamiltonian import SYKHamiltonian, disorder_average_lsr
+from quantum_chaos.hamiltonians.syk_hamiltonian import SYKHamiltonian, disorder_average_lsr
 
 # Create SYK model
 syk = SYKHamiltonian(n_majorana=8, coupling_strength=1.0, seed=42)
@@ -76,26 +77,28 @@ print(f"⟨r⟩ = {stats['mean']:.4f} ± {stats['stderr']:.4f}")
 ## Project Structure
 
 ```
-quantum_chaos_framework/
-├── hamiltonians/
-│   ├── syk_hamiltonian.py      # SYK model with disorder averaging
-│   └── hubbard_hamiltonian.py  # Driven Hubbard model with Floquet
-├── circuits/
-│   ├── otoc_calculator.py      # OTOC computation methods
-│   └── trotter_evolution.py    # Quantum circuit simulation
-├── noise/
-│   ├── noise_channels.py       # Quantum noise models
-│   └── nisq_simulator.py       # NISQ device simulation
-├── qml/
-│   ├── quantum_kernel.py       # Quantum kernel methods
-│   └── quantum_classifier.py   # Variational classifiers
-├── utils/
-│   ├── jordan_wigner.py        # Fermion-to-qubit mapping
-│   └── helpers.py              # Utility functions
-├── visualization/
-│   └── quantum_visualizer.py   # Plotting tools
-├── main.py                     # Example script
-└── requirements.txt
+quantum-chaos-framework/
+├── pyproject.toml
+├── src/quantum_chaos/
+│   ├── hamiltonians/
+│   │   ├── syk_hamiltonian.py      # SYK model with disorder averaging
+│   │   └── hubbard_hamiltonian.py  # Driven Hubbard model with Floquet
+│   ├── circuits/
+│   │   ├── otoc_calculator.py      # OTOC computation methods
+│   │   └── trotter_evolution.py    # Quantum circuit simulation
+│   ├── noise/
+│   │   ├── noise_channels.py       # Quantum noise models
+│   │   └── nisq_simulator.py       # NISQ device simulation
+│   ├── qml/
+│   │   ├── quantum_kernel.py       # Quantum kernel methods
+│   │   └── quantum_classifier.py   # Variational classifiers
+│   ├── utils/
+│   │   ├── jordan_wigner.py        # Fermion-to-qubit mapping
+│   │   └── helpers.py              # Utility functions
+│   └── visualization/
+│       └── quantum_visualizer.py   # Plotting tools
+├── tests/
+└── main.py                         # Example script
 ```
 
 ## Physical Background
