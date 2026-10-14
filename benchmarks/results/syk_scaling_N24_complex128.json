@@ -1,0 +1,14 @@
+{
+  "N": 24,
+  "sector_dim": 2048,
+  "flip_masks": 562,
+  "nnz": 1150976,
+  "matrix_gb": 0.023027716,
+  "predicted_gb": 0.02301952,
+  "build_s": 0.12867999076843262,
+  "matvec_s": 0.0010335922241210937,
+  "lanczos_ground_state_s": 0.16216087341308594,
+  "e0_even_sector": -1.1347509340656754,
+  "peak_rss_gb": 0.099385344,
+  "dtype": "complex128"
+}

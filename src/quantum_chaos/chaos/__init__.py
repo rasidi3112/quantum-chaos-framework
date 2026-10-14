@@ -6,6 +6,7 @@ from .eth import (
     offdiagonal_moment_ratio,
     page_entropy,
 )
+from .kpm import chebyshev_moments, jackson_kernel, kpm_density, moments_to_power_moments
 from .krylov import autocorrelation, krylov_complexity, krylov_wavefunction, lanczos_coefficients
 from .moments import (
     normalized_moments,
@@ -25,8 +26,16 @@ from .sff import (
     unfold,
     unfolded_form_factor,
 )
+from .typicality import SectorSYK, typical_autocorrelation, typical_otoc
 
 __all__ = [
+    "SectorSYK",
+    "chebyshev_moments",
+    "jackson_kernel",
+    "kpm_density",
+    "moments_to_power_moments",
+    "typical_autocorrelation",
+    "typical_otoc",
     "diagonal_fluctuation",
     "eigenbasis_matrix_elements",
     "eigenstate_entanglement",
