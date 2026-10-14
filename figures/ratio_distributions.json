@@ -30,9 +30,9 @@
     "extra": {}
   },
   "provenance": {
-    "git_commit": "126f49f",
-    "src_tree": "8ebae35",
-    "dirty": true,
+    "git_commit": "820b4b4",
+    "src_tree": "261f15e",
+    "dirty": false,
     "package_version": "0.2.0.dev0",
     "python": "3.13.5",
     "numpy": "2.5.4",
