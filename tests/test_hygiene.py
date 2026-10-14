@@ -43,7 +43,7 @@ def test_stochastic_helpers_accept_rng_and_leave_global_state_alone():
     assert global_state_untouched(lambda: bench.generate_classification_data(n_samples=20))
     a = bench.generate_classification_data(n_samples=20, random_state=4)
     b = bench.generate_classification_data(n_samples=20, random_state=4)
-    for x, y in zip(a, b):
+    for x, y in zip(a, b, strict=True):
         np.testing.assert_array_equal(x, y)
 
     kernel = SYKKernel(n_qubits=3, seed=0)

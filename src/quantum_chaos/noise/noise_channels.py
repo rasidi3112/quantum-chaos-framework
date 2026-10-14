@@ -1,6 +1,6 @@
-import numpy as np
-from typing import List, Tuple, Optional, Dict, Union
 from dataclasses import dataclass
+
+import numpy as np
 
 
 @dataclass
@@ -39,7 +39,7 @@ def pennylane_depolarizing_parameter(p: float) -> float:
     return 3.0 * p / 4.0
 
 
-def relaxation_parameters(duration: float, t1: float, t2: float) -> Tuple[float, float]:
+def relaxation_parameters(duration: float, t1: float, t2: float) -> tuple[float, float]:
     """Amplitude- and phase-damping parameters (gamma_1, gamma_phi) for a duration.
 
     Amplitude damping multiplies rho_01 by sqrt(1 - gamma_1) = exp(-t/(2 T1));
@@ -77,7 +77,7 @@ class NoiseChannels:
 
         return result
 
-    def depolarizing_kraus(self, p: float) -> List[np.ndarray]:
+    def depolarizing_kraus(self, p: float) -> list[np.ndarray]:
         # Note: Different normalization conventions exist
         # This uses: E_0 = √(1-3p/4)I, E_1 = √(p/4)X, E_2 = √(p/4)Y, E_3 = √(p/4)Z
         sqrt_1mp = np.sqrt(1 - 3 * p / 4)
@@ -90,33 +90,33 @@ class NoiseChannels:
 
         return [K0, K1, K2, K3]
 
-    def amplitude_damping_kraus(self, gamma: float) -> List[np.ndarray]:
+    def amplitude_damping_kraus(self, gamma: float) -> list[np.ndarray]:
         K0 = np.array([[1, 0], [0, np.sqrt(1 - gamma)]], dtype=complex)
 
         K1 = np.array([[0, np.sqrt(gamma)], [0, 0]], dtype=complex)
 
         return [K0, K1]
 
-    def phase_damping_kraus(self, gamma: float) -> List[np.ndarray]:
+    def phase_damping_kraus(self, gamma: float) -> list[np.ndarray]:
         K0 = np.array([[1, 0], [0, np.sqrt(1 - gamma)]], dtype=complex)
 
         K1 = np.array([[0, 0], [0, np.sqrt(gamma)]], dtype=complex)
 
         return [K0, K1]
 
-    def bit_flip_kraus(self, p: float) -> List[np.ndarray]:
+    def bit_flip_kraus(self, p: float) -> list[np.ndarray]:
         K0 = np.sqrt(1 - p) * self.I
         K1 = np.sqrt(p) * self.X
 
         return [K0, K1]
 
-    def phase_flip_kraus(self, p: float) -> List[np.ndarray]:
+    def phase_flip_kraus(self, p: float) -> list[np.ndarray]:
         K0 = np.sqrt(1 - p) * self.I
         K1 = np.sqrt(p) * self.Z
 
         return [K0, K1]
 
-    def apply_channel(self, rho: np.ndarray, kraus_ops: List[np.ndarray], qubit: int) -> np.ndarray:
+    def apply_channel(self, rho: np.ndarray, kraus_ops: list[np.ndarray], qubit: int) -> np.ndarray:
         rho = np.asarray(rho, dtype=complex)
         result = np.zeros_like(rho)
 
@@ -127,7 +127,7 @@ class NoiseChannels:
         return result
 
     def apply_depolarizing(
-        self, rho: np.ndarray, p: float, qubits: Optional[List[int]] = None
+        self, rho: np.ndarray, p: float, qubits: list[int] | None = None
     ) -> np.ndarray:
         if qubits is None:
             qubits = list(range(self.n_qubits))
@@ -140,7 +140,7 @@ class NoiseChannels:
         return rho
 
     def apply_amplitude_damping(
-        self, rho: np.ndarray, gamma: float, qubits: Optional[List[int]] = None
+        self, rho: np.ndarray, gamma: float, qubits: list[int] | None = None
     ) -> np.ndarray:
         if qubits is None:
             qubits = list(range(self.n_qubits))
@@ -153,7 +153,7 @@ class NoiseChannels:
         return rho
 
     def apply_phase_damping(
-        self, rho: np.ndarray, gamma: float, qubits: Optional[List[int]] = None
+        self, rho: np.ndarray, gamma: float, qubits: list[int] | None = None
     ) -> np.ndarray:
         if qubits is None:
             qubits = list(range(self.n_qubits))
@@ -169,16 +169,16 @@ class NoiseChannels:
         self,
         measurement_results: np.ndarray,
         error_rate: float,
-        rng: Union[None, int, np.random.Generator] = None,
+        rng: None | int | np.random.Generator = None,
     ) -> np.ndarray:
         """Flip each classical bit independently with probability ``error_rate``."""
         noise = np.random.default_rng(rng).random(np.shape(measurement_results)) < error_rate
         return np.logical_xor(measurement_results, noise).astype(int)
 
     def full_noise_model(
-        self, rho: np.ndarray, noise_model: NoiseModel, duration: Optional[float] = None
+        self, rho: np.ndarray, noise_model: NoiseModel, duration: float | None = None
     ) -> np.ndarray:
-        """T1/T2 relaxation for ``duration`` (default ``gate_time``), then one depolarizing layer."""
+        """T1/T2 relaxation for ``duration`` (default ``gate_time``), then depolarizing."""
         if duration is None:
             duration = noise_model.gate_time
         gamma_1, gamma_phi = relaxation_parameters(duration, noise_model.t1, noise_model.t2)
@@ -188,7 +188,7 @@ class NoiseChannels:
             rho = self.apply_depolarizing(rho, noise_model.depolarizing_rate)
         return rho
 
-    def verify_cptp(self, kraus_ops: List[np.ndarray], tol: float = 1e-10) -> bool:
+    def verify_cptp(self, kraus_ops: list[np.ndarray], tol: float = 1e-10) -> bool:
         dim = kraus_ops[0].shape[0]
         identity = np.eye(dim)
 
@@ -196,7 +196,7 @@ class NoiseChannels:
 
         return np.allclose(sum_KdagK, identity, atol=tol)
 
-    def channel_fidelity(self, kraus_ops: List[np.ndarray]) -> float:
+    def channel_fidelity(self, kraus_ops: list[np.ndarray]) -> float:
         dim = kraus_ops[0].shape[0]
 
         # Entanglement fidelity

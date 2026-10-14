@@ -1,6 +1,7 @@
+from collections.abc import Callable, Sequence
+
 import numpy as np
 import pennylane as qml
-from typing import List, Tuple, Dict, Optional, Callable, Union, Sequence
 from scipy.linalg import expm
 
 from ..utils.helpers import RngLike, as_rng
@@ -38,9 +39,9 @@ class QuantumKernel:
     def __init__(
         self,
         n_qubits: int,
-        hamiltonian_constructor: Optional[Callable[[np.ndarray], np.ndarray]] = None,
+        hamiltonian_constructor: Callable[[np.ndarray], np.ndarray] | None = None,
         evolution_time: float = 1.0,
-        initial_state: Optional[np.ndarray] = None,
+        initial_state: np.ndarray | None = None,
     ):
         self.n_qubits = n_qubits
         self.hamiltonian_constructor = hamiltonian_constructor
@@ -71,7 +72,7 @@ class QuantumKernel:
         overlap = np.abs(np.vdot(state1, state2)) ** 2
         return float(overlap)
 
-    def kernel_matrix(self, X1: np.ndarray, X2: Optional[np.ndarray] = None) -> np.ndarray:
+    def kernel_matrix(self, X1: np.ndarray, X2: np.ndarray | None = None) -> np.ndarray:
         symmetric = X2 is None
         states1 = [self.feature_state(x) for x in X1]
         states2 = states1 if symmetric else [self.feature_state(x) for x in X2]
@@ -83,7 +84,7 @@ class QuantumKernel:
             np.fill_diagonal(K, 1.0)
         return K
 
-    def expressivity_metric(self, n_samples: int = 100, rng: RngLike = None) -> Dict:
+    def expressivity_metric(self, n_samples: int = 100, rng: RngLike = None) -> dict:
         """Descriptive statistics of the kernel on standard-normal random inputs.
 
         A small spread of off-diagonal values signals kernel concentration
@@ -156,7 +157,7 @@ class HamiltonianEncodingKernel(QuantumKernel):
         model_hamiltonian: np.ndarray,
         local_operators: Sequence[np.ndarray],
         evolution_time: float = 1.0,
-        initial_state: Optional[np.ndarray] = None,
+        initial_state: np.ndarray | None = None,
         feature_scale: float = 1.0,
     ):
         n_qubits = int(np.log2(model_hamiltonian.shape[0]))
@@ -169,11 +170,11 @@ class HamiltonianEncodingKernel(QuantumKernel):
 
     def layer_hamiltonian(self, x_block: np.ndarray) -> np.ndarray:
         H = self.model_hamiltonian.copy()
-        for xj, O in zip(x_block, self.local_operators):
+        for xj, O in zip(x_block, self.local_operators, strict=True):
             H = H + self.feature_scale * xj * O
         return H
 
-    def _blocks(self, x: np.ndarray) -> List[np.ndarray]:
+    def _blocks(self, x: np.ndarray) -> list[np.ndarray]:
         x = np.atleast_1d(np.asarray(x, dtype=float))
         m = len(self.local_operators)
         n_layers = max(1, int(np.ceil(len(x) / m)))
@@ -201,7 +202,7 @@ class SYKKernel(HamiltonianEncodingKernel):
         n_qubits: int,
         coupling_strength: float = 1.0,
         evolution_time: float = 1.0,
-        seed: Optional[int] = None,
+        seed: int | None = None,
         feature_scale: float = 1.0,
     ):
         from ..hamiltonians.syk_hamiltonian import SYKHamiltonian
@@ -278,7 +279,7 @@ def compare_kernel_expressivity(
     hubbard_kernel: QuantumKernel,
     n_samples: int = 100,
     rng: RngLike = None,
-) -> Dict:
+) -> dict:
     """Kernel statistics of both models on the same random inputs (no ranking)."""
     seed = int(as_rng(rng).integers(2**63))
     return {

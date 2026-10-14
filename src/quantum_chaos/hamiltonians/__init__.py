@@ -2,9 +2,9 @@
 Hamiltonian Constructors Module
 """
 
-from .syk_hamiltonian import SYKHamiltonian
-from .hubbard_hamiltonian import DrivenHubbardHamiltonian
 from .hubbard_ed import HubbardRingED, hubbard_level_statistics
+from .hubbard_hamiltonian import DrivenHubbardHamiltonian
+from .syk_hamiltonian import SYKHamiltonian
 
 __all__ = [
     "SYKHamiltonian",

@@ -1,18 +1,18 @@
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.figure import Figure
-from matplotlib.axes import Axes
-from typing import Dict, List, Tuple, Optional, Union, Sequence
+from collections.abc import Sequence
 from pathlib import Path
+
+import matplotlib.pyplot as plt
+import numpy as np
+from matplotlib.figure import Figure
 
 
 class QuantumVisualizer:
     def __init__(
         self,
         style: str = "seaborn-v0_8-darkgrid",
-        figsize: Tuple[int, int] = (10, 6),
+        figsize: tuple[int, int] = (10, 6),
         dpi: int = 150,
-        save_dir: Optional[str] = None,
+        save_dir: str | None = None,
     ):
         self.figsize = figsize
         self.dpi = dpi
@@ -97,7 +97,7 @@ class QuantumVisualizer:
 
     def plot_level_spacing_statistics(
         self,
-        ratios: Dict[str, np.ndarray],
+        ratios: dict[str, np.ndarray],
         references: Sequence[str] = ("poisson", "goe"),
         bins: int = 25,
         title: str = "Spacing-ratio distributions",
@@ -222,9 +222,9 @@ class QuantumVisualizer:
 
     def plot_error_rate_comparison(
         self,
-        noise_levels: List[float],
-        syk_errors: List[float],
-        hubbard_errors: List[float],
+        noise_levels: list[float],
+        syk_errors: list[float],
+        hubbard_errors: list[float],
         title: str = "NISQ Error Rate: Ideal vs Noisy Simulation",
     ) -> Figure:
         fig, ax = plt.subplots(figsize=self.figsize)
@@ -232,10 +232,8 @@ class QuantumVisualizer:
         x = np.arange(len(noise_levels))
         width = 0.35
 
-        bars1 = ax.bar(
-            x - width / 2, syk_errors, width, label="SYK", color=self.colors["syk"], alpha=0.8
-        )
-        bars2 = ax.bar(
+        ax.bar(x - width / 2, syk_errors, width, label="SYK", color=self.colors["syk"], alpha=0.8)
+        ax.bar(
             x + width / 2,
             hubbard_errors,
             width,
@@ -257,7 +255,7 @@ class QuantumVisualizer:
         return fig
 
     def plot_ideal_vs_noisy_evolution(
-        self, comparison_results: Dict, title: str = "Ideal vs NISQ Evolution"
+        self, comparison_results: dict, title: str = "Ideal vs NISQ Evolution"
     ) -> Figure:
         fig, axes = plt.subplots(1, 3, figsize=(15, 4))
 
@@ -318,7 +316,7 @@ class QuantumVisualizer:
         return fig
 
     def plot_qml_comparison(
-        self, benchmark_results: Dict, title: str = "Kernel SVM accuracy: SYK vs Hubbard kernels"
+        self, benchmark_results: dict, title: str = "Kernel SVM accuracy: SYK vs Hubbard kernels"
     ) -> Figure:
         """Per-trial accuracies and mean +/- std. Descriptive only: no significance test."""
         fig, axes = plt.subplots(1, 2, figsize=(12, 4))
@@ -375,7 +373,7 @@ class QuantumVisualizer:
         return fig
 
     def plot_trotter_error(
-        self, error_analysis: Dict, title: str = "Trotter Decomposition Error Analysis"
+        self, error_analysis: dict, title: str = "Trotter Decomposition Error Analysis"
     ) -> Figure:
         fig, ax = plt.subplots(figsize=self.figsize)
 
@@ -432,10 +430,10 @@ class QuantumVisualizer:
 
     def create_summary_dashboard(
         self,
-        syk_data: Dict,
-        hubbard_data: Dict,
-        nisq_data: Optional[Dict] = None,
-        qml_data: Optional[Dict] = None,
+        syk_data: dict,
+        hubbard_data: dict,
+        nisq_data: dict | None = None,
+        qml_data: dict | None = None,
         title: str = "Quantum Dynamics Comparison Dashboard",
     ) -> Figure:
         n_cols = 3

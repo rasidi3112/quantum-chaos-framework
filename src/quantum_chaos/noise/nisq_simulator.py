@@ -1,14 +1,15 @@
+from collections.abc import Callable
+
 import numpy as np
 import pennylane as qml
-from typing import List, Tuple, Optional, Dict, Callable
 from scipy.linalg import expm
 
-from .noise_channels import NoiseChannels, NoiseModel
 from ..utils.helpers import fidelity
+from .noise_channels import NoiseChannels, NoiseModel
 
 
 class NISQSimulator:
-    def __init__(self, n_qubits: int, noise_model: Optional[NoiseModel] = None):
+    def __init__(self, n_qubits: int, noise_model: NoiseModel | None = None):
         self.n_qubits = n_qubits
         self.noise_model = noise_model or NoiseModel()
 
@@ -58,7 +59,7 @@ class NISQSimulator:
         times: np.ndarray,
         observable: np.ndarray,
         steps_per_unit_time: int = 10,
-    ) -> Dict:
+    ) -> dict:
         """Ideal vs noisy expectation values and Uhlmann fidelity versus time.
 
         The noisy run uses ``max(1, int(steps_per_unit_time * t))`` split steps.
@@ -109,7 +110,7 @@ class NISQSimulator:
         return float(np.floor(np.log(target_fidelity) / (self.n_qubits * np.log1p(-p))))
 
     def create_pennylane_noisy_circuit(
-        self, pauli_terms: List[Tuple[float, str]], total_time: float, n_steps: int, order: int = 1
+        self, pauli_terms: list[tuple[float, str]], total_time: float, n_steps: int, order: int = 1
     ) -> Callable:
         """Noisy Trotter circuit on ``default.mixed``.
 
@@ -151,7 +152,7 @@ class NISQSimulator:
 
         return noisy_evolution_circuit
 
-    def summary(self) -> Dict:
+    def summary(self) -> dict:
         return {
             "n_qubits": self.n_qubits,
             "depolarizing_rate": self.noise_model.depolarizing_rate,

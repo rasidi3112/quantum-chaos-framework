@@ -1,11 +1,9 @@
 import numpy as np
 import pennylane as qml
-from typing import Tuple, List, Optional, Dict, Union
-from scipy.linalg import expm
 
 
 class OTOCCalculator:
-    def __init__(self, n_qubits: int, hamiltonian: Optional[np.ndarray] = None):
+    def __init__(self, n_qubits: int, hamiltonian: np.ndarray | None = None):
         self.n_qubits = n_qubits
         self.hamiltonian = hamiltonian
         self._eigenvalues = None
@@ -34,8 +32,8 @@ class OTOCCalculator:
         W: np.ndarray,
         V: np.ndarray,
         times: np.ndarray,
-        state: Optional[np.ndarray] = None,
-        temperature: Optional[float] = None,
+        state: np.ndarray | None = None,
+        temperature: float | None = None,
     ) -> np.ndarray:
         if self.hamiltonian is None:
             raise ValueError("Hamiltonian not set")
@@ -97,7 +95,7 @@ class OTOCCalculator:
         return np.array(otoc_values)
 
     def compute_commutator_squared(
-        self, W: np.ndarray, V: np.ndarray, times: np.ndarray, state: Optional[np.ndarray] = None
+        self, W: np.ndarray, V: np.ndarray, times: np.ndarray, state: np.ndarray | None = None
     ) -> np.ndarray:
         otoc = self.compute_otoc_exact(W, V, times, state=state)
         return 2 * (1 - np.real(otoc))
@@ -159,9 +157,11 @@ class OTOCCalculator:
         W_site: int,
         V_pauli: str,
         V_site: int,
-        initial_state: Optional[np.ndarray] = None,
+        initial_state: np.ndarray | None = None,
     ):
-        """Interferometric (Hadamard-test) circuit for Re F(t), F(t) = Tr[rho W(t)^dag V^dag W(t) V].
+        """Interferometric (Hadamard-test) circuit for Re F(t).
+
+        F(t) = Tr[rho W(t)^dag V^dag W(t) V].
 
         Uses controlled-(U^dag X U) = U^dag (controlled-X) U, so the time
         evolution U = exp(-iHt) itself is never controlled (Swingle et al.,
@@ -185,7 +185,7 @@ class OTOCCalculator:
         @qml.qnode(dev)
         def hadamard_test(U):
             if initial_state is None:
-                for r, q in zip(reference, system):
+                for r, q in zip(reference, system, strict=True):
                     qml.Hadamard(wires=r)
                     qml.CNOT(wires=[r, q])
             else:

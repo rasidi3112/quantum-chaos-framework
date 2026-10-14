@@ -29,8 +29,8 @@ c+_{p1} c+_{p2} ... |0> with p1 < p2 < ... .
 """
 
 import warnings
+from collections.abc import Sequence
 from itertools import combinations
-from typing import Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 from scipy.sparse import coo_matrix, csr_matrix
@@ -63,7 +63,7 @@ def _ladder(configs, mode: int, create: bool):
     return configs ^ bit, sign, valid
 
 
-def _apply_word(configs, word: Sequence[Tuple[bool, int]]):
+def _apply_word(configs, word: Sequence[tuple[bool, int]]):
     """Apply a product of ladder operators, written left to right as ``word``."""
     out = configs.copy()
     amp = np.ones(configs.shape, dtype=np.int64)
@@ -113,7 +113,7 @@ class HubbardRingED:
     def mode(self, site: int, spin: str) -> int:
         return (site % self.L) + (0 if spin == "up" else self.L)
 
-    def operator(self, terms: List[Tuple[complex, Sequence[Tuple[bool, int]]]]) -> csr_matrix:
+    def operator(self, terms: list[tuple[complex, Sequence[tuple[bool, int]]]]) -> csr_matrix:
         """Sparse matrix in this (N_up, N_down) sector of sum_k coef_k * word_k.
 
         Every word must conserve N_up and N_down.
@@ -281,9 +281,9 @@ class HubbardRingED:
 
     def sector_blocks(
         self,
-        momenta: Optional[Sequence[int]] = None,
-        shifts: Tuple[float, float, float] = (0.1234567, 0.0765432, 0.0321987),
-    ) -> List[Dict]:
+        momenta: Sequence[int] | None = None,
+        shifts: tuple[float, float, float] = (0.1234567, 0.0765432, 0.0321987),
+    ) -> list[dict]:
         """Eigenvalues of every symmetry block (m, S, eta, reflection parity).
 
         Within each momentum sector, H + a S^2 + b eta^2 + c R is diagonalised
@@ -296,7 +296,7 @@ class HubbardRingED:
         H, S2 = self.hamiltonian, self.spin_squared()
         eta2 = self.eta_squared() if self.has_eta_symmetry else None
         Rop = self.reflection()
-        blocks: Dict[Tuple, List[float]] = {}
+        blocks: dict[tuple, list[float]] = {}
         for m in momenta:
             V = self.momentum_basis(m)
             if V.shape[1] == 0:
@@ -382,7 +382,7 @@ def hubbard_level_statistics(
     U: float = 4.0,
     trim: float = 0.0,
     min_levels: int = 10,
-) -> Dict:
+) -> dict:
     """Spacing ratios pooled over fully resolved symmetry blocks (m = 0..L//2).
 
     Blocks with fewer than ``min_levels`` levels are skipped. The standard error

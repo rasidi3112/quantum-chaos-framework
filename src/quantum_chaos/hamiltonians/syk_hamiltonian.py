@@ -18,16 +18,16 @@ GSE for N mod 8 = 4 (P^2 = -1, Kramers pairs inside each sector) and GUE for
 N mod 8 = 2, 6 (P exchanges the sectors, whose spectra are then identical).
 """
 
+from itertools import combinations
+
 import numpy as np
 from scipy.sparse import coo_matrix, csr_matrix
 from scipy.sparse.linalg import eigsh
-from typing import Optional, Tuple, Dict, List
-from itertools import combinations
 
-from ..utils.jordan_wigner import JordanWignerMapper
-from ..utils.helpers import RngLike, generate_random_coupling, hermitian_eigh, spectral_density
 from ..spectral.rmt import R_MEAN, ensemble_mean_r
 from ..spectral.statistics import bootstrap_mean, spacing_ratios
+from ..utils.helpers import RngLike, generate_random_coupling, hermitian_eigh, spectral_density
+from ..utils.jordan_wigner import JordanWignerMapper
 
 _CLASS_BY_N_MOD_8 = {0: "GOE", 2: "GUE", 4: "GSE", 6: "GUE"}
 
@@ -50,14 +50,17 @@ def _popcount(a: np.ndarray) -> np.ndarray:
     return count
 
 
-def majorana_pauli(index: int, n_qubits: int) -> Tuple[int, int, complex]:
+def majorana_pauli(index: int, n_qubits: int) -> tuple[int, int, complex]:
     """(x_mask, z_mask, phase) with chi_index = phase * X^x Z^z.
 
     Bit (n_qubits - 1 - q) of a mask refers to qubit q, so masks act directly
     on computational-basis indices in Kronecker order (qubit 0 most significant).
     """
     site = index // 2
-    bit = lambda q: 1 << (n_qubits - 1 - q)
+
+    def bit(q: int) -> int:
+        return 1 << (n_qubits - 1 - q)
+
     z = 0
     for q in range(site):
         z |= bit(q)
@@ -77,7 +80,7 @@ def pauli_terms_to_sparse(terms, n_qubits: int) -> csr_matrix:
     """Sparse matrix of sum_k c_k * X^{x_k} Z^{z_k} from (x, z, c) triples."""
     dim = 2**n_qubits
     basis = np.arange(dim, dtype=np.uint64)
-    by_x: Dict[int, np.ndarray] = {}
+    by_x: dict[int, np.ndarray] = {}
     for x, z, c in terms:
         signs = 1.0 - 2.0 * (_popcount(basis & np.uint64(z)) % 2)
         by_x[x] = by_x.get(x, 0) + c * signs
@@ -128,7 +131,7 @@ class SYKHamiltonian:
         self._hamiltonian_matrix = None
         self._eigenvalues = None
         self._eigenvectors = None
-        self._sector_levels: Dict[str, np.ndarray] = {}
+        self._sector_levels: dict[str, np.ndarray] = {}
 
     @property
     def couplings(self) -> np.ndarray:
@@ -181,7 +184,7 @@ class SYKHamiltonian:
             terms.append((x, z, scale * J[i, j, k, l] * phase))
         return pauli_terms_to_sparse(terms, n)
 
-    def _diagonalize(self, n_eigenvalues: Optional[int] = None):
+    def _diagonalize(self, n_eigenvalues: int | None = None):
         if self.use_sparse and n_eigenvalues is not None:
             self._eigenvalues, self._eigenvectors = eigsh(
                 self.sparse_hamiltonian, k=n_eigenvalues, which="SA"
@@ -191,10 +194,10 @@ class SYKHamiltonian:
                 self.sparse_hamiltonian.toarray()
             )
 
-    def get_ground_state(self) -> Tuple[float, np.ndarray]:
+    def get_ground_state(self) -> tuple[float, np.ndarray]:
         return self.eigenvalues[0], self.eigenvectors[:, 0]
 
-    def get_spectral_density(self, bins: int = 50) -> Tuple[np.ndarray, np.ndarray]:
+    def get_spectral_density(self, bins: int = 50) -> tuple[np.ndarray, np.ndarray]:
         return spectral_density(self.eigenvalues, bins=bins)
 
     def get_level_spacing_ratio(self, trim: float = 0.0) -> float:
@@ -260,7 +263,7 @@ class SYKHamiltonian:
             x, z, phase = _pauli_product((x, z, phase), majorana_pauli(2 * j, n))
         return pauli_terms_to_sparse([(x, z, phase)], n).toarray()
 
-    def _sectors_for_statistics(self) -> List[Tuple[str, bool]]:
+    def _sectors_for_statistics(self) -> list[tuple[str, bool]]:
         """(sector, kramers) pairs entering the level statistics of this N."""
         if self.symmetry_class == "GUE":
             return [("even", False)]  # the odd sector has the identical spectrum
@@ -287,7 +290,7 @@ class SYKHamiltonian:
         )
         return float(np.mean(r)) if r.size else float("nan")
 
-    def summary(self) -> Dict:
+    def summary(self) -> dict:
         return {
             "n_majorana": self.n_majorana,
             "n_qubits": self.n_qubits,
@@ -303,7 +306,10 @@ class SYKHamiltonian:
         }
 
     def __repr__(self) -> str:
-        return f"SYKHamiltonian(N={self.n_majorana}, n_qubits={self.n_qubits}, J={self.coupling_strength})"
+        return (
+            f"SYKHamiltonian(N={self.n_majorana}, n_qubits={self.n_qubits}, "
+            f"J={self.coupling_strength})"
+        )
 
 
 def sector_level_count(n_majorana: int) -> int:
@@ -319,7 +325,7 @@ def disorder_average_lsr(
     trim: float = 0.0,
     coupling_strength: float = 1.0,
     rng: RngLike = None,
-) -> Dict:
+) -> dict:
     """Disorder-averaged, sector-resolved mean spacing ratio.
 
     Realisation ``k`` uses seed ``seed_start + k``. Each realisation contributes
@@ -353,7 +359,7 @@ def disorder_average_lsr(
 
 def syk_rmt_reference(
     n_majorana: int, n_samples: int = 500, trim: float = 0.0, rng: RngLike = None
-) -> Dict:
+) -> dict:
     """Finite-size RMT <r> of the SYK class with the same number of levels and trimming."""
     cls = syk_symmetry_class(n_majorana)
     res = ensemble_mean_r(cls, sector_level_count(n_majorana), n_samples, trim=trim, rng=rng)

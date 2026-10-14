@@ -4,8 +4,8 @@ import numpy as np
 import pytest
 
 from quantum_chaos.spectral import (
-    DegenerateSpectrumWarning,
     R_MEAN,
+    DegenerateSpectrumWarning,
     ensemble_mean_r,
     remove_kramers_pairs,
     spacing_ratios,

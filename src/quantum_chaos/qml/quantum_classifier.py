@@ -1,11 +1,10 @@
 import numpy as np
-from typing import Tuple, Dict, List, Optional, Union
-from sklearn.svm import SVC
-from sklearn.model_selection import train_test_split, cross_val_score
-from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import accuracy_score, classification_report
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.svm import SVC
 
-from .quantum_kernel import QuantumKernel, SYKKernel, HubbardKernel
+from .quantum_kernel import HubbardKernel, QuantumKernel, SYKKernel
 
 
 class QuantumClassifier:
@@ -59,7 +58,7 @@ class QuantumClassifier:
         y_pred = self.predict(X)
         return accuracy_score(y, y_pred)
 
-    def evaluate(self, X_test: np.ndarray, y_test: np.ndarray) -> Dict:
+    def evaluate(self, X_test: np.ndarray, y_test: np.ndarray) -> dict:
         y_pred = self.predict(X_test)
 
         return {
@@ -108,7 +107,7 @@ class QuantumKernelClassificationBenchmark:
         separation: float = 1.0,
         noise: float = 0.1,
         random_state: int = 42,
-    ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         rng = np.random.default_rng(random_state)
 
         samples_per_class = n_samples // n_classes
@@ -134,7 +133,7 @@ class QuantumKernelClassificationBenchmark:
 
     def run_benchmark(
         self, X_train: np.ndarray, y_train: np.ndarray, X_test: np.ndarray, y_test: np.ndarray
-    ) -> Dict:
+    ) -> dict:
         if self.syk_classifier is None:
             self.setup_classifiers()
 
@@ -174,7 +173,7 @@ class QuantumKernelClassificationBenchmark:
 
         return results
 
-    def run_full_comparison(self, n_trials: int = 5, n_samples: int = 100) -> Dict:
+    def run_full_comparison(self, n_trials: int = 5, n_samples: int = 100) -> dict:
         if self.syk_classifier is None:
             self.setup_classifiers()
 

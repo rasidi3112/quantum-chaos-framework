@@ -1,9 +1,9 @@
-import numpy as np
-from typing import List, Tuple, Dict, Optional, Union
 from functools import reduce
 
+import numpy as np
 
-def pauli_operators() -> Dict[str, np.ndarray]:
+
+def pauli_operators() -> dict[str, np.ndarray]:
     return {
         "I": np.array([[1, 0], [0, 1]], dtype=complex),
         "X": np.array([[0, 1], [1, 0]], dtype=complex),
@@ -12,7 +12,7 @@ def pauli_operators() -> Dict[str, np.ndarray]:
     }
 
 
-def tensor_product(operators: List[np.ndarray]) -> np.ndarray:
+def tensor_product(operators: list[np.ndarray]) -> np.ndarray:
     return reduce(np.kron, operators)
 
 
@@ -85,7 +85,7 @@ class JordanWignerMapper:
 
 
 def jordan_wigner_transform(
-    operator_type: str, indices: Union[int, Tuple[int, ...]], n_qubits: int
+    operator_type: str, indices: int | tuple[int, ...], n_qubits: int
 ) -> np.ndarray:
     mapper = JordanWignerMapper(n_qubits)
 
@@ -107,7 +107,7 @@ def jordan_wigner_transform(
 
 def get_pauli_string_representation(
     operator: np.ndarray, n_qubits: int, threshold: float = 1e-10
-) -> List[Tuple[complex, str]]:
+) -> list[tuple[complex, str]]:
     paulis = pauli_operators()
     pauli_labels = ["I", "X", "Y", "Z"]
     dim = 2**n_qubits

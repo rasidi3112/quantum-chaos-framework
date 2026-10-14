@@ -133,7 +133,8 @@ def fmt(x, e):
 def print_markdown(result):
     print("\n### SYK (sector resolved; class from N mod 8)\n")
     print(
-        "| N | class | levels/sector | realisations | ⟨r⟩ SYK | ⟨r⟩ RMT same size | z | Atas (N→∞) |"
+        "| N | class | levels/sector | realisations | ⟨r⟩ SYK | ⟨r⟩ RMT same size "
+        "| z | Atas (N→∞) |"
     )
     print("|---|---|---|---|---|---|---|---|")
     for r in result["syk"]:

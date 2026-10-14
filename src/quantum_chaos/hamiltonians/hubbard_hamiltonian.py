@@ -1,8 +1,7 @@
 import numpy as np
-from typing import Optional, Tuple, Dict, List, Callable
 
-from ..utils.jordan_wigner import JordanWignerMapper
 from ..utils.helpers import spectral_density
+from ..utils.jordan_wigner import JordanWignerMapper
 
 
 class DrivenHubbardHamiltonian:
@@ -169,7 +168,7 @@ class DrivenHubbardHamiltonian:
 
     def stroboscopic_evolution(
         self, initial_state: np.ndarray, n_periods: int, n_steps_per_period: int = 100
-    ) -> List[np.ndarray]:
+    ) -> list[np.ndarray]:
         F = self.floquet_operator(n_steps_per_period)
         states = [initial_state.copy()]
         current_state = initial_state.copy()
@@ -178,7 +177,7 @@ class DrivenHubbardHamiltonian:
             states.append(current_state.copy())
         return states
 
-    def get_spectral_density(self, bins: int = 50) -> Tuple[np.ndarray, np.ndarray]:
+    def get_spectral_density(self, bins: int = 50) -> tuple[np.ndarray, np.ndarray]:
         return spectral_density(self.static_eigenvalues, bins=bins)
 
     def get_number_operator(self, site: int, spin: str) -> np.ndarray:
@@ -215,7 +214,7 @@ class DrivenHubbardHamiltonian:
         mean_hopping = np.mean([self.hopping_strength((k + 0.5) * T / n) for k in range(n)])
         return mean_hopping * self.hopping_matrix + self.interaction_matrix
 
-    def summary(self) -> Dict:
+    def summary(self) -> dict:
         return {
             "n_sites": self.n_sites,
             "n_qubits": self.n_qubits,

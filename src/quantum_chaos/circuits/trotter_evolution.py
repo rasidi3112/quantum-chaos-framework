@@ -1,16 +1,13 @@
 import warnings
+from collections.abc import Callable
 
 import numpy as np
 import pennylane as qml
-from pennylane import numpy as pnp
-from typing import List, Tuple, Dict, Optional, Union, Callable
 from scipy.linalg import expm
 
 
 class TrotterEvolution:
-    def __init__(
-        self, n_qubits: int, device_name: str = "default.qubit", shots: Optional[int] = None
-    ):
+    def __init__(self, n_qubits: int, device_name: str = "default.qubit", shots: int | None = None):
         self.n_qubits = n_qubits
         self.device_name = device_name
         self.shots = shots
@@ -27,7 +24,7 @@ class TrotterEvolution:
         return self._device
 
     def hamiltonian_to_pennylane(
-        self, pauli_terms: List[Tuple[complex, str]]
+        self, pauli_terms: list[tuple[complex, str]]
     ) -> qml.ops.LinearCombination:
         coeffs = []
         observables = []
@@ -83,7 +80,7 @@ class TrotterEvolution:
 
         # Multi-qubit Pauli rotation using CNOT ladder
         # 1. Change basis for X and Y
-        for q, p in zip(active_qubits, pauli_types):
+        for q, p in zip(active_qubits, pauli_types, strict=True):
             if p == "X":
                 qml.Hadamard(wires=q)
             elif p == "Y":
@@ -101,18 +98,18 @@ class TrotterEvolution:
             qml.CNOT(wires=[active_qubits[i], active_qubits[i + 1]])
 
         # 5. Undo basis change
-        for q, p in zip(active_qubits, pauli_types):
+        for q, p in zip(active_qubits, pauli_types, strict=True):
             if p == "X":
                 qml.Hadamard(wires=q)
             elif p == "Y":
                 qml.RX(-np.pi / 2, wires=q)
 
-    def first_order_trotter_layer(self, pauli_terms: List[Tuple[float, str]], dt: float):
+    def first_order_trotter_layer(self, pauli_terms: list[tuple[float, str]], dt: float):
         for coeff, pauli_str in pauli_terms:
             angle = coeff * dt
             self._pauli_rotation(pauli_str, angle)
 
-    def second_order_trotter_layer(self, pauli_terms: List[Tuple[float, str]], dt: float):
+    def second_order_trotter_layer(self, pauli_terms: list[tuple[float, str]], dt: float):
         # Forward sweep with dt/2
         for coeff, pauli_str in pauli_terms:
             angle = coeff * dt / 2
@@ -125,11 +122,11 @@ class TrotterEvolution:
 
     def create_evolution_circuit(
         self,
-        pauli_terms: List[Tuple[float, str]],
+        pauli_terms: list[tuple[float, str]],
         total_time: float,
         n_steps: int,
         order: int = 1,
-        initial_state: Optional[np.ndarray] = None,
+        initial_state: np.ndarray | None = None,
     ) -> Callable:
         dt = total_time / n_steps
 
@@ -154,12 +151,12 @@ class TrotterEvolution:
 
     def create_expectation_circuit(
         self,
-        pauli_terms: List[Tuple[float, str]],
+        pauli_terms: list[tuple[float, str]],
         observable: str,
         total_time: float,
         n_steps: int,
         order: int = 1,
-        initial_state: Optional[np.ndarray] = None,
+        initial_state: np.ndarray | None = None,
     ) -> Callable:
         dt = total_time / n_steps
 
@@ -196,7 +193,7 @@ class TrotterEvolution:
     def evolve_state(
         self,
         initial_state: np.ndarray,
-        pauli_terms: List[Tuple[float, str]],
+        pauli_terms: list[tuple[float, str]],
         total_time: float,
         n_steps: int = 10,
         order: int = 1,
@@ -209,12 +206,12 @@ class TrotterEvolution:
     def compute_fidelity_vs_time(
         self,
         initial_state: np.ndarray,
-        pauli_terms: List[Tuple[float, str]],
+        pauli_terms: list[tuple[float, str]],
         times: np.ndarray,
         hamiltonian_matrix: np.ndarray,
         n_steps_per_unit_time: int = 10,
         order: int = 2,
-    ) -> Tuple[np.ndarray, np.ndarray]:
+    ) -> tuple[np.ndarray, np.ndarray]:
         fidelities = []
 
         for t in times:
@@ -235,12 +232,12 @@ class TrotterEvolution:
 
     def trotter_error_analysis(
         self,
-        pauli_terms: List[Tuple[float, str]],
+        pauli_terms: list[tuple[float, str]],
         hamiltonian_matrix: np.ndarray,
         total_time: float,
         max_steps: int = 100,
-        rng: Union[None, int, np.random.Generator] = None,
-    ) -> Dict:
+        rng: None | int | np.random.Generator = None,
+    ) -> dict:
         """Infidelity of order-1/2 Trotter evolution vs exact, from a random state."""
         rng = np.random.default_rng(rng)
         dim = 2**self.n_qubits
@@ -278,7 +275,7 @@ class TrotterEvolution:
 
 def matrix_to_pauli_terms(
     H: np.ndarray, n_qubits: int, threshold: float = 1e-10
-) -> List[Tuple[float, str]]:
+) -> list[tuple[float, str]]:
     from ..utils.jordan_wigner import get_pauli_string_representation
 
     pauli_decomp = get_pauli_string_representation(H, n_qubits, threshold)

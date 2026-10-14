@@ -1,9 +1,9 @@
-import numpy as np
-from typing import Tuple, Optional, List, Union
-from scipy.linalg import expm
 from itertools import combinations
 
-RngLike = Union[None, int, np.random.Generator]
+import numpy as np
+from scipy.linalg import expm
+
+RngLike = None | int | np.random.Generator
 
 
 def as_rng(seed: RngLike = None) -> np.random.Generator:
@@ -49,7 +49,7 @@ def generate_random_coupling(
     return J
 
 
-def _signed_permutations(indices: Tuple[int, ...]) -> List[Tuple[Tuple[int, ...], int]]:
+def _signed_permutations(indices: tuple[int, ...]) -> list[tuple[tuple[int, ...], int]]:
     from itertools import permutations
 
     result = []
@@ -79,7 +79,7 @@ def matrix_exponential(H: np.ndarray, t: float = 1.0) -> np.ndarray:
     return expm(-1j * H * t)
 
 
-def partial_trace(rho: np.ndarray, keep: List[int], dims: List[int]) -> np.ndarray:
+def partial_trace(rho: np.ndarray, keep: list[int], dims: list[int]) -> np.ndarray:
     """Reduced density matrix on the subsystems ``keep``.
 
     ``rho`` acts on the tensor product of subsystems with dimensions ``dims``
@@ -147,7 +147,7 @@ def state_fidelity(psi: np.ndarray, phi: np.ndarray) -> float:
 
 
 def entanglement_entropy(
-    state: np.ndarray, subsystem_qubits: List[int], total_qubits: int
+    state: np.ndarray, subsystem_qubits: list[int], total_qubits: int
 ) -> float:
     rho = np.outer(state, state.conj())
     dims = [2] * total_qubits
@@ -160,7 +160,7 @@ def entanglement_entropy(
 
 def spectral_density(
     eigenvalues: np.ndarray, bins: int = 50, normalize: bool = True
-) -> Tuple[np.ndarray, np.ndarray]:
+) -> tuple[np.ndarray, np.ndarray]:
     density, bin_edges = np.histogram(eigenvalues, bins=bins, density=normalize)
     bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
     return bin_centers, density

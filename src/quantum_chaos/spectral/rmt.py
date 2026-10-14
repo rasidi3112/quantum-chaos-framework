@@ -16,13 +16,11 @@ same dimension and edge trimming, so that finite-size effects are not
 mistaken for physics.
 """
 
-from typing import Dict, Optional, Union
-
 import numpy as np
 
 from .statistics import spacing_ratios
 
-R_MEAN: Dict[str, float] = {
+R_MEAN: dict[str, float] = {
     "poisson": 2 * np.log(2) - 1,
     "goe": 0.5307,
     "gue": 0.5996,
@@ -30,9 +28,9 @@ R_MEAN: Dict[str, float] = {
 }
 """Large-N <r~> (Atas et al. 2013, Table I, numerical column; Poisson exact)."""
 
-R_MEAN_UNCERTAINTY: Dict[str, float] = {"poisson": 0.0, "goe": 1e-4, "gue": 1e-4, "gse": 1e-4}
+R_MEAN_UNCERTAINTY: dict[str, float] = {"poisson": 0.0, "goe": 1e-4, "gue": 1e-4, "gse": 1e-4}
 
-R_SURMISE: Dict[str, float] = {
+R_SURMISE: dict[str, float] = {
     "poisson": 2 * np.log(2) - 1,
     "goe": 4 - 2 * np.sqrt(3),
     "gue": 2 * np.sqrt(3) / np.pi - 0.5,
@@ -42,7 +40,7 @@ R_SURMISE: Dict[str, float] = {
 
 DYSON_INDEX = {"goe": 1, "gue": 2, "gse": 4}
 
-RngLike = Union[None, int, np.random.Generator]
+RngLike = None | int | np.random.Generator
 
 
 def _normalise(ensemble: str) -> str:
@@ -85,7 +83,7 @@ def ensemble_mean_r(
     n_samples: int,
     trim: float = 0.0,
     rng: RngLike = None,
-) -> Dict[str, float]:
+) -> dict[str, float]:
     """Finite-size <r~> of an ensemble: same dimension and trimming as the data.
 
     Returns the mean over samples of the per-matrix mean ratio and its
@@ -107,7 +105,7 @@ def ensemble_mean_r(
     }
 
 
-def closest_ensemble(mean_r: float, candidates: Optional[list] = None) -> str:
+def closest_ensemble(mean_r: float, candidates: list | None = None) -> str:
     """Name of the reference ensemble whose large-N <r~> is closest (descriptive only)."""
     candidates = candidates or list(R_MEAN)
     return min(candidates, key=lambda k: abs(R_MEAN[_normalise(k)] - mean_r))
