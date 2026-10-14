@@ -185,7 +185,7 @@ def main():
     }
     out = pathlib.Path(args.output)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(result, indent=2, default=float))
+    out.write_text(json.dumps(result, indent=2, default=float) + "\n")
     print_markdown(result)
     print(f"\nWrote {out}")
 
