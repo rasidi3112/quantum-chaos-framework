@@ -75,6 +75,23 @@ class FloquetConfig:
 
 
 @dataclass(frozen=True)
+class NISQConfig:
+    bound_n_majorana: int = 8
+    bound_time: float = 2.0
+    bound_steps: tuple[int, ...] = (1, 2, 4, 8, 16, 32, 64)
+    cost_sizes: tuple[int, ...] = (8, 12, 16, 20, 24)
+    sparse_k: float = 4.0
+    sparse_stat_sizes: tuple[int, ...] = (16, 20)
+    sparse_k_values: tuple[float, ...] = (0.5, 1.0, 2.0, 4.0, 8.0)
+    sparse_realisations: int = 12
+    otoc_n_majorana: int = 6
+    otoc_times: tuple[float, ...] = (0.0, 0.5, 1.0, 1.5, 2.0, 2.5)
+    otoc_steps: int = 6
+    depolarizing: float = 0.005
+    folds: tuple[int, ...] = (1, 3, 5)
+
+
+@dataclass(frozen=True)
 class FigureConfig:
     name: str
     kind: str
@@ -85,6 +102,7 @@ class FigureConfig:
     sff: SFFConfig | None = None
     dynamics: DynamicsConfig | None = None
     floquet: FloquetConfig | None = None
+    nisq: NISQConfig | None = None
     bins: int = 25
     extra: dict[str, Any] = field(default_factory=dict)
 
@@ -96,6 +114,7 @@ _SECTIONS = {
     "sff": SFFConfig,
     "dynamics": DynamicsConfig,
     "floquet": FloquetConfig,
+    "nisq": NISQConfig,
 }
 
 
@@ -122,6 +141,17 @@ def figure_config_from_dict(data: dict[str, Any], where: str = "config") -> Figu
                 section["betas"] = tuple(float(x) for x in section["betas"])
             if key == "floquet":
                 for name, cast in (("sizes", int), ("omegas", float), ("expansion_omegas", float)):
+                    if name in section:
+                        section[name] = tuple(cast(x) for x in section[name])
+            if key == "nisq":
+                for name, cast in (
+                    ("bound_steps", int),
+                    ("cost_sizes", int),
+                    ("sparse_stat_sizes", int),
+                    ("sparse_k_values", float),
+                    ("otoc_times", float),
+                    ("folds", int),
+                ):
                     if name in section:
                         section[name] = tuple(cast(x) for x in section[name])
             if key == "dynamics" and "eth_sizes" in section:

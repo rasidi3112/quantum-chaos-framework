@@ -54,6 +54,18 @@ TINY = {
         "n_steps": 8,
         "expansion_omegas": [20.0, 40.0],
     },
+    "nisq": {
+        "bound_n_majorana": 6,
+        "bound_steps": [1, 4],
+        "cost_sizes": [8, 10],
+        "sparse_stat_sizes": [10],
+        "sparse_k_values": [2.0, 4.0],
+        "sparse_realisations": 2,
+        "otoc_n_majorana": 4,
+        "otoc_times": [0.0, 0.5],
+        "otoc_steps": 1,
+        "folds": [1, 3],
+    },
 }
 
 
