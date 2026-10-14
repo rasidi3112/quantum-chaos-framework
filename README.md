@@ -84,11 +84,71 @@ tables (~40 min).
 
 ![Symmetry-resolved diagnostics](figures/overview.png)
 
-*(a) SYK ⟨r⟩ per N (filled) and random matrices with the same number of levels
-(open), with the large-N values of Atas et al.; the class follows N mod 8.
-(b) Hubbard ring L=8, N=4+4, U=4: integrable t'=0 vs t'=0.5 (at L=8 still
-below GOE; L=10 results in VALIDATION.md). (c) Infinite-
-temperature OTOC of one realisation (qualitative).*
+*(a) SYK ⟨r⟩ per N (black) and random matrices with the same number of levels
+(open squares), with the large-N values of Atas et al.; the class follows
+N mod 8. (b) Hubbard ring L=8, N=4+4, U=4: integrable t'=0 vs t'=0.5 (at L=8
+still below GOE; L=10 results in VALIDATION.md). (c) Infinite-temperature OTOC
+of one realisation (qualitative). (d) Numbers shown in (a) and (b).*
+
+## Figures
+
+Every figure is produced by `make figures` from the YAML file named below
+(`configs/figures/`); the plotted numbers and the provenance (git commit,
+library versions) are stored next to each image as a `.json` file. Details and
+error analysis are in [VALIDATION.md](VALIDATION.md).
+
+### Level-spacing-ratio distributions — `ratio_distributions.yaml`
+
+![Spacing-ratio distributions](figures/ratio_distributions.png)
+
+*Histograms of r̃ for SYK N = 16 (GOE), 18 (GUE), 20 (GSE) and for the
+Hubbard ring (L = 8, t' = 0 and 0.5), against the Wigner-like surmises of
+Atas et al. (dashed).*
+
+### Spectral form factor — `sff.yaml`
+
+![Spectral form factor](figures/sff.png)
+
+*(a) Disorder-averaged SFF at β = 0 with dip, ramp and plateau; dotted lines
+are the exact plateaus 1/L (N mod 8 = 0) and 2/L (otherwise). (b) Unfolded,
+sector-resolved connected form factor against the GOE/GUE/GSE predictions.*
+
+### Scrambling and operator growth — `chaos_dynamics.yaml`
+
+![Scrambling and operator growth](figures/chaos_dynamics.png)
+
+*(a) Regularised Majorana OTOC for interacting SYK4 and the free SYK2
+control. (b) Lanczos coefficients: the Krylov space of the free model ends
+after N − 1 steps. (c) Mean Majorana size of χ₀(t). (d) Entanglement of
+mid-spectrum eigenstates (N = 20) against the Page curve. No Lyapunov
+exponent is extracted: the early-time growth is ∝ t² at these sizes.*
+
+### Floquet heating and high-frequency expansion — `floquet_heating.yaml`
+
+![Floquet heating](figures/floquet_heating.png)
+
+*Driven Hubbard ring J(t) = 1 + cos ωt, t' = 0.5, U = 4. (a) Absorbed energy
+versus the number of periods. (b) Time-averaged absorbed fraction versus ω
+for L = 6 and 8. (c) Error of the van Vleck effective Hamiltonian at orders
+0 and 2 (slopes ≈ −2 and −4).*
+
+### Quantum circuits and noise — `nisq.yaml`
+
+![Circuits and noise](figures/nisq.png)
+
+*(a) Trotter error against the first-order commutator bound of Childs et al.
+(b) CNOTs per Trotter step for dense and sparse (k = 4) SYK. (c) Sparse-SYK
+⟨r⟩ versus k. (d) Noisy interferometric OTOC (N = 6, depolarizing p = 0.005):
+raw, echo-normalised and zero-noise-extrapolated, for SYK4 and SYK2.*
+
+### Quantum kernels — `qml.yaml`
+
+![Quantum kernels](figures/qml.png)
+
+*(a, b) Variance of the fidelity kernel versus system size for the SYK and
+Hubbard Hamiltonian encodings, with Haar references. (c) Test accuracy over
+20 seeds against a cross-validated RBF-SVM; both quantum kernels are
+significantly worse (Wilcoxon p ≤ 0.013).*
 
 ## Conventions
 
