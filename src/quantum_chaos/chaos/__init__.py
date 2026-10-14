@@ -1,3 +1,4 @@
+from .krylov import autocorrelation, krylov_complexity, krylov_wavefunction, lanczos_coefficients
 from .moments import (
     normalized_moments,
     syk_eta,
@@ -5,6 +6,8 @@ from .moments import (
     syk_kurtosis_garcia_garcia_verbaarschot,
     syk_second_moment,
 )
+from .operator_size import mean_size_from_anticommutators, pauli_coefficients, size_distribution
+from .otoc import lyapunov_fit, lyapunov_with_systematics, normalized_decay, thermal_otoc
 from .sff import (
     partition_function,
     plateau_value,
@@ -16,6 +19,17 @@ from .sff import (
 )
 
 __all__ = [
+    "autocorrelation",
+    "krylov_complexity",
+    "krylov_wavefunction",
+    "lanczos_coefficients",
+    "lyapunov_fit",
+    "lyapunov_with_systematics",
+    "mean_size_from_anticommutators",
+    "normalized_decay",
+    "pauli_coefficients",
+    "size_distribution",
+    "thermal_otoc",
     "normalized_moments",
     "partition_function",
     "plateau_value",
