@@ -26,8 +26,6 @@ class NoiseModel:
     """
 
     depolarizing_rate: float = 0.01
-    amplitude_damping_rate: float = 0.01
-    phase_damping_rate: float = 0.01
     t1: float = 1000.0
     t2: float = 500.0
     gate_time: float = 1.0

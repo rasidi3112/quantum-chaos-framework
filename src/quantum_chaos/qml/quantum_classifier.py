@@ -187,15 +187,8 @@ class QuantumKernelClassificationBenchmark:
             'hubbard': hubbard_expressivity
         }
         
-        # Comparison summary
-        results['comparison'] = {
-            'syk_wins': syk_eval['accuracy'] > hubbard_eval['accuracy'],
-            'accuracy_difference': syk_eval['accuracy'] - hubbard_eval['accuracy'],
-            'chaos_advantage': (
-                syk_eval['accuracy'] > hubbard_eval['accuracy'] and 
-                syk_expressivity['expressivity_score'] > hubbard_expressivity['expressivity_score']
-            )
-        }
+        # Single-split difference; not a significance statement (see PLAN 3E)
+        results['accuracy_difference'] = syk_eval['accuracy'] - hubbard_eval['accuracy']
         
         return results
     
@@ -234,24 +227,7 @@ class QuantumKernelClassificationBenchmark:
             'syk_std': np.std(syk_accuracies),
             'hubbard_mean': np.mean(hubbard_accuracies),
             'hubbard_std': np.std(hubbard_accuracies),
-            'syk_wins_count': sum(1 for s, h in zip(syk_accuracies, hubbard_accuracies) if s > h),
-            'conclusion': self._draw_conclusion(syk_accuracies, hubbard_accuracies)
         }
-    
-    def _draw_conclusion(
-        self,
-        syk_accs: List[float],
-        hubbard_accs: List[float]
-    ) -> str:
-        syk_mean = np.mean(syk_accs)
-        hubbard_mean = np.mean(hubbard_accs)
-        
-        if syk_mean > hubbard_mean + 0.05:
-            return "SYK (chaotic) kernel shows significant advantage"
-        elif hubbard_mean > syk_mean + 0.05:
-            return "Hubbard (regular) kernel shows significant advantage"
-        else:
-            return "No significant difference between chaos and regular dynamics"
 
 
 def generate_quantum_embedded_features(

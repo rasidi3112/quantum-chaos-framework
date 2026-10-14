@@ -193,8 +193,20 @@ class DrivenHubbardHamiltonian:
             S_z += 0.5 * (self.get_number_operator(i, 'up') - self.get_number_operator(i, 'down'))
         return S_z
     
-    def effective_hamiltonian(self, order: int = 1) -> np.ndarray:
-        return self.interaction_matrix.copy()
+    def effective_hamiltonian(self, order: int = 0) -> np.ndarray:
+        """High-frequency effective Hamiltonian truncated at O(omega^-order).
+
+        Only the leading term is implemented: the period average
+        (1/T) int_0^T H(t) dt. For J(t) = J0 cos(omega t) the hopping averages
+        to zero, so this equals the interaction term. Higher orders (van Vleck /
+        Floquet-Magnus) are planned (PLAN 3C) and raise NotImplementedError.
+        """
+        if order != 0:
+            raise NotImplementedError("only the order-0 (period-averaged) term is implemented")
+        T = 2 * np.pi / self.driving_frequency
+        n = 64  # midpoint rule, exact for trigonometric polynomials of degree < 64
+        mean_hopping = np.mean([self.hopping_strength((k + 0.5) * T / n) for k in range(n)])
+        return mean_hopping * self.hopping_matrix + self.interaction_matrix
     
     def summary(self) -> Dict:
         return {

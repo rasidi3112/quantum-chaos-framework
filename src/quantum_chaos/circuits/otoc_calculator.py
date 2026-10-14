@@ -137,96 +137,6 @@ class OTOCCalculator:
         
         return result
     
-    def butterfly_velocity(
-        self,
-        site_separation: int,
-        times: np.ndarray,
-        threshold: float = 0.5
-    ) -> float:
-        # Use Z operators at sites 0 and site_separation
-        W = self.local_pauli('Z', 0)
-        V = self.local_pauli('Z', min(site_separation, self.n_qubits - 1))
-        
-        comm_sq = self.compute_commutator_squared(W, V, times)
-        
-        # Find scrambling time (when |[W(t), V]|² > threshold)
-        scrambled_idx = np.where(comm_sq > threshold)[0]
-        
-        if len(scrambled_idx) == 0:
-            return 0.0  # No scrambling observed
-        
-        t_scramble = times[scrambled_idx[0]]
-        
-        if t_scramble > 0:
-            return site_separation / t_scramble
-        return np.inf
-    
-    def lyapunov_exponent(
-        self,
-        times: np.ndarray,
-        temperature: Optional[float] = None,
-        fit_window: Tuple[float, float] = (0.1, 0.9)
-    ) -> Tuple[float, float]:
-        # Use nearby sites for local operators
-        W = self.local_pauli('Z', 0)
-        V = self.local_pauli('Z', min(1, self.n_qubits - 1))
-        
-        otoc = self.compute_otoc_exact(W, V, times, temperature=temperature)
-        
-        # Compute 1 - Re[C(t)]
-        deviation = 1 - np.real(otoc)
-        deviation = np.maximum(deviation, 1e-15)  # Avoid log(0)
-        
-        # Fit exponential in log space
-        log_dev = np.log(deviation)
-        
-        # Select fitting window
-        n_points = len(times)
-        start_idx = int(n_points * fit_window[0])
-        end_idx = int(n_points * fit_window[1])
-        
-        if end_idx <= start_idx:
-            return 0.0, np.inf
-        
-        times_fit = times[start_idx:end_idx]
-        log_fit = log_dev[start_idx:end_idx]
-        
-        # Linear fit: log(1 - C) ≈ 2λt + const
-        try:
-            coeffs = np.polyfit(times_fit, log_fit, 1)
-            lambda_L = coeffs[0] / 2  # Factor of 2 from definition
-            
-            # Estimate fit quality
-            fit_vals = np.polyval(coeffs, times_fit)
-            residuals = log_fit - fit_vals
-            fit_error = np.std(residuals)
-            
-            return float(lambda_L), float(fit_error)
-        except:
-            return 0.0, np.inf
-    
-    def scrambling_time(
-        self,
-        threshold: float = 0.5,
-        max_time: float = 10.0,
-        n_time_points: int = 100
-    ) -> float:
-        times = np.linspace(0, max_time, n_time_points)
-        
-        W = self.local_pauli('Z', 0)
-        V = self.local_pauli('Z', min(1, self.n_qubits - 1))
-        
-        otoc = self.compute_otoc_exact(W, V, times)
-        otoc_real = np.real(otoc)
-        
-        # Find first time C(t) < threshold
-        below_threshold = np.where(otoc_real < threshold)[0]
-        
-        if len(below_threshold) == 0:
-            return max_time  # Not scrambled within time window
-        
-        return float(times[below_threshold[0]])
-    
     def operator_size_growth(
         self,
         initial_op: np.ndarray,
@@ -266,82 +176,53 @@ class OTOCCalculator:
         W_pauli: str,
         W_site: int,
         V_pauli: str,
-        V_site: int
+        V_site: int,
+        initial_state: Optional[np.ndarray] = None
     ):
-        n_wires = self.n_qubits + 1  # Extra ancilla
-        dev = qml.device('default.qubit', wires=n_wires)
-        
-        pauli_gate = {
-            'X': qml.PauliX,
-            'Y': qml.PauliY,
-            'Z': qml.PauliZ
-        }
+        """Interferometric (Hadamard-test) circuit for Re F(t), F(t) = Tr[rho W(t)^dag V^dag W(t) V].
+
+        Uses controlled-(U^dag X U) = U^dag (controlled-X) U, so the time
+        evolution U = exp(-iHt) itself is never controlled (Swingle et al.,
+        PRA 94, 040302 (2016)). Here U is applied exactly as a matrix
+        (``qml.QubitUnitary``); a Trotterised version is planned (PLAN 3D).
+
+        ``initial_state=None`` gives infinite temperature, rho = I/D, realised
+        by purification with n reference qubits in Bell pairs; otherwise
+        rho = |psi><psi|. Returns a function ``t -> Re F(t)`` equal to
+        ``Re compute_otoc_exact(W, V, [t], state=initial_state)``.
+        """
+        if self.hamiltonian is None:
+            raise ValueError("Hamiltonian not set")
+        n = self.n_qubits
+        system = list(range(n))
+        ancilla = n
+        reference = list(range(n + 1, 2 * n + 1)) if initial_state is None else []
+        dev = qml.device('default.qubit', wires=n + 1 + len(reference))
+        gate = {'X': qml.PauliX, 'Y': qml.PauliY, 'Z': qml.PauliZ}
         
         @qml.qnode(dev)
-        def otoc_circuit(time: float, n_trotter_steps: int = 10):
-            ancilla = self.n_qubits
-            
-            # Prepare ancilla in |+⟩
+        def hadamard_test(U):
+            if initial_state is None:
+                for r, q in zip(reference, system):
+                    qml.Hadamard(wires=r)
+                    qml.CNOT(wires=[r, q])
+            else:
+                qml.StatePrep(initial_state, wires=system)
             qml.Hadamard(wires=ancilla)
-            
-            # Controlled-V
-            qml.ctrl(pauli_gate[V_pauli], control=ancilla)(wires=V_site)
-            
-            # Forward evolution (controlled)
-            # Simplified: would need full Trotter implementation
-            # This is a placeholder for demonstration
-            
-            # Controlled-W
-            qml.ctrl(pauli_gate[W_pauli], control=ancilla)(wires=W_site)
-            
-            # Backward evolution (controlled)
-            
-            # Controlled-V†
-            qml.ctrl(pauli_gate[V_pauli], control=ancilla)(wires=V_site)
-            
-            # Controlled-W†
-            qml.ctrl(pauli_gate[W_pauli], control=ancilla)(wires=W_site)
-            
-            # Measure ancilla
+            # controlled-A, A = U^dag W U V^dag U^dag W U V (Paulis are Hermitian),
+            # applied right to left
+            qml.ctrl(gate[V_pauli](wires=V_site), control=ancilla)
+            qml.QubitUnitary(U, wires=system)
+            qml.ctrl(gate[W_pauli](wires=W_site), control=ancilla)
+            qml.adjoint(qml.QubitUnitary(U, wires=system))
+            qml.ctrl(gate[V_pauli](wires=V_site), control=ancilla)
+            qml.QubitUnitary(U, wires=system)
+            qml.ctrl(gate[W_pauli](wires=W_site), control=ancilla)
+            qml.adjoint(qml.QubitUnitary(U, wires=system))
             qml.Hadamard(wires=ancilla)
-            
             return qml.expval(qml.PauliZ(ancilla))
         
-        return otoc_circuit
-    
-    def compare_models(
-        self,
-        hamiltonian_2: np.ndarray,
-        times: np.ndarray,
-        model_names: Tuple[str, str] = ('Model 1', 'Model 2')
-    ) -> Dict:
-        W = self.local_pauli('Z', 0)
-        V = self.local_pauli('Z', min(1, self.n_qubits - 1))
+        def otoc(t: float) -> float:
+            return float(hadamard_test(self._time_evolution_operator(t)))
         
-        # Model 1
-        otoc_1 = self.compute_otoc_exact(W, V, times)
-        lambda_1, err_1 = self.lyapunov_exponent(times)
-        
-        # Model 2
-        orig_H = self.hamiltonian
-        self.set_hamiltonian(hamiltonian_2)
-        otoc_2 = self.compute_otoc_exact(W, V, times)
-        lambda_2, err_2 = self.lyapunov_exponent(times)
-        
-        # Restore
-        self.set_hamiltonian(orig_H)
-        
-        return {
-            'times': times,
-            model_names[0]: {
-                'otoc': otoc_1,
-                'lyapunov': lambda_1,
-                'lyapunov_error': err_1,
-                'scrambling_time': self.scrambling_time()
-            },
-            model_names[1]: {
-                'otoc': otoc_2,
-                'lyapunov': lambda_2,
-                'lyapunov_error': err_2
-            }
-        }
+        return otoc

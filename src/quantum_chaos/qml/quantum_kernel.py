@@ -89,6 +89,12 @@ class QuantumKernel:
         self,
         n_samples: int = 100
     ) -> Dict:
+        """Descriptive statistics of the kernel on standard-normal random inputs.
+
+        A small spread of off-diagonal values signals kernel concentration
+        (Thanasilp et al., arXiv:2208.11060); these numbers are not a figure
+        of merit by themselves.
+        """
         # Generate random data
         data_dim = self.n_qubits  # Assume input dimension = n_qubits
         X = np.random.randn(n_samples, data_dim)
@@ -105,9 +111,6 @@ class QuantumKernel:
             'std_kernel': float(np.std(off_diag)),
             'min_kernel': float(np.min(off_diag)),
             'max_kernel': float(np.max(off_diag)),
-            # Ideal: mean close to 0 (well-separated), std close to 0 (uniform)
-            # High expressivity: low mean, low std
-            'expressivity_score': float(1 - np.mean(off_diag)),
             'kernel_rank': int(np.linalg.matrix_rank(K, tol=1e-6)),
             'effective_dimension': self._effective_dimension(K)
         }
@@ -279,15 +282,8 @@ def compare_kernel_expressivity(
     hubbard_kernel: QuantumKernel,
     n_samples: int = 100
 ) -> Dict:
-    syk_metrics = syk_kernel.expressivity_metric(n_samples)
-    hubbard_metrics = hubbard_kernel.expressivity_metric(n_samples)
-    
+    """Kernel statistics of both models side by side (no ranking)."""
     return {
-        'syk': syk_metrics,
-        'hubbard': hubbard_metrics,
-        'expressivity_comparison': {
-            'syk_higher': syk_metrics['expressivity_score'] > hubbard_metrics['expressivity_score'],
-            'score_difference': syk_metrics['expressivity_score'] - hubbard_metrics['expressivity_score'],
-            'kernel_separation_ratio': syk_metrics['std_kernel'] / (hubbard_metrics['std_kernel'] + 1e-10)
-        }
+        'syk': syk_kernel.expressivity_metric(n_samples),
+        'hubbard': hubbard_kernel.expressivity_metric(n_samples),
     }

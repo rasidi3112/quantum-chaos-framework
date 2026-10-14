@@ -28,8 +28,8 @@ class QuantumVisualizer:
         
         # Color palette for SYK vs Hubbard comparison
         self.colors = {
-            'syk': '#E74C3C',       # Red for chaotic
-            'hubbard': '#3498DB',   # Blue for regular
+            'syk': '#E74C3C',
+            'hubbard': '#3498DB',
             'ideal': '#2ECC71',     # Green for ideal
             'noisy': '#9B59B6',     # Purple for noisy
             'error': '#E67E22'      # Orange for error
@@ -61,7 +61,7 @@ class QuantumVisualizer:
         )
         axes[0].set_xlabel('Energy', fontsize=12)
         axes[0].set_ylabel('Density of States', fontsize=12)
-        axes[0].set_title('SYK Model (Chaotic)', fontsize=14, fontweight='bold')
+        axes[0].set_title('SYK model', fontsize=14, fontweight='bold')
         axes[0].axvline(
             np.mean(syk_eigenvalues), 
             color='black', 
@@ -82,7 +82,7 @@ class QuantumVisualizer:
         )
         axes[1].set_xlabel('Energy', fontsize=12)
         axes[1].set_ylabel('Density of States', fontsize=12)
-        axes[1].set_title('Hubbard Model (Regular)', fontsize=14, fontweight='bold')
+        axes[1].set_title('Hubbard model', fontsize=14, fontweight='bold')
         axes[1].axvline(
             np.mean(hubbard_eigenvalues), 
             color='black', 
@@ -155,9 +155,9 @@ class QuantumVisualizer:
         fig, ax = plt.subplots(figsize=self.figsize)
         
         ax.plot(times, syk_fidelity, '-', color=self.colors['syk'], 
-                linewidth=2, label='SYK (Chaotic)')
+                linewidth=2, label='SYK')
         ax.plot(times, hubbard_fidelity, '-', color=self.colors['hubbard'], 
-                linewidth=2, label='Hubbard (Regular)')
+                linewidth=2, label='Hubbard')
         
         ax.set_xlabel('Time', fontsize=12)
         ax.set_ylabel('Fidelity F(t) = |⟨ψ(0)|ψ(t)⟩|²', fontsize=12)
@@ -199,7 +199,7 @@ class QuantumVisualizer:
         deviation_hub = np.maximum(deviation_hub, 1e-15)
         
         axes[1].semilogy(times, deviation_syk, '-', color=self.colors['syk'], 
-                         linewidth=2, label='SYK (expect exponential)')
+                         linewidth=2, label='SYK')
         axes[1].semilogy(times, deviation_hub, '-', color=self.colors['hubbard'], 
                          linewidth=2, label='Hubbard')
         axes[1].set_xlabel('Time', fontsize=12)
@@ -241,37 +241,6 @@ class QuantumVisualizer:
         
         plt.tight_layout()
         self._save_figure(fig, 'error_rate_comparison')
-        return fig
-    
-    def plot_spectral_stability(
-        self,
-        benchmark_results: Dict,
-        title: str = "Spectral Stability Under Noise"
-    ) -> Figure:
-        fig, axes = plt.subplots(1, 2, figsize=(14, 5))
-        
-        noise_levels = benchmark_results['noise_levels']
-        
-        # Energy variance vs noise
-        axes[0].plot(noise_levels, benchmark_results['energy_variance'], 
-                     'o-', color=self.colors['error'], linewidth=2, markersize=8)
-        axes[0].set_xlabel('Depolarizing Rate', fontsize=12)
-        axes[0].set_ylabel('Energy Variance', fontsize=12)
-        axes[0].set_title('Energy Measurement Uncertainty', fontsize=14, fontweight='bold')
-        axes[0].grid(True, alpha=0.3)
-        
-        # Ground state error vs noise
-        axes[1].plot(noise_levels, benchmark_results['ground_state_error'],
-                     's-', color=self.colors['noisy'], linewidth=2, markersize=8)
-        axes[1].set_xlabel('Depolarizing Rate', fontsize=12)
-        axes[1].set_ylabel('Ground State Energy Error', fontsize=12)
-        axes[1].set_title('Ground State Estimation Error', fontsize=14, fontweight='bold')
-        axes[1].grid(True, alpha=0.3)
-        
-        fig.suptitle(title, fontsize=16, fontweight='bold', y=1.02)
-        plt.tight_layout()
-        
-        self._save_figure(fig, 'spectral_stability')
         return fig
     
     def plot_ideal_vs_noisy_evolution(
@@ -320,55 +289,35 @@ class QuantumVisualizer:
     def plot_qml_comparison(
         self,
         benchmark_results: Dict,
-        title: str = "QML Performance: Chaos vs Regular Dynamics"
+        title: str = "Kernel SVM accuracy: SYK vs Hubbard kernels"
     ) -> Figure:
-        fig, axes = plt.subplots(1, 3, figsize=(15, 4))
+        """Per-trial accuracies and mean +/- std. Descriptive only: no significance test."""
+        fig, axes = plt.subplots(1, 2, figsize=(12, 4))
         
-        # Accuracy comparison
         trials = np.arange(1, benchmark_results['n_trials'] + 1)
         axes[0].plot(trials, benchmark_results['syk_accuracies'], 
                      'o-', color=self.colors['syk'], linewidth=2, 
-                     markersize=8, label='SYK (Chaotic)')
+                     markersize=8, label='SYK kernel')
         axes[0].plot(trials, benchmark_results['hubbard_accuracies'],
                      's-', color=self.colors['hubbard'], linewidth=2,
-                     markersize=8, label='Hubbard (Regular)')
-        axes[0].axhline(benchmark_results['syk_mean'], color=self.colors['syk'], 
-                        linestyle='--', alpha=0.5)
-        axes[0].axhline(benchmark_results['hubbard_mean'], color=self.colors['hubbard'], 
-                        linestyle='--', alpha=0.5)
+                     markersize=8, label='Hubbard kernel')
         axes[0].set_xlabel('Trial', fontsize=12)
-        axes[0].set_ylabel('Accuracy', fontsize=12)
-        axes[0].set_title('Classification Accuracy per Trial', fontsize=14, fontweight='bold')
+        axes[0].set_ylabel('Test accuracy', fontsize=12)
+        axes[0].set_title('Accuracy per trial', fontsize=14, fontweight='bold')
         axes[0].legend()
         axes[0].grid(True, alpha=0.3)
         axes[0].set_ylim(0, 1.05)
         
-        # Bar plot of mean accuracy with error bars
         means = [benchmark_results['syk_mean'], benchmark_results['hubbard_mean']]
         stds = [benchmark_results['syk_std'], benchmark_results['hubbard_std']]
-        x = [0, 1]
-        colors_bar = [self.colors['syk'], self.colors['hubbard']]
-        
-        axes[1].bar(x, means, yerr=stds, color=colors_bar, alpha=0.8,
-                    capsize=5, edgecolor='black', linewidth=1.5)
-        axes[1].set_xticks(x)
-        axes[1].set_xticklabels(['SYK\n(Chaotic)', 'Hubbard\n(Regular)'], fontsize=11)
-        axes[1].set_ylabel('Mean Accuracy', fontsize=12)
-        axes[1].set_title('Average Performance', fontsize=14, fontweight='bold')
+        axes[1].bar([0, 1], means, yerr=stds, color=[self.colors['syk'], self.colors['hubbard']],
+                    alpha=0.8, capsize=5, edgecolor='black', linewidth=1.5)
+        axes[1].set_xticks([0, 1])
+        axes[1].set_xticklabels(['SYK', 'Hubbard'], fontsize=11)
+        axes[1].set_ylabel('Mean accuracy (± std)', fontsize=12)
+        axes[1].set_title(f"{benchmark_results['n_trials']} trials", fontsize=14, fontweight='bold')
         axes[1].set_ylim(0, 1.1)
         axes[1].grid(True, alpha=0.3, axis='y')
-        
-        # Win distribution pie chart
-        syk_wins = benchmark_results['syk_wins_count']
-        hubbard_wins = benchmark_results['n_trials'] - syk_wins
-        
-        if syk_wins + hubbard_wins > 0:
-            axes[2].pie([syk_wins, hubbard_wins], 
-                       labels=['SYK Wins', 'Hubbard Wins'],
-                       colors=[self.colors['syk'], self.colors['hubbard']],
-                       autopct='%1.1f%%', startangle=90,
-                       explode=(0.05, 0.05))
-            axes[2].set_title('Win Distribution', fontsize=14, fontweight='bold')
         
         fig.suptitle(title, fontsize=16, fontweight='bold', y=1.02)
         plt.tight_layout()
@@ -461,14 +410,8 @@ class QuantumVisualizer:
             summary_text += f"SYK Ground State: {syk_data['ground_state_energy']:.4f}\n"
         if 'ground_state_energy' in hubbard_data:
             summary_text += f"Hubbard Ground State: {hubbard_data['ground_state_energy']:.4f}\n"
-        if lsr_values[0] > 0.45:
-            summary_text += "\nSYK: Chaotic (Random Matrix)\n"
-        else:
-            summary_text += "\nSYK: Less Chaotic\n"
-        if lsr_values[1] > 0.45:
-            summary_text += "Hubbard: Chaotic\n"
-        else:
-            summary_text += "Hubbard: More Integrable\n"
+        summary_text += f"\nSYK <r>: {lsr_values[0]:.4f}\n"
+        summary_text += f"Hubbard <r>: {lsr_values[1]:.4f}\n"
         
         ax.text(0.1, 0.9, summary_text, transform=ax.transAxes, fontsize=11,
                 verticalalignment='top', fontfamily='monospace',
@@ -500,23 +443,7 @@ class QuantumVisualizer:
                     ax.set_title('QML Classification', fontweight='bold')
                     ax.set_ylim(0, 1.1)
             
-            # Conclusion
-            ax = axes[1, 2]
-            ax.axis('off')
-            conclusion = "CONCLUSIONS\n" + "="*40 + "\n\n"
-            
-            if qml_data and 'conclusion' in qml_data:
-                conclusion += f"QML: {qml_data['conclusion']}\n"
-            
-            conclusion += "\nChaos Advantage:\n"
-            conclusion += "- SYK exhibits maximal scrambling\n"
-            conclusion += "- Higher expressivity for QML\n"
-            conclusion += "- But potentially higher noise sensitivity\n"
-            
-            ax.text(0.1, 0.9, conclusion, transform=ax.transAxes, fontsize=11,
-                    verticalalignment='top', fontfamily='monospace',
-                    bbox=dict(boxstyle='round', facecolor='lightblue', alpha=0.5))
-            ax.set_title('Conclusions', fontweight='bold')
+            axes[1, 2].axis('off')
         
         fig.suptitle(title, fontsize=18, fontweight='bold', y=1.02)
         plt.tight_layout()

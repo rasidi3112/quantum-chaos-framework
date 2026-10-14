@@ -25,7 +25,6 @@ REMOVED = [
 ]
 
 
-@pytest.mark.xfail(reason="P0-9: placeholder/misleading API still present", strict=True)
 @pytest.mark.parametrize("module, cls, attr", REMOVED)
 def test_placeholder_api_removed(module, cls, attr):
     import importlib
@@ -33,8 +32,6 @@ def test_placeholder_api_removed(module, cls, attr):
     assert not hasattr(getattr(importlib.import_module(module), cls), attr)
 
 
-@pytest.mark.xfail(reason="P0-9: source still contains placeholders or advantage claims",
-                   strict=True)
 def test_source_has_no_placeholders_or_unsupported_claims():
     pattern = re.compile(r"placeholder|simplified|advantage|expressivity_score|Higher expressivity",
                          re.IGNORECASE)
@@ -55,7 +52,6 @@ def random_hamiltonian(n_qubits, seed):
     return (a + a.conj().T) / 2
 
 
-@pytest.mark.xfail(reason="P0-9: create_otoc_circuit has no time evolution", strict=True)
 @pytest.mark.parametrize("pure", [False, True])
 def test_otoc_circuit_matches_exact_otoc(pure):
     from quantum_chaos.circuits.otoc_calculator import OTOCCalculator
@@ -104,7 +100,6 @@ def first_order_layer(terms, dt):
     return U
 
 
-@pytest.mark.xfail(reason="P0-9: noisy circuit only implements all-Z terms", strict=True)
 def test_noisy_trotter_circuit_without_noise_matches_ideal_layers():
     from quantum_chaos.noise.nisq_simulator import NISQSimulator
     from quantum_chaos.noise.noise_channels import NoiseModel
@@ -118,7 +113,6 @@ def test_noisy_trotter_circuit_without_noise_matches_ideal_layers():
     np.testing.assert_allclose(rho, np.outer(psi, psi.conj()), atol=1e-10)
 
 
-@pytest.mark.xfail(reason="P0-9: noisy circuit only implements all-Z terms", strict=True)
 def test_noisy_trotter_circuit_matches_numpy_noise_model():
     from quantum_chaos.noise.nisq_simulator import NISQSimulator
     from quantum_chaos.noise.noise_channels import NoiseModel
@@ -149,7 +143,6 @@ def test_lowest_order_effective_hamiltonian_is_period_average():
     np.testing.assert_allclose(model.effective_hamiltonian(order=0), average, atol=1e-12)
 
 
-@pytest.mark.xfail(reason="P0-9: effective_hamiltonian silently ignores `order`", strict=True)
 def test_higher_order_effective_hamiltonian_is_not_faked():
     from quantum_chaos.hamiltonians.hubbard_hamiltonian import DrivenHubbardHamiltonian
 
