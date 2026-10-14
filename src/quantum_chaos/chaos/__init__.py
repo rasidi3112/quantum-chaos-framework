@@ -1,3 +1,11 @@
+from .eth import (
+    diagonal_fluctuation,
+    eigenbasis_matrix_elements,
+    eigenstate_entanglement,
+    entanglement_entropy_bipartite,
+    offdiagonal_moment_ratio,
+    page_entropy,
+)
 from .krylov import autocorrelation, krylov_complexity, krylov_wavefunction, lanczos_coefficients
 from .moments import (
     normalized_moments,
@@ -19,6 +27,12 @@ from .sff import (
 )
 
 __all__ = [
+    "diagonal_fluctuation",
+    "eigenbasis_matrix_elements",
+    "eigenstate_entanglement",
+    "entanglement_entropy_bipartite",
+    "offdiagonal_moment_ratio",
+    "page_entropy",
     "autocorrelation",
     "krylov_complexity",
     "krylov_wavefunction",
