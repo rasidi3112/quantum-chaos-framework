@@ -249,5 +249,4 @@ MIT — see [LICENSE](LICENSE).
 
 ## Maintainer
 
-[@rasidi3112](https://github.com/rasidi3112). Citation metadata (CITATION.cff,
-Zenodo DOI) will be added once the author information is provided.
+[@rasidi3112](https://github.com/rasidi3112)
