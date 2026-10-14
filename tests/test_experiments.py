@@ -66,6 +66,15 @@ TINY = {
         "otoc_steps": 1,
         "folds": [1, 3],
     },
+    "qml": {
+        "syk_qubits": [3, 4],
+        "hubbard_sites": [2],
+        "times": [1.0],
+        "n_samples": 6,
+        "seeds": 2,
+        "dataset_size": 30,
+        "evolution_grid": [1.0],
+    },
 }
 
 

@@ -92,6 +92,17 @@ class NISQConfig:
 
 
 @dataclass(frozen=True)
+class QMLConfig:
+    syk_qubits: tuple[int, ...] = (3, 4, 5, 6, 7)
+    hubbard_sites: tuple[int, ...] = (2, 3, 4)
+    times: tuple[float, ...] = (0.1, 1.0, 10.0)
+    n_samples: int = 30
+    seeds: int = 20
+    dataset_size: int = 80
+    evolution_grid: tuple[float, ...] = (0.3, 1.0, 3.0)
+
+
+@dataclass(frozen=True)
 class FigureConfig:
     name: str
     kind: str
@@ -103,6 +114,7 @@ class FigureConfig:
     dynamics: DynamicsConfig | None = None
     floquet: FloquetConfig | None = None
     nisq: NISQConfig | None = None
+    qml: QMLConfig | None = None
     bins: int = 25
     extra: dict[str, Any] = field(default_factory=dict)
 
@@ -115,6 +127,7 @@ _SECTIONS = {
     "dynamics": DynamicsConfig,
     "floquet": FloquetConfig,
     "nisq": NISQConfig,
+    "qml": QMLConfig,
 }
 
 
@@ -151,6 +164,15 @@ def figure_config_from_dict(data: dict[str, Any], where: str = "config") -> Figu
                     ("sparse_k_values", float),
                     ("otoc_times", float),
                     ("folds", int),
+                ):
+                    if name in section:
+                        section[name] = tuple(cast(x) for x in section[name])
+            if key == "qml":
+                for name, cast in (
+                    ("syk_qubits", int),
+                    ("hubbard_sites", int),
+                    ("times", float),
+                    ("evolution_grid", float),
                 ):
                     if name in section:
                         section[name] = tuple(cast(x) for x in section[name])

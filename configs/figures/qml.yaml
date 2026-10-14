@@ -1,0 +1,11 @@
+name: qml
+kind: qml
+output: figures/qml.png
+qml:
+  syk_qubits: [3, 4, 5, 6, 7]
+  hubbard_sites: [2, 3, 4]
+  times: [0.1, 1.0, 10.0]
+  n_samples: 30
+  seeds: 20
+  dataset_size: 80
+  evolution_grid: [0.3, 1.0, 3.0]
