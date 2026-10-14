@@ -1,7 +1,7 @@
 # VALIDATION
 
 What has been tested, with which tolerance, what came out, and what is **not**
-yet verified. Status at version 0.2.0, after phases 0–2 of [PLAN.md](https://github.com/rasidi3112/quantum-chaos-framework/blob/main/PLAN.md) (2026-10-15).
+yet verified. Status at version 0.3.0 (2026-10-15).
 
 Environment of the recorded runs: macOS (Apple M1, 16 GB), Python 3.13.5 and
 3.14.6, NumPy 2.5.4, SciPy 1.18.1, PennyLane 0.45.1. A GitHub Actions workflow
@@ -244,7 +244,7 @@ remains unreconciled, section 3.1).
   the suppression follows the exponential law of Abanin et al. / Mori et al.;
   at L ≤ 8 the residual absorption is not separable from perturbative
   dressing and finite-size resonances (L = 6 is non-monotonic at ω = 10–12).
-- The drive protocol (PLAN Q6) is still open; the code supports
+- The choice of drive protocol is still open; the code supports
   J(t) = J0 + J1 cos ωt (J0 = 0 is the original model).
 
 ## 6. Circuits and NISQ (phase 3D)
@@ -306,7 +306,7 @@ remains unreconciled, section 3.1).
 - Hubbard ring: GOE only reached at L = 10 for N = 4+4, 5+5; residual
   degeneracies of the integrable chain unexplained.
 - Floquet: exponential suppression of heating not established at L ≤ 8;
-  drive protocol (PLAN Q6) not decided.
+  drive protocol not decided.
 - Mid-spectrum level statistics beyond N ≈ 28 (shift-invert / POLFED) not
   implemented; second-order Trotter commutator bound not implemented.
 - NISQ results use a single depolarizing model on simulators; no hardware,

@@ -12,8 +12,7 @@ Hamiltonian-encoding quantum kernels.
 
 ## Status
 
-Version `0.3.0`. See [CHANGELOG.md](CHANGELOG.md), [PLAN.md](PLAN.md) and
-[VALIDATION.md](VALIDATION.md) (what was tested, the results — including the
+Version `0.3.0`. See [CHANGELOG.md](CHANGELOG.md) and [VALIDATION.md](VALIDATION.md) (what was tested, the results — including the
 negative ones — and what is not verified).
 
 - Done: bug fixes (phase 0), symmetry-resolved spectral statistics
@@ -28,7 +27,7 @@ negative ones — and what is not verified).
   accessible sizes (the chaos bound is not tested); quantum kernels are
   significantly worse than a tuned RBF-SVM on the benchmarks used.
 - Open: CI has never run (nothing pushed), citation metadata/DOI, the
-  Floquet drive protocol choice (PLAN Q6).
+  choice of the Floquet drive protocol.
 
 ## Installation
 
@@ -166,7 +165,7 @@ quantum-chaos-framework/
 ## References
 
 Checked against the arXiv/journal record (†) or cited from memory and still to
-be verified (see PLAN.md §9):
+be verified:
 
 1. Y. Y. Atas, E. Bogomolny, O. Giraud, G. Roux, *Distribution of the ratio of
    consecutive level spacings in random matrix ensembles*, PRL **110**, 084101 (2013). †

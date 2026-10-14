@@ -7,7 +7,7 @@ change between minor versions.
 
 ## [0.3.0] - 2026-10-15
 
-Research features of PLAN phase 3. Every module is validated against exact
+Research features (phase 3). Every module is validated against exact
 results or verified literature formulas; negative results are reported in
 VALIDATION.md.
 
@@ -42,7 +42,7 @@ VALIDATION.md.
 ## [0.2.0] - 2026-10-15
 
 Correctness release: the original code is audited, fixed and validated (see
-`PLAN.md` phases 0–2 and `VALIDATION.md`). Every bug fix was preceded by a test
+`VALIDATION.md`). Every bug fix was preceded by a test
 that failed on the old code.
 
 ### Breaking
