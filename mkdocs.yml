@@ -21,6 +21,7 @@ nav:
       - Spectral statistics: api/spectral.md
       - Chaos diagnostics: api/chaos.md
       - Circuits and OTOCs: api/circuits.md
+      - Floquet: api/floquet.md
       - Noise: api/noise.md
       - Quantum kernels: api/qml.md
       - Experiments: api/experiments.md

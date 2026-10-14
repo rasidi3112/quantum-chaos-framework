@@ -11,3 +11,7 @@
 ::: quantum_chaos.chaos.operator_size
 
 ::: quantum_chaos.chaos.eth
+
+::: quantum_chaos.chaos.kpm
+
+::: quantum_chaos.chaos.typicality

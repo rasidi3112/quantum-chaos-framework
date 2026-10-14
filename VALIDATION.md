@@ -146,8 +146,15 @@ Thouless time is not determined reliably at these sizes.
 - **Negative result:** no Lyapunov exponent can be extracted at these sizes.
   The early-time rate exceeds 2πT at low temperature, depends strongly on the
   fit window, and the free model gives rates of the same size at β = 10. The
-  chaos bound λ ≤ 2πT is therefore **not tested** here; this needs much larger
-  N (planned with the sparse methods of phase 3A).
+  chaos bound λ ≤ 2πT is therefore **not tested** here.
+- Larger N with dynamical typicality (T = ∞, `results/large_n_syk.json`;
+  N = 20, 24, 28 with 6, 3, 2 realisations): the local slope
+  d ln(1 − F/F(0))/dt falls monotonically like ≈ 2/t (e.g. N = 28: 4.37,
+  2.00, 1.30, 0.95, 0.74 at t = 0.5, 1, 1.5, 2, 2.5), i.e. 1 − F/F(0) ∝ t²
+  over the whole early-time window, nearly independent of N (1 − F/F(0) at
+  t = 1: 0.051, 0.045, 0.041). There is no regime of constant slope: the
+  window fits (1.74, 1.74, 1.60 ± ~0.5) measure the curvature of a t² law,
+  not a Lyapunov exponent.
 
 ### 3.4 Krylov complexity and operator size
 
@@ -179,7 +186,101 @@ Thouless time is not determined reliably at these sizes.
   l = 1…5 qubits (Page formula checked against Haar-random states); at N = 16
   the half-system value is 2.22 vs Page 2.27.
 
-## 4. Literature values used
+## 4. Large-N numerics (phase 3A)
+
+Benchmarks on the recording machine (`benchmarks/results/*.json`; one parity
+sector, complex128, χ² = ½):
+
+| N | sector dim | flip masks | matrix memory | build | mat-vec | Lanczos E0 | peak RSS |
+|---|---|---|---|---|---|---|---|
+| 24 | 2 048 | 562 | 0.023 GB | 0.13 s | 1 ms | 0.16 s | 0.10 GB |
+| 28 | 8 192 | 1 093 | 0.18 GB | 0.84 s | 8 ms | 1.1 s | 0.28 GB |
+| 30 | 16 384 | 1 471 | 0.48 GB | 2.8 s | 24 ms | 4.9 s | 0.61 GB |
+| 32 | 32 768 | 1 941 | 1.27 GB | 8.2 s | 66 ms | 15 s | 1.51 GB |
+| 34 | 65 536 | 2 517 | 3.30 GB | 24 s | 0.38 s | 66 s | 3.49 GB |
+
+The memory prediction D/2·(C(n,4)+C(n,2)+1)·(itemsize+4) bytes agrees with the
+measured matrix size to < 0.1 %. Dense diagonalisation of a sector is limited
+to N ≈ 28 on 16 GB; shift-invert/POLFED for mid-spectrum statistics at N ≥ 30 is
+**not implemented**.
+
+Checks: sector matrices equal the dense construction exactly; Lanczos E0
+equals dense ED (N = 16, 1e-10); the KPM second moment reproduces
+Σ J²(χ²)⁴ (3 %, stochastic trace); typicality autocorrelations and
+(regularised, β = 2) OTOCs agree with exact results within 5σ of the
+random-vector error (N = 12).
+
+Ensemble-averaged ground-state energy (χ² = ½, `results/large_n_syk.json`):
+
+| N | 12 | 16 | 20 | 24 | 28 | 30 | 32 | 34 |
+|---|---|---|---|---|---|---|---|---|
+| realisations | 20 | 20 | 10 | 8 | 6 | 4 | 3 | 3 |
+| ⟨E0⟩ | −0.566(6) | −0.783(4) | −0.961(4) | −1.149(3) | −1.308(3) | −1.391(5) | −1.478(5) | −1.563(3) |
+| ⟨E0⟩/N | −0.0471 | −0.0490 | −0.0480 | −0.0479 | −0.0467 | −0.0464 | −0.0462 | −0.0460 |
+
+A 1/N fit through N = 20 and 34 gives E0/N → ≈ −0.043; no verified literature
+value is available here for comparison (the García-García & Verbaarschot fit
+remains unreconciled, section 3.1).
+
+## 5. Floquet dynamics (phase 3C)
+
+- High-frequency expansions validated against exact Floquet operators
+  (L = 5 Hubbard ring, J0 = J1 = 1, U = 4): the van Vleck spectral error scales
+  as ω^−2.07 at order 0 and ω^−4.09 at order 2 (odd orders vanish for a cosine
+  drive); the Floquet–Magnus operator error scales as ω^−1 / ω^−2 at orders
+  0 / 1 for a sine drive. Propagators: midpoint (2nd order) and 4th-order
+  Magnus with tested convergence orders.
+- Heating (`figures/floquet_heating.png`; J(t) = 1 + cos ωt, t' = 0.5,
+  U = 4, half filling, K = 0, 2·10⁴ periods from the ground state of H0):
+
+| ω | 4 | 8 | 10 | 12 | 14 | 16 | 20 | 24 |
+|---|---|---|---|---|---|---|---|---|
+| L = 6 (dim 68, W = 19.5) | 0.986 | 0.894 | 0.284 | 0.581 | 0.026 | 0.008 | 0.0025 | 0.0010 |
+| L = 8 (dim 618, W = 25.3) | 0.980 | 0.873 | 0.752 | 0.703 | 0.020 | 0.007 | 0.0022 | 0.0009 |
+
+  (time-averaged absorbed energy fraction; W = many-body bandwidth.)
+  Heating to infinite temperature within 2–50 periods for ω ≤ 12 and less than
+  2 % absorption for ω ≥ 14, i.e. already below W. **Not established:** whether
+  the suppression follows the exponential law of Abanin et al. / Mori et al.;
+  at L ≤ 8 the residual absorption is not separable from perturbative
+  dressing and finite-size resonances (L = 6 is non-monotonic at ω = 10–12).
+- The drive protocol (PLAN Q6) is still open; the code supports
+  J(t) = J0 + J1 cos ωt (J0 = 0 is the original model).
+
+## 6. Circuits and NISQ (phase 3D)
+
+- First-order commutator bound of Childs et al. (PRX 11, 011020, Prop. 15,
+  verified) holds for SYK N = 8 at all r and is ~8.5× above the actual error;
+  both scale as 1/r. The second-order bound was not implemented.
+- CNOTs per first-order Trotter step (CNOT-ladder decomposition): dense SYK
+  300 (N = 8) → 1.2·10⁵ (N = 24); sparse SYK with k = 4: 138 → 1.0·10³.
+- Sparse SYK (Xu, Susskind, Su, Swingle; definition verified): ⟨r⟩ recovers
+  the RMT value for k ≥ 4 (N = 16 GOE: 0.5306(33); N = 20 GSE: 0.6719(30)),
+  deviates at k = 2 and fails for k ≤ 1.
+- Interferometric OTOC with Trotter evolution reproduces the exact OTOC
+  (N = 6, 1e-3 with 12 second-order steps). Under depolarizing noise
+  (p = 0.005 per qubit and layer, `figures/nisq.png`), normalising by the
+  echo with W = identity and zero-noise extrapolation (folds 1, 3, 5,
+  Richardson) both move the signal towards the noiseless value for SYK4 and
+  for the SYK2 control; in the unit test ZNE reduces the error ≥ 3×. These are
+  small-N, single-noise-model statements, not hardware results.
+
+## 7. Quantum kernels (phase 3E)
+
+- Haar fidelity moments (mean 1/D, variance (D−1)/(D²(D+1))) checked by sampling.
+- SYK Hamiltonian-encoding kernels concentrate exponentially with the number
+  of qubits at long evolution times (Var[K] ∝ 2^(−2.06 n) at t = 10,
+  n = 3–7; ~4.5× above Haar at n = 7), not at short times (t = 0.1: K ≈ 1).
+- Hubbard kernels concentrate much less (L = 4: 1.2·10⁻² vs 7·10⁻⁴ for Haar
+  in the (N, S_z) sector), because conserved quantities restrict the
+  explored space.
+- Classification (20 seeds, cross-validated hyperparameters for every model,
+  paired Wilcoxon tests): both quantum kernels are **significantly worse**
+  than an RBF-SVM — moons: RBF 0.921, SYK 0.775 (p = 1e-4), Hubbard 0.835
+  (p = 2e-4); circles: RBF 0.988, SYK 0.929 (p = 0.013), Hubbard 0.7875
+  (p = 1e-4). No quantum or "chaos" advantage is observed.
+
+## 8. Literature values used
 
 | Quantity | Value | Source | Status |
 |---|---|---|---|
@@ -188,25 +289,32 @@ Thouless time is not determined reliably at these sizes.
 | ⟨r̃⟩ surmise | 0.53590 / 0.60266 / 0.67617 | same, Eq. (7) | verified; reproduced by numerical integration |
 | SYK class per parity sector | N mod 8 = 0: GOE, 2/6: GUE, 4: GSE | Cotler et al., JHEP 05 (2017) 118, §3.1 | verified |
 | SYK conventions | {ψ_a,ψ_b}=δ_ab, ⟨J²⟩=3!J²/N³ | Cotler et al. §2; Maldacena & Stanford, PRD 94, 106002 (2016) | verified (code: χ²=1 → H_code = 4 H_MS) |
+| SYK kurtosis M4/M2² − 3 = −32(N−4)(N²−11N+36)/[N(N−1)(N−2)(N−3)] | exact | García-García & Verbaarschot, PRD 94, 126010 (2016), Eq. (8) | verified; re-derived from Wick contractions |
+| SYK E0 fit −0.055 − 0.029 N | fit | same, Eq. (14) | quoted verbatim; **not reproduced** (section 3.1) |
+| First-order Trotter commutator bound | (t²/2) Σ ‖[Σ_{γ2>γ1} H_γ2, H_γ1]‖ | Childs, Su, Tran, Wiebe, Zhu, PRX 11, 011020 (2021), Prop. 15, Eq. (145) | verified |
+| Sparse SYK pruning | p = kN/C(N,4), ⟨J²⟩ = 3!J²/(N³p) | Xu, Susskind, Su, Swingle, arXiv:2008.02303 | verified |
 
-## 5. Not yet verified / open
+## 9. Not yet verified / open
 
-- **Hubbard t' ≠ 0:** consistent with GOE only for L = 10 at N = 4+4 and 5+5;
-  smaller or more dilute sectors are still below GOE. Only t' = 0.5 and U = 4
-  were studied; the dependence on t' and U (crossover scale) is not.
-- **Residual exact degeneracies of the integrable chain** (0.2–1.7 % of the
-  spacings after resolving K, reflection, S and η) are not explained.
-- SYK ground-state energy vs García-García & Verbaarschot's fit: discrepancy
-  of ~1.5× not reconciled (section 3.1).
-- Lyapunov exponent and the chaos bound: not testable at N ≤ 16 (section 3.3).
-- Thouless time and linear growth of Lanczos coefficients: not resolved at
-  accessible sizes.
-- Higher-order Floquet expansions, heating: not implemented (phase 3C).
-- Trotter commutator bounds, sparse SYK, teleportation protocol, ZNE: not
-  implemented (phase 3D).
-- Kernel concentration vs N and t with classical baselines: not run (phase 3E).
-- References cited from memory and not yet checked: Essler et al. (2005),
-  Yang PRL 63, 2144 (1989), and the items marked I/V in PLAN.md §9.
+- **Not run on CI or Linux**; Python 3.11/3.12 untested.
+- SYK ground-state energy vs García-García & Verbaarschot's fit: ~1.5×
+  discrepancy not reconciled (section 3.1).
+- Lyapunov exponent and the chaos bound: no exponential regime up to N = 28
+  (T = ∞ early-time growth is ∝ t², section 3.3); finite-temperature OTOCs at
+  large N, where an exponential window is expected, were not computed.
+- Thouless time and the linear growth of Lanczos coefficients: not resolved.
+- Hubbard ring: GOE only reached at L = 10 for N = 4+4, 5+5; residual
+  degeneracies of the integrable chain unexplained.
+- Floquet: exponential suppression of heating not established at L ≤ 8;
+  drive protocol (PLAN Q6) not decided.
+- Mid-spectrum level statistics beyond N ≈ 28 (shift-invert / POLFED) not
+  implemented; second-order Trotter commutator bound not implemented.
+- NISQ results use a single depolarizing model on simulators; no hardware,
+  no transpilation to a device topology.
+- References from memory not yet checked: Essler et al. (2005), Yang PRL 63,
+  2144 (1989), Kobrin et al. (2021), Roberts–Stanford–Streicher (2018),
+  Parker et al. (2019), Abanin et al. (2015), Mori et al. (2016),
+  Eckardt & Anisimovas (2015), Bukov et al. (2015), Bartsch & Gemmer (2009),
+  Thanasilp et al. (2022) — cited for context only, no numbers taken from them.
 - Platform note: Apple Accelerate's `zheevd` fails for complex matrices with
-  n ≳ 3000; dense Hermitian problems therefore use `*heevr`
-  (`utils.helpers.hermitian_eigh`).
+  n ≳ 3000; dense Hermitian problems use `*heevr` (`utils.helpers.hermitian_eigh`).

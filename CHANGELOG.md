@@ -5,6 +5,40 @@ All notable changes to this project are documented here. The format follows
 [Semantic Versioning](https://semver.org/). Before 1.0.0 the public API may
 change between minor versions.
 
+## [0.3.0] - 2026-10-15
+
+Research features of PLAN phase 3. Every module is validated against exact
+results or verified literature formulas; negative results are reported in
+VALIDATION.md.
+
+### Added
+
+- `chaos`: exact SYK moments (kurtosis identical to García-García &
+  Verbaarschot Eq. 8), spectral form factor (raw and unfolded, analytic
+  GOE/GUE/GSE form factors, plateau from degeneracies, Thouless-time
+  estimator), finite-temperature and regularised OTOCs with Lyapunov fits and
+  window systematics, Lanczos coefficients / Krylov complexity, Majorana
+  operator-size distributions (fast Walsh–Hadamard Pauli decomposition), ETH
+  matrix elements, Page entropy, KPM density of states, dynamical typicality.
+- `hamiltonians.syk_sparse`: memory-lean parity-sector SYK (N = 34 in 3.3 GB),
+  sparse SYK couplings; `syk2_hamiltonian` as a free control.
+- `floquet`: van Vleck (≤ 2nd order) and Floquet–Magnus (≤ 1st order)
+  expansions, 2nd/4th-order propagators, momentum-resolved driven Hubbard
+  blocks and heating analysis; `DrivenHubbardHamiltonian(static_hopping=…)`
+  and `effective_hamiltonian(order ≤ 2)`.
+- `circuits`: first-order Trotter commutator bound (Childs et al.), gate
+  counts, noisy interferometric OTOC with echo normalisation, zero-noise
+  extrapolation (folding + Richardson).
+- `qml`: kernel-concentration statistics, Haar references, cross-validated
+  comparison with an RBF-SVM over many seeds with Wilcoxon tests.
+- Figures `sff`, `chaos_dynamics`, `floquet_heating`, `nisq`, `qml`;
+  `benchmarks/scaling.py`; `scripts/large_n_syk.py`.
+
+### Changed
+
+- Python code carries no docstrings or comments (requested by the owner);
+  explanations live in `docs/`, `VALIDATION.md` and commit messages.
+
 ## [0.2.0] - 2026-10-15
 
 Correctness release: the original code is audited, fixed and validated (see

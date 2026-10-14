@@ -12,19 +12,23 @@ Hamiltonian-encoding quantum kernels.
 
 ## Status
 
-Version `0.2.0` — a correctness release of the original code; see
-[CHANGELOG.md](CHANGELOG.md), [PLAN.md](PLAN.md) for the full plan and
-[VALIDATION.md](VALIDATION.md) for what has been tested, the results, and what
-is not yet verified.
+Version `0.3.0`. See [CHANGELOG.md](CHANGELOG.md), [PLAN.md](PLAN.md) and
+[VALIDATION.md](VALIDATION.md) (what was tested, the results — including the
+negative ones — and what is not verified).
 
-- Done: bug fixes (phase 0), symmetry-resolved spectral statistics (phase 1),
-  packaging, tests (95 % coverage), lint/type checks, CI workflow, docs with
-  executed tutorials, configuration-driven figures (phase 2).
-- Not done: citation metadata/DOI, and research features such as the spectral
-  form factor, Lyapunov exponents, Krylov complexity, higher-order Floquet
-  expansions and the QML study (phase 3).
-- The CI workflow is configured but has not run yet; tests have been run
-  locally on macOS (Python 3.13 and 3.14).
+- Done: bug fixes (phase 0), symmetry-resolved spectral statistics
+  (phase 1), packaging/tests/CI configuration/docs (phase 2), and the research
+  features of phase 3: spectral form factor, finite-temperature OTOCs,
+  Krylov complexity, operator size, ETH and Page curves (3B); sparse
+  parity-sector SYK to N = 34, KPM and dynamical typicality (3A); Floquet
+  high-frequency expansions and heating (3C); Trotter bounds, sparse SYK,
+  noisy interferometric OTOCs with echo normalisation and ZNE (3D); kernel
+  concentration and statistical comparison with an RBF baseline (3E).
+- Main negative results: no Lyapunov exponent can be extracted at the
+  accessible sizes (the chaos bound is not tested); quantum kernels are
+  significantly worse than a tuned RBF-SVM on the benchmarks used.
+- Open: CI has never run (nothing pushed), citation metadata/DOI, the
+  Floquet drive protocol choice (PLAN Q6).
 
 ## Installation
 
@@ -141,16 +145,19 @@ quantum-chaos-framework/
 ├── src/quantum_chaos/
 │   ├── hamiltonians/   # SYK (sparse, symmetry classes), Hubbard ring ED, driven Hubbard (Floquet)
 │   ├── spectral/       # spacing ratios, RMT references and samplers
-│   ├── circuits/       # Trotter circuits, OTOC (exact + Hadamard-test circuit)
+│   ├── chaos/          # moments, SFF, OTOC/Lyapunov, Krylov, operator size, ETH, KPM, typicality
+│   ├── floquet/        # van Vleck / Magnus expansions, propagators, heating
+│   ├── circuits/       # Trotter circuits and bounds, gate counts, (noisy) interferometric OTOC, ZNE
 │   ├── noise/          # Kraus channels, T1/T2 model, noisy Trotter circuits
-│   ├── qml/            # Hamiltonian-encoding fidelity kernels, kernel SVM
+│   ├── qml/            # Hamiltonian-encoding kernels, concentration, RBF comparison
 │   ├── experiments/    # YAML configs -> figures with provenance
 │   ├── utils/          # partial trace, fidelity, Jordan-Wigner, RNG helpers
 │   └── visualization/
 ├── configs/figures/    # one YAML file per figure (seeds included)
 ├── figures/            # generated figures + JSON sidecars (make figures)
 ├── docs/               # MkDocs site, tutorials (jupytext .py)
-├── scripts/            # make_figures.py, validate_level_statistics.py
+├── scripts/            # make_figures.py, validate_level_statistics.py, large_n_syk.py
+├── benchmarks/         # time and memory vs N
 ├── results/            # validation numbers (JSON)
 ├── tests/
 └── main.py
