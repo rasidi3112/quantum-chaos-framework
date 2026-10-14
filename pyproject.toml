@@ -1,28 +1,49 @@
 [build-system]
-requires = ["hatchling>=1.24"]
+requires = ["hatchling>=1.27"]
 build-backend = "hatchling.build"
 
 [project]
 name = "quantum-chaos"
 version = "0.2.0.dev0"
-description = "Quantum chaos and information scrambling in SYK and Hubbard models"
+description = "Symmetry-resolved diagnostics of quantum chaos and scrambling in SYK and Hubbard models"
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
 requires-python = ">=3.11"
+keywords = ["quantum chaos", "SYK", "Hubbard model", "random matrix theory", "OTOC", "Floquet"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Physics",
+]
 dependencies = [
-    "numpy>=1.20.0",
-    "scipy>=1.7.0",
-    "matplotlib>=3.4.0",
+    "numpy>=1.26,<3",
+    "scipy>=1.11,<2",
+    "matplotlib>=3.8,<4",
     "pennylane>=0.45,<0.46",
-    "scikit-learn>=1.0.0",
+    "scikit-learn>=1.4,<2",
+    "pyyaml>=6,<7",
 ]
 
 [project.optional-dependencies]
 test = ["pytest>=8", "pytest-cov>=5"]
+lint = ["ruff>=0.6", "mypy>=1.10", "pre-commit>=3.7", "types-PyYAML"]
+docs = [
+    "mkdocs>=1.6,<2",
+    "mkdocs-material>=9.5,<10",
+    "mkdocstrings[python]>=0.26",
+    "mkdocs-jupyter>=0.25",
+    "jupytext>=1.16",
+]
+dev = ["quantum-chaos[test,lint,docs]"]
 
 [project.urls]
 Repository = "https://github.com/rasidi3112/quantum-chaos-framework"
+Changelog = "https://github.com/rasidi3112/quantum-chaos-framework/blob/main/CHANGELOG.md"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/quantum_chaos"]
@@ -38,3 +59,37 @@ filterwarnings = [
 markers = [
     "slow: long-running statistical tests, skipped by default (run with '-m slow')",
 ]
+
+[tool.coverage.run]
+source = ["quantum_chaos"]
+
+[tool.coverage.report]
+fail_under = 85
+show_missing = true
+skip_covered = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "NPY"]
+ignore = [
+    "E741",  # physics notation (I, l) is intentional
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["NPY002"]  # tests deliberately inspect the legacy global RNG
+"docs/tutorials/*.py" = ["E402"]
+
+[tool.mypy]
+python_version = "3.11"
+ignore_missing_imports = true
+warn_unused_ignores = true
+warn_redundant_casts = true
+files = ["src/quantum_chaos"]
+
+[[tool.mypy.overrides]]
+module = ["quantum_chaos.spectral.*", "quantum_chaos.utils.helpers"]
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
