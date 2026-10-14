@@ -13,8 +13,9 @@ def commutator_norm(A, B):
     return abs(C).max() if C.nnz else 0.0
 
 
-@pytest.mark.parametrize("L, nu, nd, tp", [(4, 2, 2, 0.0), (6, 3, 3, 0.0), (6, 2, 3, 0.4),
-                                           (5, 2, 2, 0.3)])
+@pytest.mark.parametrize(
+    "L, nu, nd, tp", [(4, 2, 2, 0.0), (6, 3, 3, 0.0), (6, 2, 3, 0.4), (5, 2, 2, 0.3)]
+)
 def test_symmetry_operators_commute_with_h(L, nu, nd, tp):
     ed = HubbardRingED(L, nu, nd, t=1.0, tp=tp, U=2.7)
     H = ed.hamiltonian
@@ -31,8 +32,9 @@ def test_next_nearest_neighbour_hopping_breaks_eta_pairing():
     assert commutator_norm(ed.hamiltonian, ed.eta_squared()) > 0.1
 
 
-@pytest.mark.parametrize("L, nu, nd, tp", [(5, 2, 2, 0.3), (6, 3, 3, 0.0), (6, 2, 3, 0.4),
-                                           (6, 3, 3, 0.4)])
+@pytest.mark.parametrize(
+    "L, nu, nd, tp", [(5, 2, 2, 0.3), (6, 3, 3, 0.0), (6, 2, 3, 0.4), (6, 3, 3, 0.4)]
+)
 def test_resolved_blocks_reproduce_full_sector_spectrum(L, nu, nd, tp):
     ed = HubbardRingED(L, nu, nd, t=1.0, tp=tp, U=3.1)
     blocks = ed.sector_blocks(momenta=range(L))
@@ -56,8 +58,11 @@ def test_momenta_k_and_minus_k_are_degenerate():
 def test_free_fermion_limit(L, nu, nd, tp):
     k = 2 * np.pi * np.arange(L) / L
     eps = -2 * np.cos(k) - 2 * tp * np.cos(2 * k)
-    energies = sorted(sum(eps[list(a)]) + sum(eps[list(b)])
-                      for a in combinations(range(L), nu) for b in combinations(range(L), nd))
+    energies = sorted(
+        sum(eps[list(a)]) + sum(eps[list(b)])
+        for a in combinations(range(L), nu)
+        for b in combinations(range(L), nd)
+    )
     ed = HubbardRingED(L, nu, nd, t=1.0, tp=tp, U=0.0)
     np.testing.assert_allclose(np.linalg.eigvalsh(ed.hamiltonian.toarray()), energies, atol=1e-10)
 
@@ -65,8 +70,11 @@ def test_free_fermion_limit(L, nu, nd, tp):
 def test_atomic_limit_counts_doublons():
     L, nu, nd, U = 5, 3, 2, 1.7
     ed = HubbardRingED(L, nu, nd, t=0.0, tp=0.0, U=U)
-    expected = sorted(U * len(set(a) & set(b))
-                      for a in combinations(range(L), nu) for b in combinations(range(L), nd))
+    expected = sorted(
+        U * len(set(a) & set(b))
+        for a in combinations(range(L), nu)
+        for b in combinations(range(L), nd)
+    )
     np.testing.assert_allclose(np.linalg.eigvalsh(ed.hamiltonian.toarray()), expected, atol=1e-12)
 
 
@@ -74,8 +82,9 @@ def test_atomic_limit_counts_doublons():
 def test_cross_check_with_jordan_wigner_fock_space_model(L):
     from quantum_chaos.hamiltonians.hubbard_hamiltonian import DrivenHubbardHamiltonian
 
-    jw = DrivenHubbardHamiltonian(n_sites=L, hopping_amplitude=1.0, onsite_interaction=2.3,
-                                  periodic_boundary=True)
+    jw = DrivenHubbardHamiltonian(
+        n_sites=L, hopping_amplitude=1.0, onsite_interaction=2.3, periodic_boundary=True
+    )
     reference = np.linalg.eigvalsh(jw.static_hamiltonian())
     levels = []
     for nu in range(L + 1):
@@ -108,8 +117,9 @@ def test_integrable_versus_nonintegrable_level_statistics():
     integrable = hubbard_level_statistics(8, 4, 4, tp=0.0, U=4.0)
     chaotic = hubbard_level_statistics(8, 4, 4, tp=0.5, U=4.0)
     assert abs(integrable["mean"] - 0.3863) < 4 * integrable["stderr"]
-    assert chaotic["mean"] - integrable["mean"] > 10 * np.hypot(chaotic["stderr"],
-                                                               integrable["stderr"])
+    assert chaotic["mean"] - integrable["mean"] > 10 * np.hypot(
+        chaotic["stderr"], integrable["stderr"]
+    )
 
 
 def test_unresolved_fock_space_level_statistics_removed():

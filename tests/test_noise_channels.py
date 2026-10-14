@@ -27,12 +27,14 @@ def test_apply_channel_accepts_real_density_matrix():
     rho_real = np.array([[0.75, 0.25], [0.25, 0.25]])
     for kraus in all_kraus_sets(nc).values():
         out = nc.apply_channel(rho_real, kraus, 0)
-        np.testing.assert_allclose(out, nc.apply_channel(rho_real.astype(complex), kraus, 0),
-                                   atol=1e-15)
+        np.testing.assert_allclose(
+            out, nc.apply_channel(rho_real.astype(complex), kraus, 0), atol=1e-15
+        )
 
 
-@pytest.mark.parametrize("name", ["depolarizing", "amplitude_damping", "phase_damping",
-                                  "bit_flip", "phase_flip"])
+@pytest.mark.parametrize(
+    "name", ["depolarizing", "amplitude_damping", "phase_damping", "bit_flip", "phase_flip"]
+)
 def test_kraus_sets_are_trace_preserving(name):
     nc = NoiseChannels(2)
     kraus = all_kraus_sets(nc)[name]
@@ -106,7 +108,8 @@ def test_summary_reports_average_gate_fidelity():
     sim = NISQSimulator(n_qubits=2, noise_model=NoiseModel(depolarizing_rate=p))
     nc = NoiseChannels(1)
     assert sim.summary()["average_gate_fidelity"] == pytest.approx(
-        nc.channel_fidelity(nc.depolarizing_kraus(p)), abs=1e-15)
+        nc.channel_fidelity(nc.depolarizing_kraus(p)), abs=1e-15
+    )
 
 
 def test_pennylane_depolarizing_parameter_matches_numpy_convention():
@@ -116,7 +119,9 @@ def test_pennylane_depolarizing_parameter_matches_numpy_convention():
 
     nc = NoiseChannels(1)
     p = 0.3
-    kraus_pl = qml.DepolarizingChannel(pennylane_depolarizing_parameter(p), wires=0).kraus_matrices()
+    kraus_pl = qml.DepolarizingChannel(
+        pennylane_depolarizing_parameter(p), wires=0
+    ).kraus_matrices()
     rng = np.random.default_rng(5)
     a = rng.normal(size=(2, 2)) + 1j * rng.normal(size=(2, 2))
     rho = a @ a.conj().T
@@ -130,8 +135,9 @@ def test_depth_limit_is_largest_depth_above_target():
     from quantum_chaos.noise.nisq_simulator import NISQSimulator
 
     p, n, target = 0.01, 3, 0.9
-    d = NISQSimulator(n_qubits=n, noise_model=NoiseModel(depolarizing_rate=p)) \
-        .estimate_circuit_depth_limit(target)
+    d = NISQSimulator(
+        n_qubits=n, noise_model=NoiseModel(depolarizing_rate=p)
+    ).estimate_circuit_depth_limit(target)
     assert (1 - p) ** (n * d) >= target > (1 - p) ** (n * (d + 1))
     noiseless = NISQSimulator(n_qubits=n, noise_model=NoiseModel(depolarizing_rate=0.0))
     assert noiseless.estimate_circuit_depth_limit(target) == float("inf")

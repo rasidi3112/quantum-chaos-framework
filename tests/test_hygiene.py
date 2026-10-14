@@ -25,10 +25,13 @@ def test_couplings_are_reproducible_without_global_rng():
 
     np.random.seed(123)
     assert global_state_untouched(lambda: generate_random_coupling(6, seed=7))
-    np.testing.assert_array_equal(generate_random_coupling(6, seed=7),
-                                  generate_random_coupling(6, seed=7))
-    np.testing.assert_array_equal(generate_random_coupling(6, seed=np.random.default_rng(7)),
-                                  generate_random_coupling(6, seed=7))
+    np.testing.assert_array_equal(
+        generate_random_coupling(6, seed=7), generate_random_coupling(6, seed=7)
+    )
+    np.testing.assert_array_equal(
+        generate_random_coupling(6, seed=np.random.default_rng(7)),
+        generate_random_coupling(6, seed=7),
+    )
 
 
 def test_stochastic_helpers_accept_rng_and_leave_global_state_alone():
@@ -50,8 +53,9 @@ def test_stochastic_helpers_accept_rng_and_leave_global_state_alone():
 
     bits = np.zeros(200, dtype=int)
     nc = NoiseChannels(1)
-    np.testing.assert_array_equal(nc.apply_readout_error(bits, 0.3, rng=5),
-                                  nc.apply_readout_error(bits, 0.3, rng=5))
+    np.testing.assert_array_equal(
+        nc.apply_readout_error(bits, 0.3, rng=5), nc.apply_readout_error(bits, 0.3, rng=5)
+    )
 
 
 def test_trotter_error_analysis_is_reproducible():
@@ -85,8 +89,9 @@ def test_thermal_states_at_low_temperature_are_finite():
         c_reg = calc.compute_regularized_otoc(W, V, np.array([0.0, 0.5]), temperature=1e-3)
     assert np.all(np.isfinite(rho)) and np.trace(rho) == pytest.approx(1.0)
     # beta -> infinity: thermal state -> ground-state projector
-    np.testing.assert_allclose(rho, np.outer(syk.eigenvectors[:, 0], syk.eigenvectors[:, 0].conj()),
-                               atol=1e-8)
+    np.testing.assert_allclose(
+        rho, np.outer(syk.eigenvectors[:, 0], syk.eigenvectors[:, 0].conj()), atol=1e-8
+    )
     assert np.all(np.isfinite(c)) and np.all(np.isfinite(c_reg))
 
 
@@ -107,16 +112,23 @@ def test_matrix_to_pauli_terms_warns_for_non_hermitian_input():
 
 
 def test_no_bare_except():
-    offenders = [f"{p.relative_to(SRC)}:{i}" for p in SRC.rglob("*.py")
-                 for i, line in enumerate(p.read_text().splitlines(), 1)
-                 if re.match(r"\s*except\s*:", line)]
+    offenders = [
+        f"{p.relative_to(SRC)}:{i}"
+        for p in SRC.rglob("*.py")
+        for i, line in enumerate(p.read_text().splitlines(), 1)
+        if re.match(r"\s*except\s*:", line)
+    ]
     assert not offenders
 
 
 def test_no_global_numpy_rng_in_package():
     pattern = re.compile(r"np\.random\.(seed|rand|randn|random|normal|uniform|choice|randint)\(")
-    offenders = [f"{p.relative_to(SRC)}:{i}" for p in SRC.rglob("*.py")
-                 for i, line in enumerate(p.read_text().splitlines(), 1) if pattern.search(line)]
+    offenders = [
+        f"{p.relative_to(SRC)}:{i}"
+        for p in SRC.rglob("*.py")
+        for i, line in enumerate(p.read_text().splitlines(), 1)
+        if pattern.search(line)
+    ]
     assert not offenders
 
 

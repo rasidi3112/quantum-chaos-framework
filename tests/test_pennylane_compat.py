@@ -27,8 +27,9 @@ def pauli_matrix(terms):
     return out
 
 
-@pytest.mark.parametrize("name", ["hamiltonians", "circuits", "noise", "qml", "utils",
-                                  "visualization"])
+@pytest.mark.parametrize(
+    "name", ["hamiltonians", "circuits", "noise", "qml", "utils", "visualization"]
+)
 def test_subpackage_imports(name):
     importlib.import_module(f"quantum_chaos.{name}")
 

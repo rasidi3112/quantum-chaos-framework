@@ -47,8 +47,10 @@ print(syk.symmetry_class, round(syk.get_level_spacing_ratio(), 4))
 # Disorder average vs. random-matrix theory with the same number of levels
 stats = disorder_average_lsr(14, n_realizations=100, rng=0)
 ref = syk_rmt_reference(14, n_samples=500, rng=1)
-print(f"<r> = {stats['mean']:.4f} ± {stats['stderr']:.4f}  (RMT {ref['mean']:.4f}, "
-      f"large-N {stats['reference']:.4f})")
+print(
+    f"<r> = {stats['mean']:.4f} ± {stats['stderr']:.4f}  (RMT {ref['mean']:.4f}, "
+    f"large-N {stats['reference']:.4f})"
+)
 
 # Hubbard ring, fully symmetry resolved: integrable (t'=0) vs t'=0.5
 for tp in (0.0, 0.5):

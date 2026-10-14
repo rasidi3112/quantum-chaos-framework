@@ -10,8 +10,9 @@ def data(n, d, seed=0):
     return np.random.default_rng(seed).normal(size=(n, d))
 
 
-@pytest.mark.parametrize("make", [lambda: SYKKernel(n_qubits=3, seed=1),
-                                  lambda: HubbardKernel(n_sites=2)])
+@pytest.mark.parametrize(
+    "make", [lambda: SYKKernel(n_qubits=3, seed=1), lambda: HubbardKernel(n_sites=2)]
+)
 def test_kernel_matrix_is_symmetric_psd_with_unit_diagonal(make):
     kernel = make()
     K = kernel.kernel_matrix(data(6, 4))
@@ -50,8 +51,9 @@ def test_pennylane_kernel_matches_statevector_kernel():
         for x1 in X:
             assert circuit_kernel(x1, x1) == pytest.approx(1.0, abs=1e-8)
             for x2 in X:
-                assert circuit_kernel(x1, x2) == pytest.approx(kernel.kernel_value(x1, x2),
-                                                               abs=1e-8)
+                assert circuit_kernel(x1, x2) == pytest.approx(
+                    kernel.kernel_value(x1, x2), abs=1e-8
+                )
 
 
 def test_syk_kernel_rejects_trivial_n4_model():

@@ -26,10 +26,7 @@ def hermitian_eigh(matrix: np.ndarray, eigvals_only: bool = False):
 
 
 def generate_random_coupling(
-    n_majorana: int,
-    variance: float = 1.0,
-    seed: RngLike = None,
-    antisymmetric: bool = True
+    n_majorana: int, variance: float = 1.0, seed: RngLike = None, antisymmetric: bool = True
 ) -> np.ndarray:
     """Gaussian SYK couplings with <J_ijkl^2> = 3! * variance / N^3.
 
@@ -37,9 +34,9 @@ def generate_random_coupling(
     NumPy RNG is never touched.
     """
     rng = as_rng(seed)
-    sigma = np.sqrt(variance * 6.0 / (n_majorana ** 3))
+    sigma = np.sqrt(variance * 6.0 / (n_majorana**3))
     J = np.zeros((n_majorana, n_majorana, n_majorana, n_majorana))
-    
+
     if antisymmetric:
         for indices in combinations(range(n_majorana), 4):
             value = rng.normal(0, sigma)
@@ -48,16 +45,16 @@ def generate_random_coupling(
                 J[idx] = sign * value
     else:
         J = rng.normal(0, sigma, (n_majorana, n_majorana, n_majorana, n_majorana))
-    
+
     return J
 
 
 def _signed_permutations(indices: Tuple[int, ...]) -> List[Tuple[Tuple[int, ...], int]]:
     from itertools import permutations
-    
+
     result = []
     indices = list(indices)
-    
+
     for perm in permutations(range(4)):
         permuted = tuple(indices[p] for p in perm)
         sign = 1
@@ -66,7 +63,7 @@ def _signed_permutations(indices: Tuple[int, ...]) -> List[Tuple[Tuple[int, ...]
                 if perm[i] > perm[j]:
                     sign *= -1
         result.append((permuted, sign))
-    
+
     return result
 
 
@@ -149,7 +146,9 @@ def state_fidelity(psi: np.ndarray, phi: np.ndarray) -> float:
     return float(overlap)
 
 
-def entanglement_entropy(state: np.ndarray, subsystem_qubits: List[int], total_qubits: int) -> float:
+def entanglement_entropy(
+    state: np.ndarray, subsystem_qubits: List[int], total_qubits: int
+) -> float:
     rho = np.outer(state, state.conj())
     dims = [2] * total_qubits
     rho_A = partial_trace(rho, subsystem_qubits, dims)
@@ -159,7 +158,9 @@ def entanglement_entropy(state: np.ndarray, subsystem_qubits: List[int], total_q
     return float(entropy)
 
 
-def spectral_density(eigenvalues: np.ndarray, bins: int = 50, normalize: bool = True) -> Tuple[np.ndarray, np.ndarray]:
+def spectral_density(
+    eigenvalues: np.ndarray, bins: int = 50, normalize: bool = True
+) -> Tuple[np.ndarray, np.ndarray]:
     density, bin_edges = np.histogram(eigenvalues, bins=bins, density=normalize)
     bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
     return bin_centers, density

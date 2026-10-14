@@ -7,7 +7,7 @@ from ..utils.helpers import RngLike, as_rng
 
 
 def _basis_state(n_qubits: int, index: int = 0) -> np.ndarray:
-    psi = np.zeros(2 ** n_qubits, dtype=complex)
+    psi = np.zeros(2**n_qubits, dtype=complex)
     psi[index] = 1.0
     return psi
 
@@ -40,7 +40,7 @@ class QuantumKernel:
         n_qubits: int,
         hamiltonian_constructor: Optional[Callable[[np.ndarray], np.ndarray]] = None,
         evolution_time: float = 1.0,
-        initial_state: Optional[np.ndarray] = None
+        initial_state: Optional[np.ndarray] = None,
     ):
         self.n_qubits = n_qubits
         self.hamiltonian_constructor = hamiltonian_constructor
@@ -48,34 +48,30 @@ class QuantumKernel:
         if initial_state is None:
             initial_state = _basis_state(n_qubits)
         self.initial_state = np.asarray(initial_state, dtype=complex)
-        
+
         self._device = None
-    
+
     @property
     def device(self) -> qml.devices.Device:
         if self._device is None:
-            self._device = qml.device('default.qubit', wires=self.n_qubits)
+            self._device = qml.device("default.qubit", wires=self.n_qubits)
         return self._device
-    
+
     def feature_map_matrix(self, x: np.ndarray) -> np.ndarray:
         H = self.hamiltonian_constructor(np.asarray(x, dtype=float))
         return expm(-1j * H * self.evolution_time)
-    
+
     def feature_state(self, x: np.ndarray) -> np.ndarray:
         return self.feature_map_matrix(x) @ self.initial_state
-    
+
     def kernel_value(self, x1: np.ndarray, x2: np.ndarray) -> float:
         state1 = self.feature_state(x1)
         state2 = self.feature_state(x2)
-        
+
         overlap = np.abs(np.vdot(state1, state2)) ** 2
         return float(overlap)
-    
-    def kernel_matrix(
-        self,
-        X1: np.ndarray,
-        X2: Optional[np.ndarray] = None
-    ) -> np.ndarray:
+
+    def kernel_matrix(self, X1: np.ndarray, X2: Optional[np.ndarray] = None) -> np.ndarray:
         symmetric = X2 is None
         states1 = [self.feature_state(x) for x in X1]
         states2 = states1 if symmetric else [self.feature_state(x) for x in X2]
@@ -86,12 +82,8 @@ class QuantumKernel:
             K = (K + K.T) / 2
             np.fill_diagonal(K, 1.0)
         return K
-    
-    def expressivity_metric(
-        self,
-        n_samples: int = 100,
-        rng: RngLike = None
-    ) -> Dict:
+
+    def expressivity_metric(self, n_samples: int = 100, rng: RngLike = None) -> Dict:
         """Descriptive statistics of the kernel on standard-normal random inputs.
 
         A small spread of off-diagonal values signals kernel concentration
@@ -101,23 +93,23 @@ class QuantumKernel:
         # Generate random data
         data_dim = self.n_qubits  # Assume input dimension = n_qubits
         X = as_rng(rng).standard_normal((n_samples, data_dim))
-        
+
         # Compute kernel matrix
         K = self.kernel_matrix(X)
-        
+
         # Extract off-diagonal elements
         off_diag = K[np.triu_indices(n_samples, k=1)]
-        
+
         # Compute metrics
         return {
-            'mean_kernel': float(np.mean(off_diag)),
-            'std_kernel': float(np.std(off_diag)),
-            'min_kernel': float(np.min(off_diag)),
-            'max_kernel': float(np.max(off_diag)),
-            'kernel_rank': int(np.linalg.matrix_rank(K, tol=1e-6)),
-            'effective_dimension': self._effective_dimension(K)
+            "mean_kernel": float(np.mean(off_diag)),
+            "std_kernel": float(np.std(off_diag)),
+            "min_kernel": float(np.min(off_diag)),
+            "max_kernel": float(np.max(off_diag)),
+            "kernel_rank": int(np.linalg.matrix_rank(K, tol=1e-6)),
+            "effective_dimension": self._effective_dimension(K),
         }
-    
+
     def _effective_dimension(self, K: np.ndarray) -> float:
         eigenvalues = np.linalg.eigvalsh(K)
         eigenvalues = eigenvalues[eigenvalues > 1e-10]
@@ -125,7 +117,7 @@ class QuantumKernel:
             return 0.0
         eigenvalues /= eigenvalues.sum()
         return float(np.exp(-np.sum(eigenvalues * np.log(eigenvalues + 1e-12))))
-    
+
     def create_pennylane_kernel(self) -> Callable:
         """Circuit estimate of K(x1, x2) = |<psi_0| U(x2)^dagger U(x1) |psi_0>|^2.
 
@@ -134,7 +126,7 @@ class QuantumKernel:
         """
         wires = list(range(self.n_qubits))
         V = _preparation_unitary(self.initial_state)
-        
+
         @qml.qnode(self.device)
         def kernel_circuit(U1, U2):
             qml.QubitUnitary(V, wires=wires)
@@ -142,11 +134,11 @@ class QuantumKernel:
             qml.adjoint(qml.QubitUnitary(U2, wires=wires))
             qml.adjoint(qml.QubitUnitary(V, wires=wires))
             return qml.probs(wires=wires)
-        
+
         def kernel_fn(x1, x2):
             probs = kernel_circuit(self.feature_map_matrix(x1), self.feature_map_matrix(x2))
             return float(probs[0])
-        
+
         return kernel_fn
 
 
@@ -165,31 +157,32 @@ class HamiltonianEncodingKernel(QuantumKernel):
         local_operators: Sequence[np.ndarray],
         evolution_time: float = 1.0,
         initial_state: Optional[np.ndarray] = None,
-        feature_scale: float = 1.0
+        feature_scale: float = 1.0,
     ):
         n_qubits = int(np.log2(model_hamiltonian.shape[0]))
-        super().__init__(n_qubits=n_qubits, evolution_time=evolution_time,
-                         initial_state=initial_state)
+        super().__init__(
+            n_qubits=n_qubits, evolution_time=evolution_time, initial_state=initial_state
+        )
         self.model_hamiltonian = np.asarray(model_hamiltonian, dtype=complex)
         self.local_operators = [np.asarray(O, dtype=complex) for O in local_operators]
         self.feature_scale = feature_scale
-    
+
     def layer_hamiltonian(self, x_block: np.ndarray) -> np.ndarray:
         H = self.model_hamiltonian.copy()
         for xj, O in zip(x_block, self.local_operators):
             H = H + self.feature_scale * xj * O
         return H
-    
+
     def _blocks(self, x: np.ndarray) -> List[np.ndarray]:
         x = np.atleast_1d(np.asarray(x, dtype=float))
         m = len(self.local_operators)
         n_layers = max(1, int(np.ceil(len(x) / m)))
         padded = np.zeros(n_layers * m)
-        padded[:len(x)] = x
+        padded[: len(x)] = x
         return list(padded.reshape(n_layers, m))
-    
+
     def feature_map_matrix(self, x: np.ndarray) -> np.ndarray:
-        U = np.eye(2 ** self.n_qubits, dtype=complex)
+        U = np.eye(2**self.n_qubits, dtype=complex)
         for block in self._blocks(x):
             U = expm(-1j * self.layer_hamiltonian(block) * self.evolution_time) @ U
         return U
@@ -209,18 +202,16 @@ class SYKKernel(HamiltonianEncodingKernel):
         coupling_strength: float = 1.0,
         evolution_time: float = 1.0,
         seed: Optional[int] = None,
-        feature_scale: float = 1.0
+        feature_scale: float = 1.0,
     ):
         from ..hamiltonians.syk_hamiltonian import SYKHamiltonian
-        
+
         if n_qubits < 3:
             raise ValueError("SYKKernel needs n_qubits >= 3 (N=4 SYK commutes with the encoding)")
         self.coupling_strength = coupling_strength
         self.seed = seed
         self._syk = SYKHamiltonian(
-            n_majorana=2 * n_qubits,
-            coupling_strength=coupling_strength,
-            seed=seed
+            n_majorana=2 * n_qubits, coupling_strength=coupling_strength, seed=seed
         )
         majorana = self._syk.get_majorana_operator
         local_z = [-1j * majorana(2 * j) @ majorana(2 * j + 1) for j in range(n_qubits)]
@@ -228,7 +219,7 @@ class SYKKernel(HamiltonianEncodingKernel):
             model_hamiltonian=self._syk.hamiltonian_matrix,
             local_operators=local_z,
             evolution_time=evolution_time,
-            feature_scale=feature_scale
+            feature_scale=feature_scale,
         )
 
 
@@ -246,20 +237,20 @@ class HubbardKernel(HamiltonianEncodingKernel):
         hopping_amplitude: float = 1.0,
         onsite_interaction: float = 1.0,
         evolution_time: float = 1.0,
-        feature_scale: float = 1.0
+        feature_scale: float = 1.0,
     ):
         from ..hamiltonians.hubbard_hamiltonian import DrivenHubbardHamiltonian
-        
+
         self.n_sites = n_sites
         self.hopping_amplitude = hopping_amplitude
         self.onsite_interaction = onsite_interaction
         hubbard = DrivenHubbardHamiltonian(
             n_sites=n_sites,
             hopping_amplitude=hopping_amplitude,
-            onsite_interaction=onsite_interaction
+            onsite_interaction=onsite_interaction,
         )
         densities = [
-            hubbard.get_number_operator(j, 'up') + hubbard.get_number_operator(j, 'down')
+            hubbard.get_number_operator(j, "up") + hubbard.get_number_operator(j, "down")
             for j in range(n_sites)
         ]
         super().__init__(
@@ -267,15 +258,17 @@ class HubbardKernel(HamiltonianEncodingKernel):
             local_operators=densities,
             evolution_time=evolution_time,
             initial_state=neel_state(hubbard),
-            feature_scale=feature_scale
+            feature_scale=feature_scale,
         )
 
 
 def neel_state(hubbard) -> np.ndarray:
     """Half-filled Neel Fock state of a ``DrivenHubbardHamiltonian`` (qubit 0 most significant)."""
     n_qubits = hubbard.n_qubits
-    occupied = [hubbard._site_spin_to_qubit(j, 'up' if j % 2 == 0 else 'down')
-                for j in range(hubbard.n_sites)]
+    occupied = [
+        hubbard._site_spin_to_qubit(j, "up" if j % 2 == 0 else "down")
+        for j in range(hubbard.n_sites)
+    ]
     index = sum(1 << (n_qubits - 1 - q) for q in occupied)
     return _basis_state(n_qubits, index)
 
@@ -284,11 +277,11 @@ def compare_kernel_expressivity(
     syk_kernel: QuantumKernel,
     hubbard_kernel: QuantumKernel,
     n_samples: int = 100,
-    rng: RngLike = None
+    rng: RngLike = None,
 ) -> Dict:
     """Kernel statistics of both models on the same random inputs (no ranking)."""
     seed = int(as_rng(rng).integers(2**63))
     return {
-        'syk': syk_kernel.expressivity_metric(n_samples, rng=seed),
-        'hubbard': hubbard_kernel.expressivity_metric(n_samples, rng=seed),
+        "syk": syk_kernel.expressivity_metric(n_samples, rng=seed),
+        "hubbard": hubbard_kernel.expressivity_metric(n_samples, rng=seed),
     }

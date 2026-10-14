@@ -4,7 +4,11 @@ import numpy as np
 import pytest
 
 from quantum_chaos.spectral import (
-    DegenerateSpectrumWarning, R_MEAN, ensemble_mean_r, remove_kramers_pairs, spacing_ratios,
+    DegenerateSpectrumWarning,
+    R_MEAN,
+    ensemble_mean_r,
+    remove_kramers_pairs,
+    spacing_ratios,
 )
 
 
@@ -17,8 +21,9 @@ def test_exact_degeneracies_are_kept_and_reported():
 def test_kramers_pairs_reduce_to_unique_levels():
     unique = np.array([0.0, 0.7, 1.9, 2.2])
     np.testing.assert_allclose(remove_kramers_pairs(np.repeat(unique, 2)), unique)
-    np.testing.assert_allclose(spacing_ratios(np.repeat(unique, 2), kramers=True),
-                               spacing_ratios(unique))
+    np.testing.assert_allclose(
+        spacing_ratios(np.repeat(unique, 2), kramers=True), spacing_ratios(unique)
+    )
     with pytest.raises(ValueError):
         remove_kramers_pairs([0.0, 0.5, 1.0, 1.5])
 

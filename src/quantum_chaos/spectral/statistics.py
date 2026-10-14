@@ -61,7 +61,7 @@ def spacing_ratios(
         raise ValueError("trim must be in [0, 0.5)")
     e = remove_kramers_pairs(levels) if kramers else np.sort(np.asarray(levels, dtype=float))
     cut = int(np.floor(trim * e.size))
-    e = e[cut:e.size - cut]
+    e = e[cut : e.size - cut]
     if e.size < 3:
         return np.array([], dtype=float)
     s = np.diff(e)

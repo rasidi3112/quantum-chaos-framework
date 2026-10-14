@@ -75,7 +75,7 @@ def _pauli_product(a, b):
 
 def pauli_terms_to_sparse(terms, n_qubits: int) -> csr_matrix:
     """Sparse matrix of sum_k c_k * X^{x_k} Z^{z_k} from (x, z, c) triples."""
-    dim = 2 ** n_qubits
+    dim = 2**n_qubits
     basis = np.arange(dim, dtype=np.uint64)
     by_x: Dict[int, np.ndarray] = {}
     for x, z, c in terms:
@@ -86,8 +86,9 @@ def pauli_terms_to_sparse(terms, n_qubits: int) -> csr_matrix:
         rows.append((basis ^ np.uint64(x)).astype(np.int64))
         cols.append(basis.astype(np.int64))
         vals.append(np.asarray(column_values, dtype=complex))
-    H = coo_matrix((np.concatenate(vals), (np.concatenate(rows), np.concatenate(cols))),
-                   shape=(dim, dim)).tocsr()
+    H = coo_matrix(
+        (np.concatenate(vals), (np.concatenate(rows), np.concatenate(cols))), shape=(dim, dim)
+    ).tocsr()
     H.eliminate_zeros()
     return H
 
@@ -97,14 +98,14 @@ class SYKHamiltonian:
     SYK (Sachdev-Ye-Kitaev) model, q = 4, built as a sparse matrix from
     Pauli strings (see module docstring for conventions and symmetry classes).
     """
-    
+
     def __init__(
         self,
         n_majorana: int,
         coupling_strength: float = 1.0,
         seed: RngLike = None,
         use_sparse: bool = False,
-        chi_squared: float = 1.0
+        chi_squared: float = 1.0,
     ):
         if n_majorana < 4:
             raise ValueError("SYK model requires at least 4 Majorana fermions")
@@ -112,7 +113,7 @@ class SYKHamiltonian:
             raise ValueError("Number of Majorana fermions must be even")
         if chi_squared not in (1.0, 0.5):
             raise ValueError("chi_squared must be 1 (Pauli strings) or 1/2 (Maldacena-Stanford)")
-        
+
         self.n_majorana = n_majorana
         self.n_qubits = n_majorana // 2
         self.coupling_strength = coupling_strength
@@ -120,7 +121,7 @@ class SYKHamiltonian:
         self.use_sparse = use_sparse
         self.chi_squared = chi_squared
         self.symmetry_class = syk_symmetry_class(n_majorana)
-        
+
         self._jw_mapper = JordanWignerMapper(self.n_qubits)
         self._couplings = None
         self._sparse_hamiltonian = None
@@ -128,24 +129,24 @@ class SYKHamiltonian:
         self._eigenvalues = None
         self._eigenvectors = None
         self._sector_levels: Dict[str, np.ndarray] = {}
-        
+
     @property
     def couplings(self) -> np.ndarray:
         if self._couplings is None:
             self._couplings = generate_random_coupling(
                 self.n_majorana,
-                variance=self.coupling_strength ** 2,
+                variance=self.coupling_strength**2,
                 seed=self.seed,
-                antisymmetric=True
+                antisymmetric=True,
             )
         return self._couplings
-    
+
     @property
     def sparse_hamiltonian(self) -> csr_matrix:
         if self._sparse_hamiltonian is None:
             self._sparse_hamiltonian = self._build_hamiltonian()
         return self._sparse_hamiltonian
-    
+
     @property
     def hamiltonian_matrix(self):
         """Dense matrix (or CSR if ``use_sparse``)."""
@@ -154,54 +155,57 @@ class SYKHamiltonian:
         if self._hamiltonian_matrix is None:
             self._hamiltonian_matrix = self.sparse_hamiltonian.toarray()
         return self._hamiltonian_matrix
-    
+
     @property
     def eigenvalues(self) -> np.ndarray:
         if self._eigenvalues is None:
             self._diagonalize()
         return self._eigenvalues
-    
+
     @property
     def eigenvectors(self) -> np.ndarray:
         if self._eigenvectors is None:
             self._diagonalize()
         return self._eigenvectors
-    
+
     def _build_hamiltonian(self) -> csr_matrix:
         n = self.n_qubits
         chis = [majorana_pauli(a, n) for a in range(self.n_majorana)]
         J = self.couplings
-        scale = self.chi_squared ** 2
+        scale = self.chi_squared**2
         terms = []
         for i, j, k, l in combinations(range(self.n_majorana), 4):
-            x, z, phase = _pauli_product(_pauli_product(chis[i], chis[j]),
-                                         _pauli_product(chis[k], chis[l]))
+            x, z, phase = _pauli_product(
+                _pauli_product(chis[i], chis[j]), _pauli_product(chis[k], chis[l])
+            )
             terms.append((x, z, scale * J[i, j, k, l] * phase))
         return pauli_terms_to_sparse(terms, n)
-    
+
     def _diagonalize(self, n_eigenvalues: Optional[int] = None):
         if self.use_sparse and n_eigenvalues is not None:
             self._eigenvalues, self._eigenvectors = eigsh(
-                self.sparse_hamiltonian, k=n_eigenvalues, which='SA'
+                self.sparse_hamiltonian, k=n_eigenvalues, which="SA"
             )
         else:
-            self._eigenvalues, self._eigenvectors = hermitian_eigh(self.sparse_hamiltonian.toarray())
-    
+            self._eigenvalues, self._eigenvectors = hermitian_eigh(
+                self.sparse_hamiltonian.toarray()
+            )
+
     def get_ground_state(self) -> Tuple[float, np.ndarray]:
         return self.eigenvalues[0], self.eigenvectors[:, 0]
-    
+
     def get_spectral_density(self, bins: int = 50) -> Tuple[np.ndarray, np.ndarray]:
         return spectral_density(self.eigenvalues, bins=bins)
-    
+
     def get_level_spacing_ratio(self, trim: float = 0.0) -> float:
         """Sector-resolved mean spacing ratio (see :meth:`spacing_ratios`)."""
         r = self.spacing_ratios(trim=trim)
-        return float(np.mean(r)) if r.size else float('nan')
-    
+        return float(np.mean(r)) if r.size else float("nan")
+
     def get_thermal_state(self, temperature: float) -> np.ndarray:
         if temperature <= 0:
             raise ValueError("Temperature must be positive")
-        
+
         beta = 1.0 / temperature
         # shift by E_0 so that the largest weight is exp(0) = 1 (no overflow)
         boltzmann_factors = np.exp(-beta * (self.eigenvalues - self.eigenvalues[0]))
@@ -209,38 +213,39 @@ class SYKHamiltonian:
         thermal_diag = np.diag(boltzmann_factors / Z)
         rho = self.eigenvectors @ thermal_diag @ self.eigenvectors.conj().T
         return rho
-    
+
     def time_evolution_operator(self, t: float) -> np.ndarray:
         phases = np.exp(-1j * self.eigenvalues * t)
         U = self.eigenvectors @ np.diag(phases) @ self.eigenvectors.conj().T
         return U
-    
+
     def evolve_state(self, initial_state: np.ndarray, t: float) -> np.ndarray:
         U = self.time_evolution_operator(t)
         return U @ initial_state
-    
+
     def get_majorana_operator(self, index: int) -> np.ndarray:
         return self._jw_mapper.majorana_operator(index)
-    
-    def parity_sector_indices(self, sector: str = 'even') -> np.ndarray:
+
+    def parity_sector_indices(self, sector: str = "even") -> np.ndarray:
         """Basis indices with fermion parity Gamma = prod_j Z_j = +1 ('even') or -1 ('odd')."""
-        if sector not in ('even', 'odd'):
+        if sector not in ("even", "odd"):
             raise ValueError("sector must be 'even' or 'odd'")
-        basis = np.arange(2 ** self.n_qubits, dtype=np.uint64)
+        basis = np.arange(2**self.n_qubits, dtype=np.uint64)
         parity = _popcount(basis) % 2
-        return np.flatnonzero(parity == (0 if sector == 'even' else 1))
-    
-    def parity_projection(self, sector: str = 'even') -> np.ndarray:
+        return np.flatnonzero(parity == (0 if sector == "even" else 1))
+
+    def parity_projection(self, sector: str = "even") -> np.ndarray:
         """Dense Hamiltonian block of one fermion-parity sector."""
         idx = self.parity_sector_indices(sector)
         return self.sparse_hamiltonian[idx][:, idx].toarray()
-    
-    def sector_eigenvalues(self, sector: str = 'even') -> np.ndarray:
+
+    def sector_eigenvalues(self, sector: str = "even") -> np.ndarray:
         if sector not in self._sector_levels:
-            self._sector_levels[sector] = hermitian_eigh(self.parity_projection(sector),
-                                                         eigvals_only=True)
+            self._sector_levels[sector] = hermitian_eigh(
+                self.parity_projection(sector), eigvals_only=True
+            )
         return self._sector_levels[sector]
-    
+
     def particle_hole_unitary(self) -> np.ndarray:
         """Unitary part U of the antiunitary particle-hole operator P = U K.
 
@@ -254,46 +259,49 @@ class SYKHamiltonian:
         for j in range(n):
             x, z, phase = _pauli_product((x, z, phase), majorana_pauli(2 * j, n))
         return pauli_terms_to_sparse([(x, z, phase)], n).toarray()
-    
+
     def _sectors_for_statistics(self) -> List[Tuple[str, bool]]:
         """(sector, kramers) pairs entering the level statistics of this N."""
-        if self.symmetry_class == 'GUE':
-            return [('even', False)]  # the odd sector has the identical spectrum
-        kramers = self.symmetry_class == 'GSE'
-        return [('even', kramers), ('odd', kramers)]
-    
+        if self.symmetry_class == "GUE":
+            return [("even", False)]  # the odd sector has the identical spectrum
+        kramers = self.symmetry_class == "GSE"
+        return [("even", kramers), ("odd", kramers)]
+
     def spacing_ratios(self, trim: float = 0.0) -> np.ndarray:
         """Spacing ratios of the independent parity sectors, Kramers-reduced for GSE.
 
         Sectors are never merged: ratios are computed inside each sector and then
         concatenated.
         """
-        return np.concatenate([
-            spacing_ratios(self.sector_eigenvalues(sector), kramers=kramers, trim=trim)
-            for sector, kramers in self._sectors_for_statistics()
-        ])
-    
-    def get_level_spacing_ratio_parity(self, sector: str = 'even', trim: float = 0.0) -> float:
+        return np.concatenate(
+            [
+                spacing_ratios(self.sector_eigenvalues(sector), kramers=kramers, trim=trim)
+                for sector, kramers in self._sectors_for_statistics()
+            ]
+        )
+
+    def get_level_spacing_ratio_parity(self, sector: str = "even", trim: float = 0.0) -> float:
         """Mean spacing ratio inside one parity sector (Kramers-reduced for GSE)."""
-        r = spacing_ratios(self.sector_eigenvalues(sector),
-                           kramers=self.symmetry_class == 'GSE', trim=trim)
-        return float(np.mean(r)) if r.size else float('nan')
-    
+        r = spacing_ratios(
+            self.sector_eigenvalues(sector), kramers=self.symmetry_class == "GSE", trim=trim
+        )
+        return float(np.mean(r)) if r.size else float("nan")
+
     def summary(self) -> Dict:
         return {
-            'n_majorana': self.n_majorana,
-            'n_qubits': self.n_qubits,
-            'hilbert_dim': 2 ** self.n_qubits,
-            'coupling_strength': self.coupling_strength,
-            'chi_squared': self.chi_squared,
-            'ground_state_energy': float(self.eigenvalues[0]),
-            'spectral_width': float(self.eigenvalues[-1] - self.eigenvalues[0]),
-            'symmetry_class': self.symmetry_class,
-            'rmt_reference': R_MEAN[self.symmetry_class.lower()],
-            'level_spacing_ratio': self.get_level_spacing_ratio(),
-            'level_spacing_ratio_even': self.get_level_spacing_ratio_parity('even'),
+            "n_majorana": self.n_majorana,
+            "n_qubits": self.n_qubits,
+            "hilbert_dim": 2**self.n_qubits,
+            "coupling_strength": self.coupling_strength,
+            "chi_squared": self.chi_squared,
+            "ground_state_energy": float(self.eigenvalues[0]),
+            "spectral_width": float(self.eigenvalues[-1] - self.eigenvalues[0]),
+            "symmetry_class": self.symmetry_class,
+            "rmt_reference": R_MEAN[self.symmetry_class.lower()],
+            "level_spacing_ratio": self.get_level_spacing_ratio(),
+            "level_spacing_ratio_even": self.get_level_spacing_ratio_parity("even"),
         }
-    
+
     def __repr__(self) -> str:
         return f"SYKHamiltonian(N={self.n_majorana}, n_qubits={self.n_qubits}, J={self.coupling_strength})"
 
@@ -301,7 +309,7 @@ class SYKHamiltonian:
 def sector_level_count(n_majorana: int) -> int:
     """Number of distinct levels per parity sector used in the statistics."""
     dim = 2 ** (n_majorana // 2 - 1)
-    return dim // 2 if syk_symmetry_class(n_majorana) == 'GSE' else dim
+    return dim // 2 if syk_symmetry_class(n_majorana) == "GSE" else dim
 
 
 def disorder_average_lsr(
@@ -310,7 +318,7 @@ def disorder_average_lsr(
     seed_start: int = 0,
     trim: float = 0.0,
     coupling_strength: float = 1.0,
-    rng: RngLike = None
+    rng: RngLike = None,
 ) -> Dict:
     """Disorder-averaged, sector-resolved mean spacing ratio.
 
@@ -321,31 +329,33 @@ def disorder_average_lsr(
     symmetry class (Atas et al. 2013); see :func:`syk_rmt_reference` for a
     finite-size reference with the same number of levels.
     """
-    per_realization = np.array([
-        SYKHamiltonian(n_majorana, coupling_strength=coupling_strength, seed=seed)
-        .get_level_spacing_ratio(trim=trim)
-        for seed in range(seed_start, seed_start + n_realizations)
-    ])
+    per_realization = np.array(
+        [
+            SYKHamiltonian(
+                n_majorana, coupling_strength=coupling_strength, seed=seed
+            ).get_level_spacing_ratio(trim=trim)
+            for seed in range(seed_start, seed_start + n_realizations)
+        ]
+    )
     stats = bootstrap_mean(per_realization, rng=rng)
     cls = syk_symmetry_class(n_majorana)
-    stats.update({
-        'symmetry_class': cls,
-        'reference': R_MEAN[cls.lower()],
-        'levels_per_sector': sector_level_count(n_majorana),
-        'trim': trim,
-        'per_realization': per_realization,
-    })
+    stats.update(
+        {
+            "symmetry_class": cls,
+            "reference": R_MEAN[cls.lower()],
+            "levels_per_sector": sector_level_count(n_majorana),
+            "trim": trim,
+            "per_realization": per_realization,
+        }
+    )
     return stats
 
 
 def syk_rmt_reference(
-    n_majorana: int,
-    n_samples: int = 500,
-    trim: float = 0.0,
-    rng: RngLike = None
+    n_majorana: int, n_samples: int = 500, trim: float = 0.0, rng: RngLike = None
 ) -> Dict:
     """Finite-size RMT <r> of the SYK class with the same number of levels and trimming."""
     cls = syk_symmetry_class(n_majorana)
     res = ensemble_mean_r(cls, sector_level_count(n_majorana), n_samples, trim=trim, rng=rng)
-    res['symmetry_class'] = cls
+    res["symmetry_class"] = cls
     return res

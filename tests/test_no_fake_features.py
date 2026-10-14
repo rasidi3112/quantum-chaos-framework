@@ -18,10 +18,16 @@ REMOVED = [
     ("quantum_chaos.circuits.otoc_calculator", "OTOCCalculator", "compare_models"),
     ("quantum_chaos.circuits.otoc_calculator", "OTOCCalculator", "butterfly_velocity"),
     ("quantum_chaos.circuits.otoc_calculator", "OTOCCalculator", "scrambling_time"),
-    ("quantum_chaos.qml.quantum_classifier", "QuantumKernelClassificationBenchmark",
-     "_draw_conclusion"),
-    ("quantum_chaos.visualization.quantum_visualizer", "QuantumVisualizer",
-     "plot_spectral_stability"),
+    (
+        "quantum_chaos.qml.quantum_classifier",
+        "QuantumKernelClassificationBenchmark",
+        "_draw_conclusion",
+    ),
+    (
+        "quantum_chaos.visualization.quantum_visualizer",
+        "QuantumVisualizer",
+        "plot_spectral_stability",
+    ),
 ]
 
 
@@ -33,8 +39,9 @@ def test_placeholder_api_removed(module, cls, attr):
 
 
 def test_source_has_no_placeholders_or_unsupported_claims():
-    pattern = re.compile(r"placeholder|simplified|advantage|expressivity_score|Higher expressivity",
-                         re.IGNORECASE)
+    pattern = re.compile(
+        r"placeholder|simplified|advantage|expressivity_score|Higher expressivity", re.IGNORECASE
+    )
     offenders = []
     for path in SRC.rglob("*.py"):
         for lineno, line in enumerate(path.read_text().splitlines(), 1):
@@ -48,7 +55,7 @@ def test_source_has_no_placeholders_or_unsupported_claims():
 
 def random_hamiltonian(n_qubits, seed):
     rng = np.random.default_rng(seed)
-    a = rng.normal(size=(2 ** n_qubits,) * 2) + 1j * rng.normal(size=(2 ** n_qubits,) * 2)
+    a = rng.normal(size=(2**n_qubits,) * 2) + 1j * rng.normal(size=(2**n_qubits,) * 2)
     return (a + a.conj().T) / 2
 
 
@@ -63,7 +70,7 @@ def test_otoc_circuit_matches_exact_otoc(pure):
     psi = None
     if pure:
         rng = np.random.default_rng(3)
-        psi = rng.normal(size=2 ** n) + 1j * rng.normal(size=2 ** n)
+        psi = rng.normal(size=2**n) + 1j * rng.normal(size=2**n)
         psi /= np.linalg.norm(psi)
     exact = np.real(calc.compute_otoc_exact(W, V, times, state=psi))
     if pure:

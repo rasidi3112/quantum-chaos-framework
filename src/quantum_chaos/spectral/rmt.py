@@ -92,10 +92,12 @@ def ensemble_mean_r(
     standard error (samples are independent).
     """
     rng = np.random.default_rng(rng)
-    per_sample = np.array([
-        np.mean(spacing_ratios(sample_spectrum(ensemble, dim, rng), trim=trim))
-        for _ in range(n_samples)
-    ])
+    per_sample = np.array(
+        [
+            np.mean(spacing_ratios(sample_spectrum(ensemble, dim, rng), trim=trim))
+            for _ in range(n_samples)
+        ]
+    )
     return {
         "mean": float(per_sample.mean()),
         "stderr": float(per_sample.std(ddof=1) / np.sqrt(n_samples)),

@@ -87,12 +87,15 @@ class HubbardRingED:
         on-site interaction.
     """
 
-    def __init__(self, n_sites: int, n_up: int, n_down: int, t: float = 1.0,
-                 tp: float = 0.0, U: float = 4.0):
+    def __init__(
+        self, n_sites: int, n_up: int, n_down: int, t: float = 1.0, tp: float = 0.0, U: float = 4.0
+    ):
         if n_sites < 3:
             raise ValueError("need L >= 3 so that nearest-neighbour bonds are distinct")
         if tp != 0 and n_sites < 5:
-            raise ValueError("t' != 0 needs L >= 5 so that next-nearest-neighbour bonds are distinct")
+            raise ValueError(
+                "t' != 0 needs L >= 5 so that next-nearest-neighbour bonds are distinct"
+            )
         if not (0 <= n_up <= n_sites and 0 <= n_down <= n_sites):
             raise ValueError("particle numbers out of range")
         self.L, self.n_up, self.n_down = n_sites, n_up, n_down
@@ -121,16 +124,19 @@ class HubbardRingED:
             if not np.any(valid):
                 continue
             idx = np.searchsorted(self.configs, new[valid])
-            if np.any(idx >= self.dim) or np.any(self.configs[np.minimum(idx, self.dim - 1)] != new[valid]):
+            if np.any(idx >= self.dim) or np.any(
+                self.configs[np.minimum(idx, self.dim - 1)] != new[valid]
+            ):
                 raise ValueError("operator leaves the (N_up, N_down) sector")
             rows.append(idx)
             cols.append(np.flatnonzero(valid))
             vals.append(coef * amp[valid])
         if not rows:
             return csr_matrix((self.dim, self.dim), dtype=complex)
-        M = coo_matrix((np.concatenate(vals).astype(complex),
-                        (np.concatenate(rows), np.concatenate(cols))),
-                       shape=(self.dim, self.dim)).tocsr()
+        M = coo_matrix(
+            (np.concatenate(vals).astype(complex), (np.concatenate(rows), np.concatenate(cols))),
+            shape=(self.dim, self.dim),
+        ).tocsr()
         M.sum_duplicates()
         return M
 
@@ -149,8 +155,9 @@ class HubbardRingED:
                     inversions += ((self.configs >> p) & 1) & ((self.configs >> q) & 1)
         idx = np.searchsorted(self.configs, new)
         sign = 1 - 2 * (inversions % 2)
-        return coo_matrix((sign.astype(complex), (idx, np.arange(self.dim))),
-                          shape=(self.dim, self.dim)).tocsr()
+        return coo_matrix(
+            (sign.astype(complex), (idx, np.arange(self.dim))), shape=(self.dim, self.dim)
+        ).tocsr()
 
     # -- physical operators ----------------------------------------------------------
 
@@ -173,9 +180,13 @@ class HubbardRingED:
                     terms.append((-amplitude, [(True, a), (False, b)]))
         H = self.operator(terms)
         doublons = _popcount(self.configs & (self.configs >> L) & ((1 << L) - 1))
-        return (H + coo_matrix((self.U * doublons.astype(complex),
-                                (np.arange(self.dim), np.arange(self.dim))),
-                               shape=(self.dim, self.dim))).tocsr()
+        return (
+            H
+            + coo_matrix(
+                (self.U * doublons.astype(complex), (np.arange(self.dim), np.arange(self.dim))),
+                shape=(self.dim, self.dim),
+            )
+        ).tocsr()
 
     def translation(self) -> csr_matrix:
         return self.site_permutation([(j + 1) % self.L for j in range(self.L)])
@@ -187,9 +198,19 @@ class HubbardRingED:
         """S^2 = S^- S^+ + S_z^2 + S_z."""
         L = self.L
         sz = (self.n_up - self.n_down) / 2
-        terms = [(1.0, [(True, self.mode(i, "down")), (False, self.mode(i, "up")),
-                        (True, self.mode(j, "up")), (False, self.mode(j, "down"))])
-                 for i in range(L) for j in range(L)]
+        terms = [
+            (
+                1.0,
+                [
+                    (True, self.mode(i, "down")),
+                    (False, self.mode(i, "up")),
+                    (True, self.mode(j, "up")),
+                    (False, self.mode(j, "down")),
+                ],
+            )
+            for i in range(L)
+            for j in range(L)
+        ]
         return (self.operator(terms) + (sz * sz + sz) * _identity(self.dim)).tocsr()
 
     def eta_squared(self) -> csr_matrix:
@@ -198,9 +219,19 @@ class HubbardRingED:
             raise ValueError("eta-pairing needs a bipartite ring (even L)")
         L = self.L
         ez = (self.n_up + self.n_down - L) / 2
-        terms = [((-1.0) ** (i + j), [(False, self.mode(i, "down")), (False, self.mode(i, "up")),
-                                      (True, self.mode(j, "up")), (True, self.mode(j, "down"))])
-                 for i in range(L) for j in range(L)]
+        terms = [
+            (
+                (-1.0) ** (i + j),
+                [
+                    (False, self.mode(i, "down")),
+                    (False, self.mode(i, "up")),
+                    (True, self.mode(j, "up")),
+                    (True, self.mode(j, "down")),
+                ],
+            )
+            for i in range(L)
+            for j in range(L)
+        ]
         return (self.operator(terms) + (ez * ez + ez) * _identity(self.dim)).tocsr()
 
     @property
@@ -243,12 +274,16 @@ class HubbardRingED:
             n_col += 1
         if n_col == 0:
             return csr_matrix((self.dim, 0), dtype=complex)
-        return coo_matrix((np.concatenate(vals), (np.concatenate(rows), np.concatenate(cols))),
-                          shape=(self.dim, n_col)).tocsr()
+        return coo_matrix(
+            (np.concatenate(vals), (np.concatenate(rows), np.concatenate(cols))),
+            shape=(self.dim, n_col),
+        ).tocsr()
 
-    def sector_blocks(self, momenta: Optional[Sequence[int]] = None,
-                      shifts: Tuple[float, float, float] = (0.1234567, 0.0765432, 0.0321987)
-                      ) -> List[Dict]:
+    def sector_blocks(
+        self,
+        momenta: Optional[Sequence[int]] = None,
+        shifts: Tuple[float, float, float] = (0.1234567, 0.0765432, 0.0321987),
+    ) -> List[Dict]:
         """Eigenvalues of every symmetry block (m, S, eta, reflection parity).
 
         Within each momentum sector, H + a S^2 + b eta^2 + c R is diagonalised
@@ -290,9 +325,17 @@ class HubbardRingED:
             for k in range(len(energies)):
                 key = (m, S[k], None if eta is None else eta[k], None if R is None else R[k])
                 blocks.setdefault(key, []).append(energies[k])
-        return [{"m": key[0], "K": 2 * np.pi * key[0] / L, "S": key[1], "eta": key[2],
-                 "reflection": key[3], "energies": np.sort(np.array(levels))}
-                for key, levels in sorted(blocks.items(), key=lambda kv: str(kv[0]))]
+        return [
+            {
+                "m": key[0],
+                "K": 2 * np.pi * key[0] / L,
+                "S": key[1],
+                "eta": key[2],
+                "reflection": key[3],
+                "energies": np.sort(np.array(levels)),
+            }
+            for key, levels in sorted(blocks.items(), key=lambda kv: str(kv[0]))
+        ]
 
 
 def _expectations(vecs: np.ndarray, op: np.ndarray) -> np.ndarray:
@@ -301,16 +344,19 @@ def _expectations(vecs: np.ndarray, op: np.ndarray) -> np.ndarray:
 
 
 def _identity(dim: int) -> csr_matrix:
-    return coo_matrix((np.ones(dim, dtype=complex), (np.arange(dim), np.arange(dim))),
-                      shape=(dim, dim)).tocsr()
+    return coo_matrix(
+        (np.ones(dim, dtype=complex), (np.arange(dim), np.arange(dim))), shape=(dim, dim)
+    ).tocsr()
 
 
 def _round_checked(values, allowed, name, tol=1e-6):
     allowed = np.asarray(allowed)
     nearest = allowed[np.argmin(np.abs(values[:, None] - allowed[None, :]), axis=1)]
     if np.max(np.abs(values - nearest)) > tol:
-        raise RuntimeError(f"{name} is not a good quantum number of the computed eigenvectors "
-                           f"(deviation {np.max(np.abs(values - nearest)):.2e}); change `shifts`")
+        raise RuntimeError(
+            f"{name} is not a good quantum number of the computed eigenvectors "
+            f"(deviation {np.max(np.abs(values - nearest)):.2e}); change `shifts`"
+        )
     return nearest
 
 
@@ -320,14 +366,23 @@ def _casimir_to_spin(casimir, name, tol=1e-6):
     j = np.round(2 * (-1 + np.sqrt(1 + 4 * np.clip(casimir, 0, None))) / 2) / 2
     deviation = np.max(np.abs(casimir - j * (j + 1))) if casimir.size else 0.0
     if deviation > tol:
-        raise RuntimeError(f"{name} is not a good quantum number of the computed eigenvectors "
-                           f"(deviation {deviation:.2e}); change `shifts`")
+        raise RuntimeError(
+            f"{name} is not a good quantum number of the computed eigenvectors "
+            f"(deviation {deviation:.2e}); change `shifts`"
+        )
     return j
 
 
-def hubbard_level_statistics(n_sites: int, n_up: int, n_down: int, t: float = 1.0,
-                             tp: float = 0.0, U: float = 4.0, trim: float = 0.0,
-                             min_levels: int = 10) -> Dict:
+def hubbard_level_statistics(
+    n_sites: int,
+    n_up: int,
+    n_down: int,
+    t: float = 1.0,
+    tp: float = 0.0,
+    U: float = 4.0,
+    trim: float = 0.0,
+    min_levels: int = 10,
+) -> Dict:
     """Spacing ratios pooled over fully resolved symmetry blocks (m = 0..L//2).
 
     Blocks with fewer than ``min_levels`` levels are skipped. The standard error
@@ -360,6 +415,13 @@ def hubbard_level_statistics(n_sites: int, n_up: int, n_down: int, t: float = 1.
         "degenerate_fraction": n_degenerate / n_spacings if n_spacings else float("nan"),
         "eta_resolved": ed.has_eta_symmetry,
         "sector_dim": ed.dim,
-        "params": {"L": n_sites, "n_up": n_up, "n_down": n_down, "t": t, "tp": tp, "U": U,
-                   "trim": trim},
+        "params": {
+            "L": n_sites,
+            "n_up": n_up,
+            "n_down": n_down,
+            "t": t,
+            "tp": tp,
+            "U": U,
+            "trim": trim,
+        },
     }

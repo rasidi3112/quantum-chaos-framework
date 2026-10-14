@@ -5,6 +5,7 @@ import pytest
 
 from quantum_chaos.utils.helpers import fidelity
 
+
 def random_pure(dim, rng):
     psi = rng.normal(size=dim) + 1j * rng.normal(size=dim)
     return psi / np.linalg.norm(psi)
@@ -34,7 +35,12 @@ def test_fidelity_of_state_with_itself_is_one(dim):
     rng = np.random.default_rng(dim)
     psi = random_pure(dim, rng)
     pure = np.outer(psi, psi.conj())
-    for rho in (pure, random_mixed(dim, 1, rng), random_mixed(dim, 2, rng), random_mixed(dim, dim, rng)):
+    for rho in (
+        pure,
+        random_mixed(dim, 1, rng),
+        random_mixed(dim, 2, rng),
+        random_mixed(dim, dim, rng),
+    ):
         assert fidelity(rho, rho) == pytest.approx(1.0, abs=1e-10)
 
 

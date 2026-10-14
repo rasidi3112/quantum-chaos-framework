@@ -15,8 +15,9 @@ def test_level_spacing_ratio_keeps_degeneracies():
         assert level_spacing_ratio(np.array([0.0, 1.0, 1.0, 3.0])) == pytest.approx(0.0)
 
 
-@pytest.mark.parametrize("N, expected", [(8, "GOE"), (10, "GUE"), (12, "GSE"), (14, "GUE"),
-                                         (16, "GOE")])
+@pytest.mark.parametrize(
+    "N, expected", [(8, "GOE"), (10, "GUE"), (12, "GSE"), (14, "GUE"), (16, "GOE")]
+)
 def test_disorder_average_reports_class_and_reference(N, expected):
     stats = syk_module.disorder_average_lsr(N, n_realizations=2)
     assert stats["symmetry_class"] == expected
@@ -36,7 +37,7 @@ def jordan_wigner_reference(syk):
     from itertools import combinations
 
     chi = [syk.get_majorana_operator(a) for a in range(syk.n_majorana)]
-    H = np.zeros((2 ** syk.n_qubits,) * 2, dtype=complex)
+    H = np.zeros((2**syk.n_qubits,) * 2, dtype=complex)
     for i, j, k, l in combinations(range(syk.n_majorana), 4):
         H += syk.couplings[i, j, k, l] * chi[i] @ chi[j] @ chi[k] @ chi[l]
     return H
@@ -74,22 +75,27 @@ def test_particle_hole_operator(N):
     H = syk.hamiltonian_matrix
     U = syk.particle_hole_unitary()
     n = N // 2
-    np.testing.assert_allclose(U @ H.conj() @ U.conj().T, H, atol=1e-12)          # [P, H] = 0
-    np.testing.assert_allclose(U @ U.conj(), (-1) ** (n * (n - 1) // 2) * np.eye(2 ** n),
-                               atol=1e-12)                                         # P^2
-    gamma = np.diag((-1.0) ** np.array([bin(b).count("1") for b in range(2 ** n)]))
+    np.testing.assert_allclose(U @ H.conj() @ U.conj().T, H, atol=1e-12)  # [P, H] = 0
+    np.testing.assert_allclose(
+        U @ U.conj(), (-1) ** (n * (n - 1) // 2) * np.eye(2**n), atol=1e-12
+    )  # P^2
+    gamma = np.diag((-1.0) ** np.array([bin(b).count("1") for b in range(2**n)]))
     np.testing.assert_allclose(U @ gamma @ U.conj().T, (-1) ** n * gamma, atol=1e-12)
     p2 = (-1) ** (n * (n - 1) // 2)
-    expected = {"GOE": (p2 == 1 and n % 2 == 0), "GSE": (p2 == -1 and n % 2 == 0),
-                "GUE": n % 2 == 1}
+    expected = {
+        "GOE": (p2 == 1 and n % 2 == 0),
+        "GSE": (p2 == -1 and n % 2 == 0),
+        "GUE": n % 2 == 1,
+    }
     assert expected[syk.symmetry_class]
 
 
 @pytest.mark.parametrize("N", [10, 14])
 def test_gue_sectors_are_degenerate_with_each_other(N):
     syk = SYKHamiltonian(N, seed=2)
-    np.testing.assert_allclose(syk.sector_eigenvalues("even"), syk.sector_eigenvalues("odd"),
-                               atol=1e-10)
+    np.testing.assert_allclose(
+        syk.sector_eigenvalues("even"), syk.sector_eigenvalues("odd"), atol=1e-10
+    )
 
 
 @pytest.mark.parametrize("N", [12, 20])
