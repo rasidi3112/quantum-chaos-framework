@@ -1,7 +1,10 @@
 # PLAN.md — Rencana Kerja `quantum-chaos-framework`
 
 > **Status:** DISETUJUI 2026-10-14 ("setuju semua rekomendasi"). Keputusan dicatat di §10.
-> **Progres:** pra-0 ✓, Fase 0 ✓, Fase 1 ✓ (2026-10-15; hasil di VALIDATION.md). Fase 2–3 belum.
+> **Progres:** pra-0 ✓, Fase 0 ✓, Fase 1 ✓, Fase 2 ✓ kecuali `CITATION.cff`/Zenodo (menunggu Q7 dan
+> tindakan pemilik repo) dan CI yang belum pernah jalan (belum di-push). Fase 3 belum.
+> Penyimpangan dari rencana: nama subpaket `circuits/` dan `visualization/` dipertahankan (tidak
+> diganti `dynamics/`/`viz/`) untuk menghindari perubahan API tanpa manfaat fisis.
 > **Basis audit:** commit `69396f5` (branch `main`, working tree bersih).
 > **Tanggal:** 2026-10-14
 

@@ -1,11 +1,16 @@
 # VALIDATION
 
 What has been tested, with which tolerance, what came out, and what is **not**
-yet verified. Status after phase 1 of [PLAN.md](https://github.com/rasidi3112/quantum-chaos-framework/blob/main/PLAN.md) (2026-10-14).
+yet verified. Status at version 0.2.0, after phases 0–2 of [PLAN.md](https://github.com/rasidi3112/quantum-chaos-framework/blob/main/PLAN.md) (2026-10-15).
 
 Environment of the recorded runs: macOS (Apple M1, 16 GB), Python 3.13.5 and
-3.14.6, NumPy 2.5.4, SciPy 1.18.1, PennyLane 0.45.1. The test suite has **not**
-yet run on CI or on Linux (phase 2).
+3.14.6, NumPy 2.5.4, SciPy 1.18.1, PennyLane 0.45.1. A GitHub Actions workflow
+(Ubuntu and macOS, Python 3.11–3.13) is configured but has **not** run yet, so
+nothing has been tested on Linux or on Python 3.11/3.12.
+
+Code quality at 0.2.0: 170 fast tests + 4 slow tests pass, line coverage 95 %
+(gate 85 %), `ruff` and `mypy` clean, `mkdocs build --strict` succeeds with
+the tutorials executed.
 
 Reproduce:
 
