@@ -27,10 +27,10 @@
     "extra": {}
   },
   "provenance": {
-    "git_commit": "85af1e0",
-    "src_tree": "ca00f74",
-    "dirty": true,
-    "package_version": "0.3.0",
+    "git_commit": "01dc8bf",
+    "src_tree": "f1298a0",
+    "dirty": false,
+    "package_version": "0.4.0",
     "python": "3.13.5",
     "numpy": "2.5.4",
     "scipy": "1.18.1",
