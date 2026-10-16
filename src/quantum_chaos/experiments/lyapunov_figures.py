@@ -51,14 +51,18 @@ def lyapunov_analysis(
     thresholds: tuple[float, ...] = (0.25, 0.16),
     n_bootstrap: int = 400,
     seed: int = 0,
+    min_sizes: dict[float, int] | None = None,
 ) -> dict[str, Any]:
+    cuts = {float(b): int(n) for b, n in (min_sizes or {}).items()}
     times = np.asarray(results["times"], dtype=float)
     rng = np.random.default_rng(seed)
     out: dict[str, Any] = {}
     for beta in results["betas"]:
-        arrays = _otoc_arrays(results, beta)
+        cut = cuts.get(float(beta), 0)
+        arrays = {N: F for N, F in _otoc_arrays(results, beta).items() if N >= cut}
         sizes = np.array(sorted(arrays))
         per_beta: dict[str, Any] = {
+            "min_size": cut,
             "sizes": sizes.tolist(),
             "realisations": [len(arrays[N]) for N in sizes],
             "decay": {int(N): _decay(arrays[N]).tolist() for N in sizes},
@@ -104,7 +108,7 @@ def lyapunov_figure(cfg: FigureConfig) -> tuple[Figure, dict[str, Any]]:
     assert cfg.lyapunov is not None
     c = cfg.lyapunov
     results = _load(c.results)
-    data = lyapunov_analysis(results, c.thresholds, c.bootstrap, c.seed)
+    data = lyapunov_analysis(results, c.thresholds, c.bootstrap, c.seed, c.min_sizes)
     times = np.asarray(data["times"])
     main = f"threshold_{c.thresholds[0]}"
     fig, axes = plt.subplots(2, 2, figsize=(13, 9.5))
@@ -153,7 +157,7 @@ def lyapunov_figure(cfg: FigureConfig) -> tuple[Figure, dict[str, Any]]:
             axes[1, 0].plot(xs, np.polyval(fit, xs), color=col, lw=1.2, ls="--")
         if b > 0:
             axes[1, 0].axhline(2 * np.pi / b, color=col, ls=":", lw=2, label=f"2π/β (βJ = {b:g})")
-        lines.append(f"βJ = {b:g}:")
+        lines.append(f"βJ = {b:g}  (N = {d['sizes'][0]}-{d['sizes'][-1]}):")
         for thr in c.thresholds:
             r = d[f"threshold_{thr}"]
             lines.append(

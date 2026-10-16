@@ -174,3 +174,27 @@ def test_corrected_rescaling_fit_removes_the_leading_finite_size_bias():
     assert out["exponent_err"] > 0
     plain = rescaling_fit(sizes, tc, 0.01 * np.ones(sizes.size), correction=False)
     assert plain["exponent"] > 1.1 * lam
+
+
+def test_lyapunov_analysis_drops_sizes_below_the_validity_cut():
+    from quantum_chaos.experiments.lyapunov_figures import lyapunov_analysis
+
+    res = _synthetic_results(0.7, list(range(20, 36, 2)))
+    out = lyapunov_analysis(res, n_bootstrap=5, min_sizes={4.0: 24})
+    assert out["betas"]["4.0"]["sizes"] == list(range(24, 36, 2))
+    assert out["betas"]["0.0"]["sizes"] == list(range(20, 36, 2))
+    assert out["betas"]["4.0"]["min_size"] == 24
+
+
+def test_min_sizes_are_parsed_from_yaml_mapping():
+    from quantum_chaos.experiments.config import figure_config_from_dict
+
+    cfg = figure_config_from_dict(
+        {
+            "name": "x",
+            "kind": "syk_lyapunov",
+            "output": "figures/x.png",
+            "lyapunov": {"min_sizes": {"10": 24}},
+        }
+    )
+    assert cfg.lyapunov.min_sizes == {10.0: 24}

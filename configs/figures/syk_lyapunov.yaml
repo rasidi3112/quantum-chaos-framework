@@ -6,3 +6,5 @@ lyapunov:
   thresholds: [0.25, 0.16]
   bootstrap: 400
   seed: 0
+  min_sizes:
+    10.0: 24
