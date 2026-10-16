@@ -103,6 +103,15 @@ class QMLConfig:
 
 
 @dataclass(frozen=True)
+class LyapunovConfig:
+    results: str = "results/syk_lyapunov.json"
+    thresholds: tuple[float, ...] = (0.25, 0.16)
+    min_sizes: dict[float, int] = field(default_factory=dict)
+    bootstrap: int = 400
+    seed: int = 0
+
+
+@dataclass(frozen=True)
 class FigureConfig:
     name: str
     kind: str
@@ -115,6 +124,7 @@ class FigureConfig:
     floquet: FloquetConfig | None = None
     nisq: NISQConfig | None = None
     qml: QMLConfig | None = None
+    lyapunov: LyapunovConfig | None = None
     bins: int = 25
     extra: dict[str, Any] = field(default_factory=dict)
 
@@ -128,6 +138,7 @@ _SECTIONS = {
     "floquet": FloquetConfig,
     "nisq": NISQConfig,
     "qml": QMLConfig,
+    "lyapunov": LyapunovConfig,
 }
 
 
@@ -176,6 +187,12 @@ def figure_config_from_dict(data: dict[str, Any], where: str = "config") -> Figu
                 ):
                     if name in section:
                         section[name] = tuple(cast(x) for x in section[name])
+            if key == "lyapunov" and "thresholds" in section:
+                section["thresholds"] = tuple(float(x) for x in section["thresholds"])
+            if key == "lyapunov" and "min_sizes" in section:
+                section["min_sizes"] = {
+                    float(b): int(n) for b, n in (section["min_sizes"] or {}).items()
+                }
             if key == "dynamics" and "eth_sizes" in section:
                 section["eth_sizes"] = tuple(int(x) for x in section["eth_sizes"])
             data[key] = _build(cls, section, f"{where}.{key}")

@@ -75,6 +75,10 @@ TINY = {
         "dataset_size": 30,
         "evolution_grid": [1.0],
     },
+    "lyapunov": {
+        "results": str(ROOT / "tests" / "data" / "syk_lyapunov_tiny.json"),
+        "bootstrap": 5,
+    },
 }
 
 

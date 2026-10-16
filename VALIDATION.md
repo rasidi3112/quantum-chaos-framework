@@ -1,7 +1,7 @@
 # VALIDATION
 
 What has been tested, with which tolerance, what came out, and what is **not**
-yet verified. Status at version 0.3.0 (2026-10-15).
+yet verified. Status at version 0.4.0 (2026-10-16).
 
 Environment of the recorded runs: macOS (Apple M1, 16 GB), Python 3.13.5 and
 3.14.6, NumPy 2.5.4, SciPy 1.18.1, PennyLane 0.45.1. GitHub Actions (first run
@@ -155,7 +155,8 @@ Thouless time is not determined reliably at these sizes.
   over the whole early-time window, nearly independent of N (1 − F/F(0) at
   t = 1: 0.051, 0.045, 0.041). There is no regime of constant slope: the
   window fits (1.74, 1.74, 1.60 ± ~0.5) measure the curvature of a t² law,
-  not a Lyapunov exponent.
+  not a Lyapunov exponent. The finite-size rescaling analysis up to N = 34 is
+  in section 3.6.
 
 ### 3.4 Krylov complexity and operator size
 
@@ -186,6 +187,62 @@ Thouless time is not determined reliably at these sizes.
 - N = 20 mid-spectrum eigenstates follow the Page curve within 0.002 for
   l = 1…5 qubits (Page formula checked against Haar-random states); at N = 16
   the half-system value is 2.22 vs Page 2.27.
+
+### 3.6 Lyapunov exponent from finite-size rescaling (N = 20–34)
+
+Data: `results/syk_lyapunov.json` (`scripts/syk_lyapunov.py`), figure
+`figures/syk_lyapunov.png` (`configs/figures/syk_lyapunov.yaml`). SYK4 with
+χ² = ½ and ⟨J²⟩ = 3!J²/N³ (J = 1); fully regularised OTOC
+Tr(y χ₀(t) y χ₁ y χ₀(t) y χ₁)/Tr(y⁴) with y = ρ^{1/4}, one Haar-random
+vector per disorder realisation; t = 0…4 in steps of 0.2; βJ = 0 and 10.
+Realisations: 64, 48, 32, 24, 16, 10, 6, 4 for N = 20, 22, …, 34.
+
+Method (Kobrin et al., PRL 126, 030602 (2021)): the crossing time t* where
+1 − F(t)/F(0) = F0 (F0 = 0.25, check 0.16) should shift by (1/λ) ln r under
+N → rN. Three estimators, errors from 400 bootstrap resamplings of the
+realisations:
+
+- *pairs*: λ(N) = Δ ln N/Δt* for neighbouring sizes, extrapolated linearly in 1/N
+  (the paper's estimator);
+- *ln N*: one fit t* = A + (ln N)/λ;
+- *ln N + 1/N*: t* = A + (ln N)/λ + B/N. For F = C0 + C1 e^{λt}/N normalised by
+  F(0) the plain ln N fit is biased upwards by 1 + c(1 − F0)/(F0 N), c = C1/C0
+  (derived and confirmed on synthetic data in the tests); the extra 1/N term
+  removes this bias (synthetic data: within 5 %).
+
+| βJ | sizes | F0 | pairs → ∞ | ln N | ln N + 1/N | power law t* ∝ N^a (χ²/dof vs ln N + 1/N) | 2π/β |
+|---|---|---|---|---|---|---|---|
+| 0 | 20–34 | 0.25 | 0.2 ± 19.7 | 1.09 ± 0.04 | 0.62 ± 0.26 | a = 0.37 (0.38 vs 0.25) | ∞ |
+| 0 | 20–34 | 0.16 | −0.1 ± 20.9 | 1.30 ± 0.06 | 0.66 ± 0.29 | a = 0.39 (0.41 vs 0.18) | ∞ |
+| 10 | 24–34 | 0.25 | 0.6 ± 119 | 0.67 ± 0.05 | 0.7 ± 16.8 | a = 0.43 (0.30 vs 0.33) | 0.628 |
+| 10 | 24–34 | 0.16 | −0.2 ± 63 | 0.84 ± 0.09 | 0.5 ± 5.3 | a = 0.45 (0.29 vs 0.37) | 0.628 |
+
+- Validity cut (Kobrin et al.: the lowest 20 states within 1/β of the ground
+  state, even sector, 3 realisations): at βJ = 10, E₂₀ − E₀ = 0.138–0.147
+  (N = 20), 0.106–0.114 (N = 22), 0.079–0.095 (N = 24), 0.044–0.046 (N = 28).
+  N = 20 and 22 are therefore excluded at βJ = 10.
+- The neighbouring-pair estimator is uninformative at these sizes: Δ ln N ≈ 0.08
+  between neighbours while t* is known to ±0.013–0.04, so single λ(N) carry
+  errors of 30 % to > 100 %.
+- βJ = 0: the bias-corrected fit gives λ ≈ 0.6 ± 0.3, the same for both
+  thresholds, whereas the plain ln N fit changes with F0 (1.09 → 1.30) as the
+  bias formula predicts. **However, a power law t* ∝ N^0.37 describes the
+  crossing times equally well** (χ²/dof < 1 for both models), as does the t²
+  early-time growth of section 3.3. Exponential growth is therefore **not
+  established**, and 0.6 ± 0.3 is at most an estimate conditional on the
+  large-N ansatz.
+- βJ = 10: no bias-free estimate is possible (ln N and 1/N are almost
+  collinear over N = 24–34). The plain ln N fits, 0.67 ± 0.05 and 0.84 ± 0.09,
+  are biased upwards and are not a measurement of λ. **The chaos bound
+  λ ≤ 2π/β is not tested.**
+- No large-N (Schwinger–Dyson) value of λ is computed or quoted here.
+  Kobrin et al. needed up to N = 46 (single curves at 60) and hundreds of
+  realisations; the sizes reachable on a 16 GB laptop are not sufficient.
+- Numerics: Chebyshev propagation (spectral bounds from Lanczos plus a 2 %
+  margin; the propagator checks norm conservation) agrees with dense
+  exponentials to 1e-11 (tests). One N = 28 OTOC curve (33 times, β = 0)
+  takes 35 s instead of ≈ 1000 s with `expm_multiply`; one N = 34
+  realisation (21 times, both temperatures) takes 1480–1950 s on an Apple M1.
 
 ## 4. Large-N numerics (phase 3A)
 
@@ -294,15 +351,19 @@ remains unreconciled, section 3.1).
 | SYK E0 fit −0.055 − 0.029 N | fit | same, Eq. (14) | quoted verbatim; **not reproduced** (section 3.1) |
 | First-order Trotter commutator bound | (t²/2) Σ ‖[Σ_{γ2>γ1} H_γ2, H_γ1]‖ | Childs, Su, Tran, Wiebe, Zhu, PRX 11, 011020 (2021), Prop. 15, Eq. (145) | verified |
 | Sparse SYK pruning | p = kN/C(N,4), ⟨J²⟩ = 3!J²/(N³p) | Xu, Susskind, Su, Swingle, arXiv:2008.02303 | verified |
+| Crossing-time rescaling N → rN, t → t + (1/λ) ln r; F0 = 0.25; validity: 20 states within 1/β of E0 | method | Kobrin, Yang, Kahanamoku-Meyer, Olund, Moore, Stanford, Yao, PRL 126, 030602 (2021), Supp. Sec. II.3 | verified (arXiv:2002.05725v3) |
 
 ## 9. Not yet verified / open
 
 - The weekly CI jobs (slow statistical tests, newest PennyLane) have not run yet.
 - SYK ground-state energy vs García-García & Verbaarschot's fit: ~1.5×
   discrepancy not reconciled (section 3.1).
-- Lyapunov exponent and the chaos bound: no exponential regime up to N = 28
-  (T = ∞ early-time growth is ∝ t², section 3.3); finite-temperature OTOCs at
-  large N, where an exponential window is expected, were not computed.
+- Lyapunov exponent and the chaos bound: with finite-size rescaling up to
+  N = 34 (section 3.6) exponential growth cannot be distinguished from a power
+  law at βJ = 0 (bias-corrected estimate 0.6 ± 0.3 if the large-N ansatz is
+  assumed), and no bias-free estimate exists at βJ = 10; the chaos bound is
+  not tested. Larger N (≳ 46, Kobrin et al.) and a Schwinger–Dyson reference
+  value would be needed.
 - Thouless time and the linear growth of Lanczos coefficients: not resolved.
 - Hubbard ring: GOE only reached at L = 10 for N = 4+4, 5+5; residual
   degeneracies of the integrable chain unexplained.

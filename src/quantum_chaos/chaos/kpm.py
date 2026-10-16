@@ -1,5 +1,6 @@
 import numpy as np
 from scipy.sparse.linalg import eigsh
+from scipy.special import ive, jv
 
 from ..utils.helpers import RngLike
 
@@ -9,6 +10,54 @@ def spectral_bounds(hamiltonian, margin: float = 0.01) -> tuple[float, float]:
     hi = eigsh(hamiltonian, k=1, which="LA", return_eigenvectors=False, tol=1e-6)[0]
     width = hi - lo
     return float(lo - margin * width), float(hi + margin * width)
+
+
+def chebyshev_evolve(
+    hamiltonian,
+    psi: np.ndarray,
+    t: float,
+    bounds: tuple[float, float],
+    imaginary: bool = False,
+    tol: float = 1e-15,
+) -> np.ndarray:
+    lo, hi = bounds
+    a = (hi - lo) / 2
+    b = (hi + lo) / 2
+    if imaginary and t < 0:
+        raise ValueError("imaginary-time evolution needs t >= 0")
+    z = a * abs(t)
+    k = np.arange(int(z + 10 * z ** (1 / 3) + 40))
+    weights = np.where(k == 0, 1.0, 2.0)
+    if imaginary:
+        coef = weights * (-1.0) ** k * ive(k, z)
+        prefactor = np.exp(-t * lo)
+    else:
+        coef = weights * (-1j * np.sign(t)) ** k * jv(k, z)
+        prefactor = np.exp(-1j * b * t)
+    n_terms = int(np.flatnonzero(np.abs(coef) > tol * np.abs(coef).max())[-1]) + 1
+
+    def x_apply(v):
+        return (hamiltonian @ v - b * v) / a
+
+    prev = psi
+    out = coef[0] * psi
+    if n_terms > 1:
+        cur = x_apply(psi)
+        out = out + coef[1] * cur
+        for n in range(2, n_terms):
+            prev, cur = cur, 2 * x_apply(cur) - prev
+            out = out + coef[n] * cur
+    out = prefactor * out
+    norm_in = np.linalg.norm(psi)
+    norm_out = np.linalg.norm(out)
+    bad = not np.isfinite(norm_out)
+    if imaginary:
+        bad = bad or norm_out > abs(prefactor) * norm_in * (1 + 1e-8)
+    else:
+        bad = bad or abs(norm_out - norm_in) > 1e-8 * max(norm_in, 1e-300)
+    if bad:
+        raise ValueError("spectrum outside the Chebyshev bounds")
+    return out
 
 
 def chebyshev_moments(
