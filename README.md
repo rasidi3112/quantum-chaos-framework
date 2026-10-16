@@ -9,6 +9,9 @@ Hamiltonian-encoding quantum kernels.
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Docs](https://img.shields.io/badge/docs-online-blue.svg)](https://rasidi3112.github.io/quantum-chaos-framework/)
+
+**Documentation:** <https://rasidi3112.github.io/quantum-chaos-framework/>
 
 ## Status
 
