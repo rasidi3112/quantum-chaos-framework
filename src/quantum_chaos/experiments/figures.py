@@ -267,6 +267,7 @@ def ratio_distribution_figure(cfg: FigureConfig) -> tuple[Figure, dict[str, Any]
 
 from .chaos_figures import dynamics_figure, sff_figure  # noqa: E402
 from .floquet_figures import floquet_figure  # noqa: E402
+from .lyapunov_figures import lyapunov_figure  # noqa: E402
 from .nisq_figures import nisq_figure  # noqa: E402
 from .qml_figures import qml_figure  # noqa: E402
 
@@ -278,6 +279,7 @@ BUILDERS: dict[str, Callable[[FigureConfig], tuple[Figure, dict[str, Any]]]] = {
     "floquet_heating": floquet_figure,
     "nisq": nisq_figure,
     "qml": qml_figure,
+    "syk_lyapunov": lyapunov_figure,
 }
 
 

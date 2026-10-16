@@ -87,3 +87,74 @@ def lyapunov_with_systematics(
         "systematic": float(valid.max() - valid.min()) / 2,
         "statistical": float(stat),
     }
+
+
+def finite_size_extrapolation(
+    sizes: Sequence[int], curves: np.ndarray, errors: np.ndarray, order: int = 1
+) -> dict[str, np.ndarray]:
+    x = 1.0 / np.asarray(sizes, dtype=float)
+    Y = np.asarray(curves, dtype=float)
+    S = np.asarray(errors, dtype=float)
+    A = np.vander(x, order + 1, increasing=True)
+    n_t = Y.shape[1]
+    value = np.empty(n_t)
+    slope = np.empty(n_t)
+    stderr = np.empty(n_t)
+    chi2 = np.empty(n_t)
+    dof = max(len(x) - order - 1, 1)
+    for k in range(n_t):
+        w = 1.0 / S[:, k]
+        coef, *_ = np.linalg.lstsq(A * w[:, None], Y[:, k] * w, rcond=None)
+        cov = np.linalg.inv((A * w[:, None]).T @ (A * w[:, None]))
+        value[k], slope[k] = coef[0], coef[1]
+        stderr[k] = np.sqrt(cov[0, 0])
+        chi2[k] = np.sum(((A @ coef - Y[:, k]) * w) ** 2) / dof
+    return {"value": value, "slope": slope, "stderr": stderr, "chi2_per_dof": chi2}
+
+
+def local_exponent(times: np.ndarray, growth: np.ndarray) -> np.ndarray:
+    return np.gradient(
+        np.log(np.asarray(growth, dtype=float)), np.asarray(times, dtype=float), edge_order=2
+    )
+
+
+def crossing_time(times: np.ndarray, decay: np.ndarray, threshold: float) -> float:
+    t = np.asarray(times, dtype=float)
+    d = np.asarray(decay, dtype=float)
+    above = np.flatnonzero(d >= threshold)
+    if above.size == 0 or above[0] == 0:
+        return float("nan")
+    k = above[0]
+    lo, hi = np.log(d[k - 1]), np.log(d[k])
+    frac = (np.log(threshold) - lo) / (hi - lo)
+    return float(t[k - 1] + frac * (t[k] - t[k - 1]))
+
+
+def rescaling_exponents(sizes: Sequence[int], crossing_times: Sequence[float]) -> dict:
+    n = np.asarray(sizes, dtype=float)
+    tc = np.asarray(crossing_times, dtype=float)
+    exponent = np.diff(np.log(n)) / np.diff(tc)
+    return {"size": np.sqrt(n[1:] * n[:-1]), "exponent": exponent}
+
+
+def rescaling_fit(
+    sizes: Sequence[int],
+    crossing_times: Sequence[float],
+    errors: Sequence[float],
+    correction: bool = True,
+) -> dict[str, float]:
+    n = np.asarray(sizes, dtype=float)
+    tc = np.asarray(crossing_times, dtype=float)
+    w = 1.0 / np.asarray(errors, dtype=float)
+    columns = [np.ones_like(n), np.log(n)] + ([1.0 / n] if correction else [])
+    A = np.column_stack(columns)
+    coef, *_ = np.linalg.lstsq(A * w[:, None], tc * w, rcond=None)
+    cov = np.linalg.inv((A * w[:, None]).T @ (A * w[:, None]))
+    dof = max(n.size - A.shape[1], 1)
+    chi2 = float(np.sum(((A @ coef - tc) * w) ** 2) / dof)
+    slope, slope_err = coef[1], np.sqrt(cov[1, 1])
+    return {
+        "exponent": float(1.0 / slope),
+        "exponent_err": float(slope_err / slope**2),
+        "chi2_per_dof": chi2,
+    }

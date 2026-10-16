@@ -1,0 +1,8 @@
+name: syk_lyapunov
+kind: syk_lyapunov
+output: figures/syk_lyapunov.png
+lyapunov:
+  results: results/syk_lyapunov.json
+  thresholds: [0.25, 0.16]
+  bootstrap: 400
+  seed: 0

@@ -2,11 +2,11 @@ from collections.abc import Sequence
 
 import numpy as np
 from scipy.sparse import csc_matrix
-from scipy.sparse.linalg import expm_multiply
 
 from ..hamiltonians.syk_hamiltonian import _popcount, majorana_pauli
 from ..hamiltonians.syk_sparse import parity_sector_states, syk_sector_hamiltonian
 from ..utils.helpers import RngLike
+from .kpm import chebyshev_evolve, spectral_bounds
 
 SECTORS = ("even", "odd")
 OTHER = {"even": "odd", "odd": "even"}
@@ -33,6 +33,12 @@ class SectorSYK:
         for s in SECTORS:
             self._lookup[self.states[s].astype(np.int64)] = np.arange(self.states[s].size)
         self._majorana_cache: dict[tuple[int, str], csc_matrix] = {}
+        self._bounds: dict[str, tuple[float, float]] = {}
+
+    def bounds(self, sector: str) -> tuple[float, float]:
+        if sector not in self._bounds:
+            self._bounds[sector] = spectral_bounds(self.hamiltonian[sector], margin=0.02)
+        return self._bounds[sector]
 
     def majorana(self, index: int, sector: str) -> csc_matrix:
         key = (index, sector)
@@ -51,10 +57,19 @@ class SectorSYK:
         return {OTHER[s]: self.majorana(index, s) @ v for s, v in psi.items()}
 
     def evolve(self, psi: dict[str, np.ndarray], t: float) -> dict[str, np.ndarray]:
-        return {s: expm_multiply(-1j * t * self.hamiltonian[s], v) for s, v in psi.items()}
+        if t == 0:
+            return dict(psi)
+        return {
+            s: chebyshev_evolve(self.hamiltonian[s], v, t, self.bounds(s)) for s, v in psi.items()
+        }
 
     def imaginary_evolve(self, psi: dict[str, np.ndarray], tau: float) -> dict[str, np.ndarray]:
-        return {s: expm_multiply(-tau * self.hamiltonian[s], v) for s, v in psi.items()}
+        if tau == 0:
+            return dict(psi)
+        return {
+            s: chebyshev_evolve(self.hamiltonian[s], v, tau, self.bounds(s), imaginary=True)
+            for s, v in psi.items()
+        }
 
     def random_state(self, rng: np.random.Generator) -> dict[str, np.ndarray]:
         psi = {
@@ -89,34 +104,40 @@ def typical_autocorrelation(
 def typical_otoc(
     model: SectorSYK,
     w: int,
-    v: int,
+    v: int | Sequence[int],
     times: Sequence[float],
     n_vectors: int = 4,
     beta: float = 0.0,
     rng: RngLike = None,
 ) -> dict[str, np.ndarray]:
     rng = np.random.default_rng(rng)
+    partners = [int(v)] if isinstance(v, int | np.integer) else [int(p) for p in v]
+
+    def y(psi, tau):
+        return model.imaginary_evolve(psi, tau) if beta > 0 else psi
+
     samples = []
     norms = []
     for _ in range(n_vectors):
         r0 = model.random_state(rng)
-        r = model.imaginary_evolve(r0, beta / 8) if beta > 0 else r0
-        half = model.imaginary_evolve(r0, beta / 2) if beta > 0 else r0
+        r = y(r0, beta / 8)
+        half = y(r0, beta / 2)
         norms.append(_inner(half, half).real)
+        b = r
+        kets = [y(model.apply_majorana(p, r), beta / 4) for p in partners]
         values = []
+        t_prev = 0.0
         for t in times:
-
-            def y(psi):
-                return model.imaginary_evolve(psi, beta / 4) if beta > 0 else psi
-
-            def wt(psi, t=t):
-                return model.evolve(model.apply_majorana(w, model.evolve(psi, t)), -t)
-
-            phi = y(model.apply_majorana(v, r))
-            phi = y(wt(phi))
-            phi = y(model.apply_majorana(v, phi))
-            phi = wt(phi)
-            values.append(_inner(r, phi))
+            dt = float(t) - t_prev
+            b = model.evolve(b, dt)
+            kets = [model.evolve(a, dt) for a in kets]
+            t_prev = float(t)
+            e = y(model.evolve(model.apply_majorana(w, b), -t_prev), beta / 4)
+            terms = []
+            for p, a in zip(partners, kets, strict=True):
+                c = y(model.evolve(model.apply_majorana(w, a), -t_prev), beta / 4)
+                terms.append(_inner(e, model.apply_majorana(p, c)))
+            values.append(np.mean(terms))
         samples.append(values)
     s = np.array(samples)
     z = np.array(norms)

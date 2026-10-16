@@ -6,7 +6,14 @@ from .eth import (
     offdiagonal_moment_ratio,
     page_entropy,
 )
-from .kpm import chebyshev_moments, jackson_kernel, kpm_density, moments_to_power_moments
+from .kpm import (
+    chebyshev_evolve,
+    chebyshev_moments,
+    jackson_kernel,
+    kpm_density,
+    moments_to_power_moments,
+    spectral_bounds,
+)
 from .krylov import autocorrelation, krylov_complexity, krylov_wavefunction, lanczos_coefficients
 from .moments import (
     normalized_moments,
@@ -16,7 +23,17 @@ from .moments import (
     syk_second_moment,
 )
 from .operator_size import mean_size_from_anticommutators, pauli_coefficients, size_distribution
-from .otoc import lyapunov_fit, lyapunov_with_systematics, normalized_decay, thermal_otoc
+from .otoc import (
+    crossing_time,
+    finite_size_extrapolation,
+    local_exponent,
+    lyapunov_fit,
+    lyapunov_with_systematics,
+    normalized_decay,
+    rescaling_exponents,
+    rescaling_fit,
+    thermal_otoc,
+)
 from .sff import (
     partition_function,
     plateau_value,
@@ -30,7 +47,9 @@ from .typicality import SectorSYK, typical_autocorrelation, typical_otoc
 
 __all__ = [
     "SectorSYK",
+    "chebyshev_evolve",
     "chebyshev_moments",
+    "spectral_bounds",
     "jackson_kernel",
     "kpm_density",
     "moments_to_power_moments",
@@ -46,6 +65,11 @@ __all__ = [
     "krylov_complexity",
     "krylov_wavefunction",
     "lanczos_coefficients",
+    "crossing_time",
+    "finite_size_extrapolation",
+    "rescaling_exponents",
+    "rescaling_fit",
+    "local_exponent",
     "lyapunov_fit",
     "lyapunov_with_systematics",
     "mean_size_from_anticommutators",
