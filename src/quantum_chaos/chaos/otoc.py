@@ -158,3 +158,16 @@ def rescaling_fit(
         "exponent_err": float(slope_err / slope**2),
         "chi2_per_dof": chi2,
     }
+
+
+def power_law_fit(
+    sizes: Sequence[int], crossing_times: Sequence[float], errors: Sequence[float]
+) -> dict[str, float]:
+    n = np.asarray(sizes, dtype=float)
+    tc = np.asarray(crossing_times, dtype=float)
+    w = tc / np.asarray(errors, dtype=float)
+    A = np.column_stack([np.ones_like(n), np.log(n)])
+    coef, *_ = np.linalg.lstsq(A * w[:, None], np.log(tc) * w, rcond=None)
+    cov = np.linalg.inv((A * w[:, None]).T @ (A * w[:, None]))
+    chi2 = float(np.sum(((A @ coef - np.log(tc)) * w) ** 2) / max(n.size - 2, 1))
+    return {"power": float(coef[1]), "power_err": float(np.sqrt(cov[1, 1])), "chi2_per_dof": chi2}

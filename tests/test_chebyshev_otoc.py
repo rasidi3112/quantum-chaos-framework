@@ -198,3 +198,13 @@ def test_min_sizes_are_parsed_from_yaml_mapping():
         }
     )
     assert cfg.lyapunov.min_sizes == {10.0: 24}
+
+
+def test_power_law_fit_of_crossing_times():
+    from quantum_chaos.chaos.otoc import power_law_fit
+
+    sizes = np.arange(20, 36, 2)
+    tc = 0.7 * sizes ** (1 / 2.5)
+    out = power_law_fit(sizes, tc, 0.01 * np.ones(sizes.size))
+    assert out["power"] == pytest.approx(1 / 2.5, rel=1e-10)
+    assert out["chi2_per_dof"] == pytest.approx(0, abs=1e-12)

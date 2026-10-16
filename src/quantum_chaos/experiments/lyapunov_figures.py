@@ -9,7 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.figure import Figure
 
-from ..chaos.otoc import crossing_time, rescaling_exponents, rescaling_fit
+from ..chaos.otoc import crossing_time, power_law_fit, rescaling_exponents, rescaling_fit
 from .config import FigureConfig
 from .style import CYCLE, SYK, summary_box, suptitle
 
@@ -80,6 +80,15 @@ def lyapunov_analysis(
                 warnings.simplefilter("ignore", RuntimeWarning)
                 spread = np.nanstd(np.array(boot), axis=0, ddof=1)
             n = len(sizes)
+            tc_err = spread[:n]
+            ok = np.isfinite(tc) & (tc_err > 0)
+            models: dict[str, Any] = {}
+            if ok.sum() >= 4:
+                models = {
+                    "log_fit": rescaling_fit(sizes[ok], tc[ok], tc_err[ok], correction=False),
+                    "log_fit_corrected": rescaling_fit(sizes[ok], tc[ok], tc_err[ok]),
+                    "power_law": power_law_fit(sizes[ok], tc[ok], tc_err[ok]),
+                }
             per_beta[f"threshold_{thr}"] = {
                 "crossing_time": tc.tolist(),
                 "crossing_time_err": spread[:n].tolist(),
@@ -92,6 +101,7 @@ def lyapunov_analysis(
                 "global_err": float(spread[2 * n]),
                 "corrected": lam_c,
                 "corrected_err": float(spread[2 * n + 1]),
+                "weighted_models": models,
             }
         out[str(float(beta))] = per_beta
     return {"times": times.tolist(), "thresholds": list(thresholds), "betas": out}
@@ -161,10 +171,17 @@ def lyapunov_figure(cfg: FigureConfig) -> tuple[Figure, dict[str, Any]]:
         for thr in c.thresholds:
             r = d[f"threshold_{thr}"]
             lines.append(
-                f"  F0={thr:.2f}  λ(N→∞) = {r['extrapolated']:.2f} ± {r['extrapolated_err']:.2f}"
+                f"  F0={thr:.2f}  pairs   = {r['extrapolated']:.2f} ± {r['extrapolated_err']:.2f}"
             )
-            lines.append(f"            global  = {r['global']:.2f} ± {r['global_err']:.2f}")
+            lines.append(f"            ln N    = {r['global']:.2f} ± {r['global_err']:.2f}")
             lines.append(f"            +1/N    = {r['corrected']:.2f} ± {r['corrected_err']:.2f}")
+            wm = r["weighted_models"]
+            if wm:
+                lines.append(
+                    f"            t*~N^{wm['power_law']['power']:.2f}"
+                    f"  chi2: {wm['power_law']['chi2_per_dof']:.2f}"
+                    f" vs {wm['log_fit_corrected']['chi2_per_dof']:.2f}"
+                )
         if b > 0:
             lines.append(f"  chaos bound 2π/β = {2 * np.pi / b:.3f}")
     axes[0, 1].set_xlabel("ln N")
@@ -175,6 +192,7 @@ def lyapunov_figure(cfg: FigureConfig) -> tuple[Figure, dict[str, Any]]:
     axes[1, 0].set_ylabel(r"$\lambda(N) = \Delta \ln N / \Delta t^*$")
     axes[1, 0].set_title("(c) Rescaling exponent and 1/N extrapolation")
     axes[1, 0].set_xlim(left=-0.003)
+    axes[1, 0].set_ylim(0, 3)
     axes[1, 0].legend(fontsize=8)
     sizes_all = data["betas"][next(iter(data["betas"]))]["sizes"]
     reals = data["betas"][next(iter(data["betas"]))]["realisations"]
