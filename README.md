@@ -15,7 +15,7 @@ Hamiltonian-encoding quantum kernels.
 
 ## Status
 
-Version `0.3.0`. See [CHANGELOG.md](CHANGELOG.md) and [VALIDATION.md](VALIDATION.md) (what was tested, the results — including the
+Version `0.4.0`. See [CHANGELOG.md](CHANGELOG.md) and [VALIDATION.md](VALIDATION.md) (what was tested, the results — including the
 negative ones — and what is not verified).
 
 - Done: bug fixes (phase 0), symmetry-resolved spectral statistics
@@ -26,9 +26,11 @@ negative ones — and what is not verified).
   high-frequency expansions and heating (3C); Trotter bounds, sparse SYK,
   noisy interferometric OTOCs with echo normalisation and ZNE (3D); kernel
   concentration and statistical comparison with an RBF baseline (3E).
-- Main negative results: no Lyapunov exponent can be extracted at the
-  accessible sizes (the chaos bound is not tested); quantum kernels are
-  significantly worse than a tuned RBF-SVM on the benchmarks used.
+- Main negative results: no Lyapunov exponent can be established at the
+  accessible sizes — a finite-size rescaling analysis up to N = 34 cannot
+  distinguish exponential growth from a power law, and the chaos bound is not
+  tested; quantum kernels are significantly worse than a tuned RBF-SVM on the
+  benchmarks used.
 - CI (GitHub Actions) passes on Ubuntu and macOS for Python 3.11–3.13 (and 3.14).
 - Open: citation metadata/DOI, the choice of the Floquet drive protocol.
 
@@ -126,6 +128,20 @@ after N − 1 steps. (c) Mean Majorana size of χ₀(t). (d) Entanglement of
 mid-spectrum eigenstates (N = 20) against the Page curve. No Lyapunov
 exponent is extracted: the early-time growth is ∝ t² at these sizes.*
 
+### Finite-size rescaling of the OTOC — `syk_lyapunov.yaml`
+
+![SYK scrambling rescaling](figures/syk_lyapunov.png)
+
+*Regularised OTOC for N = 20–34 at βJ = 0 and 10, analysed with the
+crossing-time rescaling of Kobrin et al. (PRL 126, 030602). (a) 1 − F(t)/F(0)
+with the thresholds 0.25 and 0.16. (b) Crossing time against ln N. (c)
+Exponents from neighbouring sizes and the bias-corrected global fit. At
+βJ = 0 the corrected fit gives λ ≈ 0.6 ± 0.3, but a power law t* ∝ N^0.37 fits
+equally well; at βJ = 10 no bias-free estimate is possible. Exponential
+growth and the chaos bound are therefore not established
+(VALIDATION.md §3.6). The figure is built from `results/syk_lyapunov.json`,
+which `scripts/syk_lyapunov.py` produces in about 3 h on an Apple M1.*
+
 ### Floquet heating and high-frequency expansion — `floquet_heating.yaml`
 
 ![Floquet heating](figures/floquet_heating.png)
@@ -193,10 +209,13 @@ Full tables, tolerances and open items: [VALIDATION.md](VALIDATION.md).
   still below GOE (finite-size effect). Only t′ = 0.5, U = 4 were studied.
 - The integrable chain (t′ = 0) keeps 0.2–1.7 % exactly degenerate spacings
   after all resolved symmetries; their origin is not analysed.
-- No Lyapunov exponent, butterfly velocity or scrambling time is computed: the
-  former heuristic fits were removed and will be redone with error estimates.
-- Quantum kernels are provided as tools; no advantage of any kernel is
-  claimed, and no comparison with classical baselines has been run yet.
+- No Lyapunov exponent, butterfly velocity or scrambling time is established:
+  the finite-size rescaling analysis up to N = 34 (VALIDATION.md §3.6) cannot
+  separate exponential from power-law growth, and the chaos bound is not
+  tested.
+- No advantage of any quantum kernel is claimed; against a tuned RBF-SVM the
+  quantum kernels are significantly worse on the benchmarks used
+  (VALIDATION.md §7).
 - The Floquet effective Hamiltonian is implemented only at leading order.
 
 ## Project structure
@@ -218,7 +237,7 @@ quantum-chaos-framework/
 ├── configs/figures/    # one YAML file per figure (seeds included)
 ├── figures/            # generated figures + JSON sidecars (make figures)
 ├── docs/               # MkDocs site, tutorials (jupytext .py)
-├── scripts/            # make_figures.py, validate_level_statistics.py, large_n_syk.py
+├── scripts/            # make_figures.py, validate_level_statistics.py, large_n_syk.py, syk_lyapunov.py
 ├── benchmarks/         # time and memory vs N
 ├── results/            # validation numbers (JSON)
 ├── tests/

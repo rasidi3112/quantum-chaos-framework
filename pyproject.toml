@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "quantum-chaos"
-version = "0.3.0"
+version = "0.4.0"
 description = "Symmetry-resolved diagnostics of quantum chaos and scrambling in SYK and Hubbard models"
 readme = "README.md"
 license = "MIT"

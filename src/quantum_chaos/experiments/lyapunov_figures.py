@@ -158,13 +158,14 @@ def lyapunov_figure(cfg: FigureConfig) -> tuple[Figure, dict[str, Any]]:
             x, m["exponent"], yerr=m["exponent_err"], fmt="o", color=col, label=f"βJ = {b:g}"
         )
         axes[1, 0].errorbar(
-            [0.0], [m["extrapolated"]], yerr=[m["extrapolated_err"]], fmt="s", color=col, ms=9
+            [0.0],
+            [m["corrected"]],
+            yerr=[m["corrected_err"]],
+            fmt="s",
+            color=col,
+            ms=9,
+            label=f"ln N + 1/N fit (βJ = {b:g})",
         )
-        ok = np.isfinite(m["exponent"])
-        if ok.sum() >= 2:
-            fit = np.polyfit(x[ok], np.asarray(m["exponent"])[ok], 1)
-            xs = np.linspace(0, float(np.max(x)), 10)
-            axes[1, 0].plot(xs, np.polyval(fit, xs), color=col, lw=1.2, ls="--")
         if b > 0:
             axes[1, 0].axhline(2 * np.pi / b, color=col, ls=":", lw=2, label=f"2π/β (βJ = {b:g})")
         lines.append(f"βJ = {b:g}  (N = {d['sizes'][0]}-{d['sizes'][-1]}):")
@@ -190,7 +191,7 @@ def lyapunov_figure(cfg: FigureConfig) -> tuple[Figure, dict[str, Any]]:
     axes[0, 1].legend()
     axes[1, 0].set_xlabel(r"$1/\sqrt{N_1 N_2}$")
     axes[1, 0].set_ylabel(r"$\lambda(N) = \Delta \ln N / \Delta t^*$")
-    axes[1, 0].set_title("(c) Rescaling exponent and 1/N extrapolation")
+    axes[1, 0].set_title("(c) Pairwise exponents; squares: corrected global fit")
     axes[1, 0].set_xlim(left=-0.003)
     axes[1, 0].set_ylim(0, 3)
     axes[1, 0].legend(fontsize=8)

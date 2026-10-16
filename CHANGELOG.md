@@ -5,6 +5,36 @@ All notable changes to this project are documented here. The format follows
 [Semantic Versioning](https://semver.org/). Before 1.0.0 the public API may
 change between minor versions.
 
+## [0.4.0] - 2026-10-16
+
+Finite-size rescaling analysis of SYK scrambling up to N = 34.
+
+### Added
+
+- `chaos.kpm.chebyshev_evolve`: Chebyshev propagator for real and imaginary
+  time with a norm check that rejects spectral bounds missing the spectrum.
+- `chaos.otoc`: `crossing_time`, `rescaling_exponents` (Kobrin et al.,
+  PRL 126, 030602), `rescaling_fit` (global ln N fit with optional 1/N
+  correction), `power_law_fit`, `finite_size_extrapolation`, `local_exponent`.
+- `typical_otoc` accepts several partner operators that share the W branch.
+- `scripts/syk_lyapunov.py` (resumable) and `results/syk_lyapunov.json`:
+  regularised OTOCs for N = 20–34 at βJ = 0 and 10.
+- Figure `syk_lyapunov` (`configs/figures/syk_lyapunov.yaml`) with a
+  per-temperature minimum size (`min_sizes`).
+
+### Changed
+
+- `SectorSYK.evolve`/`imaginary_evolve` use Chebyshev propagation instead of
+  `expm_multiply` (≈ 30× faster for the N = 28 OTOC); the typicality OTOC
+  evolves forward incrementally.
+
+### Results
+
+- βJ = 0: bias-corrected rescaling gives λ ≈ 0.6 ± 0.3, but a power law
+  t* ∝ N^0.37 fits the crossing times equally well; exponential growth is not
+  established. βJ = 10: no bias-free estimate; the chaos bound is not tested
+  (VALIDATION.md §3.6).
+
 ## [0.3.0] - 2026-10-15
 
 Research features (phase 3). Every module is validated against exact
